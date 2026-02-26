@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  @apply bg-background text-foreground font-sans;
+}
+
+body {
+  @apply min-h-screen;
+}
+
+a {
+  @apply text-accent-pink hover:text-accent-pinkSoft transition-colors;
+}
+
+.btn-gradient {
+  @apply inline-flex items-center justify-center rounded-full bg-gradient-pink px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:scale-[1.02] hover:shadow-pink-500/60;
+}
+
+.card-surface {
+  @apply rounded-2xl border border-white/5 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-xl shadow-[0_18px_45px_rgba(0,0,0,0.65)];
+}
+

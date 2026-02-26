@@ -1,0 +1,113 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import SiteShell from "../../(site)/Shell";
+import { AgeGate } from "../../(site)/AgeGate";
+import { getVideos, models } from "@/lib/data";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function ModelDetailPage({ params }: Props) {
+  const { id } = await params;
+  const model = models.find((m) => m.id === id);
+
+  if (!model) {
+    redirect("/models");
+  }
+
+  const videos = getVideos().filter((v) => v.models.includes(model.id));
+  const galleryUrls = model.galleryUrls ?? [];
+
+  return (
+    <AgeGate>
+      <SiteShell>
+        <div className="mx-auto max-w-5xl px-4 py-10 space-y-8">
+          <header className="space-y-2">
+            <Link
+              href="/models"
+              className="text-xs text-accent-pinkSoft hover:text-accent-pink"
+            >
+              ← Back to all models
+            </Link>
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+              <div className="h-32 w-32 shrink-0 overflow-hidden rounded-full bg-gradient-pink">
+                {model.avatarUrl ? (
+                  <img
+                    src={model.avatarUrl}
+                    alt={model.stageName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
+              <div className="space-y-1">
+                <h1 className="text-3xl font-semibold tracking-tight">{model.stageName}</h1>
+                <p className="text-xs text-neutral-400">
+                  {model.active ? "Active" : "Taking a break"}
+                </p>
+                {model.bio && (
+                  <p className="mt-3 max-w-xl text-sm text-neutral-300">{model.bio}</p>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {galleryUrls.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Gallery</h2>
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {galleryUrls.map((url, i) => (
+                  <div
+                    key={i}
+                    className="aspect-[4/3] overflow-hidden rounded-lg bg-neutral-900"
+                  >
+                    <img
+                      src={url}
+                      alt={`${model.stageName} gallery ${i + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold">Scenes</h2>
+            {videos.length === 0 ? (
+              <p className="text-sm text-neutral-500">No scenes yet.</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {videos.map((video) => (
+                  <Link
+                    key={video.id}
+                    href={`/videos/${video.id}`}
+                    className="group"
+                  >
+                    <div className="aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
+                      {video.thumbnailUrl ? (
+                        <img
+                          src={video.thumbnailUrl}
+                          alt={video.title}
+                          className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
+                      )}
+                    </div>
+                    <h3 className="mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft">
+                      {video.title}
+                    </h3>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      {new Date(video.publishedAt).toLocaleDateString()}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </SiteShell>
+    </AgeGate>
+  );
+}
