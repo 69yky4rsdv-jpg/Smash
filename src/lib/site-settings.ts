@@ -14,7 +14,7 @@ const DEFAULT: SiteSettings = {
   logoUrl: undefined,
   heroBannerLine1: "A fan favorite.",
   heroBannerLine2: "Take it all in.",
-  heroBannerImageUrl: undefined
+  heroBannerImageUrl: "https://picsum.photos/1600/400?blur=2"
 };
 
 function getFilePath(): string {

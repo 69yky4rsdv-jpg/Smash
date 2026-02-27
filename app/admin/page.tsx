@@ -1,6 +1,6 @@
 import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
-import { categories, deleteVideo, getVideos, models, setVideoHidden, subscriptionPlans, updateVideo, users } from "@/lib/data";
+import { categories, deleteVideo, getModels, getVideos, setVideoHidden, subscriptionPlans, updateVideo, users } from "@/lib/data";
 import {
   createCategory,
   createModel,
@@ -53,6 +53,8 @@ async function deleteModelAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   deleteModel(id);
+  revalidatePath("/models");
+  revalidatePath("/admin");
 }
 
 async function createVideoAction(formData: FormData) {
@@ -171,11 +173,13 @@ async function setSubscriptionAction(formData: FormData) {
   const planId = String(formData.get("planId") ?? "") || undefined;
   if (!userId) return;
   setUserSubscription(userId, planId);
+  revalidatePath("/admin");
 }
 
 export default function AdminPage() {
   const site = getSiteSettings();
   const videos = getVideos(true);
+  const models = getModels();
 
   return (
     <AgeGate>

@@ -26,22 +26,19 @@ export default function SiteShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-white/5 bg-black/60 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt={siteName}
-                className="h-8 w-8 rounded-full object-cover"
-              />
-            ) : (
+          <div className="flex items-center gap-2">
+            <Link
+              href={isLoggedIn ? "/profile" : "/"}
+              className="flex items-center justify-center"
+            >
               <div className="h-8 w-8 rounded-full bg-gradient-pink" />
-            )}
-            <div className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-200">
+            </Link>
+            <Link href="/" className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-200">
               <span className="bg-gradient-to-r from-accent-pink via-accent-pinkSoft to-pink-300 bg-clip-text text-transparent drop-shadow-sm">
                 {siteName}
               </span>
-            </div>
-          </Link>
+            </Link>
+          </div>
           <nav className="flex items-center gap-1 text-sm sm:gap-2">
             <Link
               href="/pricing"
@@ -82,9 +79,20 @@ export default function SiteShell({ children }: { children: ReactNode }) {
                 Logout
               </Link>
             ) : (
-              <Link href="/auth/login" className="btn-gradient ml-2 text-xs px-4 py-1.5">
-                Login / Join
-              </Link>
+              <div className="ml-2 flex items-center gap-2">
+                <Link
+                  href="/auth/login"
+                  className="rounded-full border border-white/30 px-4 py-1.5 text-xs font-medium text-neutral-100 hover:bg-white/10"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="btn-gradient text-xs px-4 py-1.5"
+                >
+                  Join
+                </Link>
+              </div>
             )}
           </nav>
         </div>
@@ -106,6 +114,9 @@ export default function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/support" className="text-neutral-400 hover:text-neutral-200">
                 Support
               </Link>
+                  <Link href="/2257" className="text-neutral-400 hover:text-neutral-200">
+                    2257
+                  </Link>
             </div>
           </div>
           <p className="text-[10px] leading-snug text-neutral-500">

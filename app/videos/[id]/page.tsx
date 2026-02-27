@@ -2,7 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
-import { categories, getVideos, models } from "@/lib/data";
+import { SubscriptionGate } from "../../(site)/SubscriptionGate";
+import { categories, getModels, getVideos } from "@/lib/data";
+import { VideoPlayer } from "../VideoPlayer";
+import { VideoEngagementControls } from "../VideoEngagementControls";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -17,32 +20,64 @@ export default async function VideoDetailPage({ params }: Props) {
     redirect("/videos");
   }
 
+  const models = getModels();
   const videoModels = models.filter((m) => video.models.includes(m.id));
   const videoCategories = categories.filter((c) => video.categories.includes(c.id));
+  const relatedVideos = videos
+    .filter((v) => v.id !== video.id)
+    .sort((a, b) => {
+      const aOverlap = a.categories.filter((c) => video.categories.includes(c)).length;
+      const bOverlap = b.categories.filter((c) => video.categories.includes(c)).length;
+      return bOverlap - aOverlap;
+    })
+    .slice(0, 5);
 
   return (
     <AgeGate>
       <SiteShell>
-        <div className="mx-auto max-w-5xl px-4 py-10 space-y-8">
-          <header className="space-y-2">
+        <SubscriptionGate>
+          <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
+          <header className="space-y-3">
             <Link
               href="/videos"
               className="text-xs text-accent-pinkSoft hover:text-accent-pink"
             >
               ← Back to all videos
             </Link>
-            <p className="text-xs text-accent-pinkSoft">Scene</p>
-            <h1 className="text-3xl font-semibold tracking-tight">{video.title}</h1>
-            <p className="text-xs text-neutral-400">
-              {new Date(video.publishedAt).toLocaleDateString()} ·{" "}
-              {videoModels.map((m) => m.stageName).join(", ")}
+            <p className="text-xs text-accent-pinkSoft uppercase tracking-[0.18em]">
+              Scene
             </p>
+            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
+              {video.title}
+            </h1>
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-400">
+              <p>
+                {new Date(video.publishedAt).toLocaleDateString()} ·{" "}
+                {videoModels.map((m) => m.stageName).join(", ")}
+              </p>
+              <VideoEngagementControls videoId={video.id} />
+            </div>
           </header>
 
-          <section className="grid gap-6 md:grid-cols-[3fr,2fr]">
-            <div className="space-y-3">
-              <div className="aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40 shadow-[0_18px_45px_rgba(0,0,0,0.85)]">
-                {video.thumbnailUrl ? (
+          <section className="grid gap-8 md:grid-cols-[7fr,4fr] lg:grid-cols-[8fr,4fr]">
+            <div className="space-y-4">
+              <div className="aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/40 shadow-[0_24px_65px_rgba(0,0,0,0.9)]">
+                {video.videoUrl ? (
+                  video.videoUrl.includes("iframe.mediadelivery.net") ? (
+                    <iframe
+                      src={video.videoUrl}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <VideoPlayer
+                      src={video.videoUrl}
+                      poster={video.thumbnailUrl}
+                      className="h-full w-full object-cover"
+                    />
+                  )
+                ) : video.thumbnailUrl ? (
                   <img
                     src={video.thumbnailUrl}
                     alt={video.title}
@@ -50,32 +85,79 @@ export default async function VideoDetailPage({ params }: Props) {
                   />
                 ) : null}
               </div>
-              <p className="text-[13px] text-neutral-200">{video.description}</p>
-            </div>
-            <aside className="space-y-4 text-sm">
-              <div className="card-surface p-4 space-y-2">
-                <p className="text-xs font-semibold text-neutral-300">Categories</p>
-                <div className="flex flex-wrap gap-2 text-[11px]">
-                  {videoCategories.map((cat) => (
-                    <span
-                      key={cat.id}
-                      className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"
-                    >
-                      {cat.name}
-                    </span>
-                  ))}
+              <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
+                {video.description && (
+                  <p className="text-[13px] text-neutral-200">{video.description}</p>
+                )}
+                <div className="flex flex-wrap gap-3 text-[11px]">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                      Categories
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {videoCategories.map((cat) => (
+                        <span
+                          key={cat.id}
+                          className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"
+                        >
+                          {cat.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                      Models
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-[13px]">
+                      {videoModels.map((model) => (
+                        <Link
+                          key={model.id}
+                          href={`/models/${model.id}`}
+                          className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100 hover:bg-accent-pink/20 hover:text-accent-pinkSoft"
+                        >
+                          {model.stageName}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="card-surface p-4 space-y-2">
-                <p className="text-xs font-semibold text-neutral-300">Models</p>
-                <div className="flex flex-wrap gap-2 text-[13px]">
-                  {videoModels.map((model) => (
+            </div>
+            <aside className="space-y-4 text-sm">
+              <div className="card-surface p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-neutral-300 uppercase tracking-[0.18em]">
+                    Watch next
+                  </p>
+                  <span className="text-[10px] text-neutral-500">Handpicked for you</span>
+                </div>
+                <div className="space-y-3">
+                  {relatedVideos.map((next) => (
                     <Link
-                      key={model.id}
-                      href={`/models/${model.id}`}
-                      className="text-neutral-100 hover:text-accent-pinkSoft underline-offset-2 hover:underline"
+                      key={next.id}
+                      href={`/videos/${next.id}`}
+                      className="flex gap-3 rounded-lg bg-white/5 p-2 hover:bg-white/10"
                     >
-                      {model.stageName}
+                      <div className="aspect-video w-24 flex-shrink-0 overflow-hidden rounded-md bg-neutral-900">
+                        {next.thumbnailUrl ? (
+                          <img
+                            src={next.thumbnailUrl}
+                            alt={next.title}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
+                        )}
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col justify-center">
+                        <p className="line-clamp-2 text-xs font-semibold text-neutral-100">
+                          {next.title}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-neutral-500">
+                          {new Date(next.publishedAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -83,6 +165,7 @@ export default async function VideoDetailPage({ params }: Props) {
             </aside>
           </section>
         </div>
+        </SubscriptionGate>
       </SiteShell>
     </AgeGate>
   );

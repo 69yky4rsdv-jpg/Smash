@@ -69,6 +69,15 @@ export function EditVideoForm({ videos, categories, models, updateVideoAction }:
               className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
             />
           </div>
+          <div className="space-y-1">
+            <label className="text-xs text-neutral-200">Published date</label>
+            <input
+              type="date"
+              name="publishedAt"
+              defaultValue={video.publishedAt ? video.publishedAt.slice(0, 10) : ""}
+              className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+            />
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <TagMultiSelect
               name="categories"

@@ -8,7 +8,7 @@ export default function AffiliatePage() {
         <div className="mx-auto max-w-3xl px-4 py-10 space-y-8">
           <header className="space-y-3 text-center">
             <h1 className="text-3xl font-semibold tracking-tight">
-              Become a <span className="text-accent-pink">VelvetStream</span> affiliate
+              Become a <span className="text-accent-pink">SmashPOV</span> affiliate
             </h1>
             <p className="text-sm text-neutral-300">
               Earn recurring revenue by promoting our premium library. High conversions, generous
@@ -94,6 +94,13 @@ export default function AffiliatePage() {
               <p className="text-[11px] text-neutral-500">
                 For demo purposes this form does not send real emails yet; wire it to your affiliate
                 platform or CRM when you are ready.
+              </p>
+              <p className="text-[11px] text-neutral-500">
+                For record-keeping information, see our{" "}
+                <a href="/2257" className="text-accent-pink hover:text-accent-pinkSoft">
+                  18 U.S.C. § 2257 statement
+                </a>
+                .
               </p>
             </form>
           </section>

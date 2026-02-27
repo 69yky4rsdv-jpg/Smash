@@ -42,7 +42,7 @@ export const categories: Category[] = [
   { id: "threesome", name: "Threesome" }
 ];
 
-export const models: Model[] = [
+const DEFAULT_MODELS: Model[] = [
   {
     id: "model-1",
     stageName: "Anissa",
@@ -59,6 +59,32 @@ export const models: Model[] = [
     active: true
   }
 ];
+
+function getModelsPath(): string {
+  return join(process.cwd(), "data", "models.json");
+}
+
+export function getModels(): Model[] {
+  try {
+    const path = getModelsPath();
+    if (!existsSync(path)) return [...DEFAULT_MODELS];
+    const raw = readFileSync(path, "utf-8");
+    const data = JSON.parse(raw) as Model[];
+    return Array.isArray(data) ? data : [...DEFAULT_MODELS];
+  } catch {
+    return [...DEFAULT_MODELS];
+  }
+}
+
+export function saveModels(modelsList: Model[]): void {
+  try {
+    const dir = join(process.cwd(), "data");
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(getModelsPath(), JSON.stringify(modelsList, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write models.json:", e);
+  }
+}
 
 const DEFAULT_VIDEOS: Video[] = [
   {
@@ -157,7 +183,12 @@ export function deleteVideo(id: string): void {
 /** Update an existing video's fields. */
 export function updateVideo(
   id: string,
-  updates: Partial<Pick<Video, "title" | "description" | "thumbnailUrl" | "videoUrl" | "categories" | "models" | "isTrending">>
+  updates: Partial<
+    Pick<
+      Video,
+      "title" | "description" | "thumbnailUrl" | "videoUrl" | "categories" | "models" | "isTrending" | "publishedAt"
+    >
+  >
 ): void {
   const list = getVideos(true);
   const video = list.find((v) => v.id === id);
@@ -169,6 +200,7 @@ export function updateVideo(
   if (updates.categories !== undefined) video.categories = updates.categories;
   if (updates.models !== undefined) video.models = updates.models;
   if (updates.isTrending !== undefined) video.isTrending = updates.isTrending;
+   if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   saveVideos(list);
 }
 

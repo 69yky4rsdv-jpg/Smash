@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
-import { getVideos, models } from "@/lib/data";
+import { getModels, getVideos } from "@/lib/data";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -10,6 +10,7 @@ type Props = {
 
 export default async function ModelDetailPage({ params }: Props) {
   const { id } = await params;
+  const models = getModels();
   const model = models.find((m) => m.id === id);
 
   if (!model) {

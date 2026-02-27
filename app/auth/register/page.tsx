@@ -37,7 +37,7 @@ export default function RegisterPage() {
       <SiteShell>
         <div className="mx-auto flex max-w-md flex-col px-4 py-10">
           <h1 className="mb-2 text-2xl font-semibold tracking-tight">
-            Join <span className="text-accent-pink">VelvetStream</span>
+            Join <span className="text-accent-pink">SmashPOV</span>
           </h1>
           <p className="mb-6 text-sm text-neutral-300">
             Create your account in seconds. Choose a membership on the next step.

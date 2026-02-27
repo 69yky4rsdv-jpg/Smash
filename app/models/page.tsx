@@ -1,9 +1,10 @@
 import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
-import { models } from "@/lib/data";
+import { getModels } from "@/lib/data";
 import { ModelsGridClient } from "./ModelsGridClient";
 
 export default function ModelsPage() {
+  const models = getModels();
   return (
     <AgeGate>
       <SiteShell>

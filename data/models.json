@@ -1,0 +1,30 @@
+[
+  {
+    "id": "model-1",
+    "stageName": "Anissa",
+    "active": true
+  },
+  {
+    "id": "model-3",
+    "stageName": "Alanna",
+    "active": true
+  },
+  {
+    "id": "56345bfe-66d4-46a2-b482-c80ca32c1548",
+    "stageName": "Jessie Rodgers",
+    "avatarUrl": "https://Pull-Video-Load.b-cdn.net/18000685_017_8efd.jpg",
+    "galleryUrls": [
+      "https://Pull-Video-Load.b-cdn.net/18000685_017_8efd.jpg"
+    ],
+    "active": true
+  },
+  {
+    "id": "7c6067d2-c7a1-433e-9d04-02a13cf6acdb",
+    "stageName": "Bonnie Blue",
+    "avatarUrl": "https://Pull-Video-Load.b-cdn.net/13010957_009_5135.jpg",
+    "galleryUrls": [
+      "https://Pull-Video-Load.b-cdn.net/13010957_009_5135.jpg"
+    ],
+    "active": true
+  }
+]

@@ -5,7 +5,7 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettingsProvider } from "./(site)/SiteSettingsProvider";
 
 export const metadata: Metadata = {
-  title: "VelvetStream — Premium Video Platform",
+  title: "SmashPov — Premium Porn Site",
   description: "Subscription-based premium video platform with models, categories, and affiliates."
 };
 

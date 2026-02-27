@@ -31,27 +31,40 @@ export function ModelsGridClient({ models }: Props) {
           className="w-full max-w-xs rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4">
+      {/* Card layout that shows ALL models passed in (no slicing). */}
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {filtered.map((model) => (
           <Link
             key={model.id}
             href={`/models/${model.id}`}
-            className="card-surface flex flex-col items-center gap-3 p-4 transition hover:ring-2 hover:ring-accent-pink/40"
+            className="card-surface flex flex-col overflow-hidden rounded-xl border border-white/10 bg-white/5 transition hover:border-accent-pink/60 hover:ring-2 hover:ring-accent-pink/30"
           >
-            <div className="h-20 w-20 overflow-hidden rounded-full bg-gradient-pink">
+            <div className="aspect-[4/3] w-full overflow-hidden bg-gradient-pink">
               {model.avatarUrl && (
                 <img
                   src={model.avatarUrl}
                   alt={model.stageName}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition duration-300 hover:scale-105"
                 />
               )}
             </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-neutral-50">{model.stageName}</p>
-              <p className="text-[11px] text-neutral-400">
-                {model.active ? "Active" : "Taking a break"}
-              </p>
+            <div className="flex flex-1 flex-col justify-between p-3">
+              <div>
+                <p className="text-sm font-semibold text-neutral-50 line-clamp-1">
+                  {model.stageName}
+                </p>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[11px]">
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-0.5 ${
+                    model.active
+                      ? "bg-emerald-500/15 text-emerald-300"
+                      : "bg-neutral-700/40 text-neutral-300"
+                  }`}
+                >
+                  {model.active ? "Active" : "Taking a break"}
+                </span>
+              </div>
             </div>
           </Link>
         ))}

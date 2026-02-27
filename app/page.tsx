@@ -3,6 +3,7 @@ import { AgeGate } from "./(site)/AgeGate";
 import { getVideos, subscriptionPlans } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
 import Link from "next/link";
+import { JoinNowButton } from "./(site)/JoinNowButton";
 
 export default function HomePage() {
   const site = getSiteSettings();
@@ -18,7 +19,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-10 space-y-12">
           {/* Hero banner image — 1/3 size */}
           <section className="overflow-hidden rounded-xl">
-            <div className="h-20 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 md:h-24">
+            <div className="h-32 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 md:h-48">
               {site.heroBannerImageUrl ? (
                 <img
                   src={site.heroBannerImageUrl}
@@ -37,12 +38,7 @@ export default function HomePage() {
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
               Unlimited access to the full library
             </h2>
-            <Link
-              href="/auth/register"
-              className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-accent-pink via-accent-pinkSoft to-pink-400 px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-pink-500/25 transition hover:scale-[1.02] hover:shadow-pink-500/40 focus:outline-none focus:ring-2 focus:ring-accent-pink/50 focus:ring-offset-2 focus:ring-offset-black"
-            >
-              Join now
-            </Link>
+            <JoinNowButton />
             <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-400 md:gap-10">
               <span className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />

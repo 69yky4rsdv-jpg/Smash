@@ -1,5 +1,5 @@
-import { categories, getVideos, models, saveVideos, subscriptionPlans, users, appendVideo } from "./data";
-import type { Category, Model, Video } from "./types";
+import { categories, getModels, getVideos, saveModels, saveVideos, subscriptionPlans, users, appendVideo } from "./data";
+import type { Category, Model, SubscriptionPlan, Video } from "./types";
 import { randomUUID } from "crypto";
 
 export function createCategory(name: string): Category {
@@ -12,6 +12,7 @@ export function createCategory(name: string): Category {
 }
 
 export function createModel(stageName: string, bio?: string, avatarUrl?: string, galleryUrls?: string[]): Model {
+  const list = getModels();
   const model: Model = {
     id: randomUUID(),
     stageName,
@@ -20,14 +21,17 @@ export function createModel(stageName: string, bio?: string, avatarUrl?: string,
     galleryUrls,
     active: true
   };
-  models.push(model);
+  list.push(model);
+  saveModels(list);
   return model;
 }
 
 export function deleteModel(id: string): void {
-  const index = models.findIndex((m) => m.id === id);
+  const list = getModels();
+  const index = list.findIndex((m) => m.id === id);
   if (index === -1) return;
-  models.splice(index, 1);
+  list.splice(index, 1);
+  saveModels(list);
   const videosList = getVideos(true);
   for (const video of videosList) {
     video.models = video.models.filter((modelId) => modelId !== id);
@@ -36,9 +40,11 @@ export function deleteModel(id: string): void {
 }
 
 export function toggleModelActive(id: string): Model | null {
-  const model = models.find((m) => m.id === id);
+  const list = getModels();
+  const model = list.find((m) => m.id === id);
   if (!model) return null;
   model.active = !model.active;
+  saveModels(list);
   return model;
 }
 
@@ -46,13 +52,15 @@ export function updateModel(
   id: string,
   updates: Partial<Pick<Model, "stageName" | "bio" | "avatarUrl" | "galleryUrls" | "active">>
 ): Model | null {
-  const model = models.find((m) => m.id === id);
+  const list = getModels();
+  const model = list.find((m) => m.id === id);
   if (!model) return null;
   if (updates.stageName !== undefined) model.stageName = updates.stageName;
   if (updates.bio !== undefined) model.bio = updates.bio;
   if (updates.avatarUrl !== undefined) model.avatarUrl = updates.avatarUrl;
   if (updates.galleryUrls !== undefined) model.galleryUrls = updates.galleryUrls;
   if (updates.active !== undefined) model.active = updates.active;
+  saveModels(list);
   return model;
 }
 
@@ -86,5 +94,16 @@ export function setUserSubscription(userId: string, planId: string | undefined) 
     return;
   }
   user.subscriptionPlanId = planId;
+}
+
+export function updateSubscriptionPlan(
+  id: string,
+  updates: Partial<Pick<SubscriptionPlan, "pricePerMonth" | "billingLabel">>
+): SubscriptionPlan | null {
+  const plan = subscriptionPlans.find((p) => p.id === id);
+  if (!plan) return null;
+  if (updates.pricePerMonth !== undefined) plan.pricePerMonth = updates.pricePerMonth;
+  if (updates.billingLabel !== undefined) plan.billingLabel = updates.billingLabel;
+  return plan;
 }
 
