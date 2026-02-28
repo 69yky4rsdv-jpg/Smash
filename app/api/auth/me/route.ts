@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { subscriptionPlans, users } from "@/lib/data";
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const userId = cookieStore.get("vs_userId")?.value;
 
   if (!userId) {
