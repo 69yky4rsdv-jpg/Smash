@@ -57,11 +57,13 @@ export function EditModelForm({ models, updateModelAction }: Props) {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-neutral-200">Gallery image URLs (comma separated)</label>
-            <input
+            <label className="text-xs text-neutral-200">Gallery image URLs (one per line or comma-separated; short form cdn.net/... supported)</label>
+            <textarea
               name="gallery"
-              defaultValue={model.galleryUrls?.join(", ") ?? ""}
-              className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+              rows={4}
+              defaultValue={model.galleryUrls?.join("\n") ?? ""}
+              placeholder="https://.../img1.jpg&#10;cdn.net/.../IMG_0001.JPG"
+              className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 font-mono text-xs"
             />
           </div>
           <div className="flex items-center gap-2">

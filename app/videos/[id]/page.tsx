@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 import { SubscriptionGate } from "../../(site)/SubscriptionGate";
-import { categories, getModels, getVideos } from "@/lib/data";
+import { ScrollingTitle } from "../../(site)/ScrollingTitle";
+import { getCategories, getModels, getVideos } from "@/lib/data";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
 
@@ -22,7 +23,7 @@ export default async function VideoDetailPage({ params }: Props) {
 
   const models = getModels();
   const videoModels = models.filter((m) => video.models.includes(m.id));
-  const videoCategories = categories.filter((c) => video.categories.includes(c.id));
+  const videoCategories = getCategories().filter((c) => video.categories.includes(c.id));
   const relatedVideos = videos
     .filter((v) => v.id !== video.id)
     .sort((a, b) => {
@@ -48,14 +49,22 @@ export default async function VideoDetailPage({ params }: Props) {
               Scene
             </p>
             <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              {video.title}
+              <ScrollingTitle title={video.title} animateOnHover={false} />
             </h1>
             <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-400">
               <p>
                 {new Date(video.publishedAt).toLocaleDateString()} ·{" "}
                 {videoModels.map((m) => m.stageName).join(", ")}
               </p>
-              <VideoEngagementControls videoId={video.id} />
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/videos/${video.id}/photos`}
+                  className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] text-neutral-300 transition hover:bg-white/10 hover:text-neutral-100"
+                >
+                  Photos
+                </Link>
+                <VideoEngagementControls videoId={video.id} />
+              </div>
             </div>
           </header>
 

@@ -2,6 +2,21 @@
   {
     "id": "model-1",
     "stageName": "Anissa",
+    "active": true,
+    "galleryUrls": [
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0003.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0004.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0005.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0006.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0007.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0010.JPG",
+      "https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0011.JPG"
+    ]
+  },
+  {
+    "id": "model-2",
+    "stageName": "Haley",
     "active": true
   },
   {
@@ -10,21 +25,8 @@
     "active": true
   },
   {
-    "id": "56345bfe-66d4-46a2-b482-c80ca32c1548",
-    "stageName": "Jessie Rodgers",
-    "avatarUrl": "https://Pull-Video-Load.b-cdn.net/18000685_017_8efd.jpg",
-    "galleryUrls": [
-      "https://Pull-Video-Load.b-cdn.net/18000685_017_8efd.jpg"
-    ],
-    "active": true
-  },
-  {
-    "id": "7c6067d2-c7a1-433e-9d04-02a13cf6acdb",
-    "stageName": "Bonnie Blue",
-    "avatarUrl": "https://Pull-Video-Load.b-cdn.net/13010957_009_5135.jpg",
-    "galleryUrls": [
-      "https://Pull-Video-Load.b-cdn.net/13010957_009_5135.jpg"
-    ],
+    "id": "c08d6bfa-0773-4cb3-b429-5021e11ce903",
+    "stageName": "Chloe",
     "active": true
   }
 ]

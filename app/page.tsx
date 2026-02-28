@@ -4,6 +4,7 @@ import { getVideos, subscriptionPlans } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
 import Link from "next/link";
 import { JoinNowButton } from "./(site)/JoinNowButton";
+import { HomeVideoGrids } from "./HomeVideoGrids";
 
 export default function HomePage() {
   const site = getSiteSettings();
@@ -16,7 +17,7 @@ export default function HomePage() {
   return (
     <AgeGate>
       <SiteShell>
-        <div className="mx-auto max-w-6xl px-4 py-10 space-y-12">
+        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 py-10 space-y-12">
           {/* Hero banner image — 1/3 size */}
           <section className="overflow-hidden rounded-xl">
             <div className="h-32 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 md:h-48">
@@ -55,77 +56,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Latest Videos — traditional video layout */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Latest videos</h2>
-              <Link
-                href="/videos"
-                className="text-xs text-accent-pinkSoft hover:text-accent-pink"
-              >
-                View all
-              </Link>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {latest.map((video) => (
-                <Link key={video.id} href={`/videos/${video.id}`} className="group">
-                  <div className="aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
-                    {video.thumbnailUrl ? (
-                      <img
-                        src={video.thumbnailUrl}
-                        alt={video.title}
-                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
-                    )}
-                  </div>
-                  <h3 className="mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft">
-                    {video.title}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-neutral-500">
-                    {new Date(video.publishedAt).toLocaleDateString()}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* Trending — traditional video layout */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Trending videos</h2>
-              <Link
-                href="/videos/trending"
-                className="text-xs text-accent-pinkSoft hover:text-accent-pink"
-              >
-                View all
-              </Link>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {trending.map((video) => (
-                <Link key={video.id} href={`/videos/${video.id}`} className="group">
-                  <div className="aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
-                    {video.thumbnailUrl ? (
-                      <img
-                        src={video.thumbnailUrl}
-                        alt={video.title}
-                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
-                    )}
-                  </div>
-                  <h3 className="mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft">
-                    {video.title}
-                  </h3>
-                  <p className="mt-0.5 text-xs text-neutral-500">
-                    {new Date(video.publishedAt).toLocaleDateString()}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </section>
+          <HomeVideoGrids latest={latest} trending={trending} />
 
           {/* All plans */}
           <section className="space-y-4">

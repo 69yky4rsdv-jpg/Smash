@@ -1,7 +1,7 @@
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 import { getVideos } from "@/lib/data";
-import Link from "next/link";
+import { TrendingGridClient } from "./TrendingGridClient";
 
 export default function TrendingVideosPage() {
   const videos = getVideos();
@@ -19,23 +19,7 @@ export default function TrendingVideosPage() {
               The scenes fans are watching the most right now.
             </p>
           </header>
-          <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {trending.map((video) => (
-              <Link
-                key={video.id}
-                href={`/videos/${video.id}`}
-                className="card-surface overflow-hidden"
-              >
-                <div className="aspect-video w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
-                <div className="p-3 space-y-1">
-                  <h3 className="text-xs font-semibold line-clamp-2">{video.title}</h3>
-                  <p className="text-[10px] text-neutral-400">
-                    {new Date(video.publishedAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <TrendingGridClient videos={trending} />
         </div>
       </SiteShell>
     </AgeGate>

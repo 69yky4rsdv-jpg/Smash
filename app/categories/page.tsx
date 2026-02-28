@@ -1,6 +1,6 @@
 import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
-import { categories, getVideos } from "@/lib/data";
+import { getCategories, getVideos } from "@/lib/data";
 import Link from "next/link";
 import { CategoriesGate } from "./CategoriesGate";
 
@@ -16,7 +16,7 @@ export default function CategoriesPage() {
               Choose a category and search to browse videos.
             </p>
           </header>
-          <CategoriesGate categories={categories} videos={videos} />
+          <CategoriesGate categories={getCategories()} videos={videos} />
         </div>
       </SiteShell>
     </AgeGate>

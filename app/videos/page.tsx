@@ -2,6 +2,7 @@ import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
 import { getVideos } from "@/lib/data";
 import Link from "next/link";
+import { VideosListClient } from "./VideosListClient";
 
 export default function AllVideosPage() {
   const videos = getVideos();
@@ -15,29 +16,7 @@ export default function AllVideosPage() {
               Browse the full catalog. Click any thumbnail to open the scene page.
             </p>
           </header>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {videos.map((video) => (
-              <Link key={video.id} href={`/videos/${video.id}`} className="group">
-                <div className="aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
-                  {video.thumbnailUrl ? (
-                    <img
-                      src={video.thumbnailUrl}
-                      alt={video.title}
-                      className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
-                  )}
-                </div>
-                <h3 className="mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft">
-                  {video.title}
-                </h3>
-                <p className="mt-0.5 text-xs text-neutral-500">
-                  {new Date(video.publishedAt).toLocaleDateString()}
-                </p>
-              </Link>
-            ))}
-          </div>
+          <VideosListClient videos={videos} />
 
           {/* Affiliate sign up */}
           <section className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">

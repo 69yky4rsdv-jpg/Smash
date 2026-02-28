@@ -1,13 +1,15 @@
-import { categories, getModels, getVideos, saveModels, saveVideos, subscriptionPlans, users, appendVideo } from "./data";
+import { getCategories, saveCategories, getModels, getVideos, saveModels, saveVideos, subscriptionPlans, users, appendVideo } from "./data";
 import type { Category, Model, SubscriptionPlan, Video } from "./types";
 import { randomUUID } from "crypto";
 
 export function createCategory(name: string): Category {
+  const list = getCategories();
   const category: Category = {
     id: randomUUID(),
     name
   };
-  categories.push(category);
+  list.push(category);
+  saveCategories(list);
   return category;
 }
 

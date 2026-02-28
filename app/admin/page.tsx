@@ -1,6 +1,6 @@
 import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
-import { categories, deleteVideo, getModels, getVideos, setVideoHidden, subscriptionPlans, updateVideo, users } from "@/lib/data";
+import { addVideoPhotos, deleteVideo, getCategories, getModels, getVideos, parsePhotoUrls, setVideoHidden, subscriptionPlans, updateVideo, users } from "@/lib/data";
 import {
   createCategory,
   createModel,
@@ -15,12 +15,16 @@ import { revalidatePath } from "next/cache";
 import { TagMultiSelect } from "./TagMultiSelect";
 import { EditVideoForm } from "./EditVideoForm";
 import { EditModelForm } from "./EditModelForm";
+import { CreateCategoryForm } from "./CreateCategoryForm";
+import { CreateModelForm } from "./CreateModelForm";
 
 async function createCategoryAction(formData: FormData) {
   "use server";
   const name = String(formData.get("name") ?? "").trim();
   if (name) {
     createCategory(name);
+    revalidatePath("/categories");
+    revalidatePath("/admin");
   }
 }
 
@@ -30,13 +34,7 @@ async function createModelAction(formData: FormData) {
   const bio = String(formData.get("bio") ?? "").trim() || undefined;
   const avatarUrl = String(formData.get("avatarUrl") ?? "").trim() || undefined;
   const galleryRaw = String(formData.get("gallery") ?? "").trim();
-  const galleryUrls =
-    galleryRaw.length > 0
-      ? galleryRaw
-          .split(",")
-          .map((url) => url.trim())
-          .filter(Boolean)
-      : undefined;
+  const galleryUrls = galleryRaw.length > 0 ? parsePhotoUrls(galleryRaw) : undefined;
   if (name) {
     createModel(name, bio, avatarUrl, galleryUrls);
   }
@@ -138,13 +136,7 @@ async function updateModelAction(formData: FormData) {
   const bio = String(formData.get("bio") ?? "").trim() || undefined;
   const avatarUrl = String(formData.get("avatarUrl") ?? "").trim() || undefined;
   const galleryRaw = String(formData.get("gallery") ?? "").trim();
-  const galleryUrls =
-    galleryRaw.length > 0
-      ? galleryRaw
-          .split(",")
-          .map((url) => url.trim())
-          .filter(Boolean)
-      : undefined;
+  const galleryUrls = galleryRaw.length > 0 ? parsePhotoUrls(galleryRaw) : undefined;
   const active = String(formData.get("active") ?? "") === "true";
   if (!modelId || !stageName) return;
   updateModel(modelId, { stageName, bio, avatarUrl, galleryUrls, active });
@@ -174,6 +166,39 @@ async function setSubscriptionAction(formData: FormData) {
   if (!userId) return;
   setUserSubscription(userId, planId);
   revalidatePath("/admin");
+}
+
+async function addVideoPhotosAction(formData: FormData) {
+  "use server";
+  const videoId = String(formData.get("videoId") ?? "").trim();
+  const paste = String(formData.get("photoUrls") ?? "").trim();
+  if (!videoId || !paste) return;
+  const urls = parsePhotoUrls(paste);
+  if (urls.length) addVideoPhotos(videoId, urls);
+  revalidatePath("/admin");
+  revalidatePath(`/videos/${videoId}`);
+  revalidatePath(`/videos/${videoId}/photos`);
+}
+
+async function addModelGalleryAction(formData: FormData) {
+  "use server";
+  const modelId = String(formData.get("modelId") ?? "").trim();
+  const paste = String(formData.get("modelGalleryUrls") ?? "").trim();
+  if (!modelId || !paste) return;
+  const urls = parsePhotoUrls(paste);
+  if (urls.length === 0) return;
+  const models = getModels();
+  const model = models.find((m) => m.id === modelId);
+  if (!model) return;
+  const existing = model.galleryUrls ?? [];
+  const combined = [...existing];
+  for (const url of urls) {
+    if (!combined.includes(url)) combined.push(url);
+  }
+  updateModel(modelId, { galleryUrls: combined });
+  revalidatePath("/admin");
+  revalidatePath("/models");
+  revalidatePath(`/models/${modelId}`);
 }
 
 export default function AdminPage() {
@@ -301,7 +326,7 @@ export default function AdminPage() {
                     <TagMultiSelect
                       name="categories"
                       label="Categories"
-                      items={categories.map((cat) => ({ id: cat.id, label: cat.name }))}
+                      items={getCategories().map((cat) => ({ id: cat.id, label: cat.name }))}
                     />
                     <TagMultiSelect
                       name="models"
@@ -321,10 +346,46 @@ export default function AdminPage() {
                   <h3 className="text-sm font-semibold text-neutral-200">Edit existing video</h3>
                   <EditVideoForm
                     videos={videos}
-                    categories={categories}
+                    categories={getCategories()}
                     models={models}
                     updateVideoAction={updateVideoAction}
                   />
+                </div>
+
+                <div className="mt-6 space-y-3 border-t border-white/10 pt-4">
+                  <h3 className="text-sm font-semibold text-neutral-200">Video photo galleries</h3>
+                  <p className="text-[11px] text-neutral-400">
+                    Paste image URLs (one per line or comma-separated). Full URLs or short form: <code className="rounded bg-white/10 px-1">cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG</code>
+                  </p>
+                  <form action={addVideoPhotosAction} className="space-y-3 text-sm">
+                    <div className="space-y-1">
+                      <label className="text-neutral-200">Video</label>
+                      <select
+                        name="videoId"
+                        required
+                        className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                      >
+                        <option value="">— Select video —</option>
+                        {videos.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-neutral-200">Photo URLs (one per line or comma-separated)</label>
+                      <textarea
+                        name="photoUrls"
+                        rows={8}
+                        placeholder={"https://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG\nhttps://Pull-Video-Load.b-cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0003.JPG\n\nOr short form:\ncdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG,cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0003.JPG"}
+                        className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 font-mono text-xs"
+                      />
+                    </div>
+                    <button type="submit" className="btn-gradient justify-center text-sm px-4 py-2">
+                      Add photos
+                    </button>
+                  </form>
                 </div>
 
                 <div className="mt-4 space-y-2">
@@ -373,54 +434,7 @@ export default function AdminPage() {
               <div className="space-y-4">
                 <div className="card-surface p-5 space-y-3">
                   <h2 className="text-lg font-semibold">Models</h2>
-                  <form action={createModelAction} className="grid gap-3 text-sm sm:grid-cols-[2fr,3fr]">
-                  <div className="space-y-1">
-                    <label className="text-neutral-200" htmlFor="model-name">
-                      Stage name
-                    </label>
-                    <input
-                      id="model-name"
-                      name="name"
-                      required
-                      className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-neutral-200" htmlFor="model-bio">
-                      Short bio
-                    </label>
-                    <input
-                      id="model-bio"
-                      name="bio"
-                      className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-neutral-200" htmlFor="model-avatar">
-                      Profile photo URL
-                    </label>
-                    <input
-                      id="model-avatar"
-                      name="avatarUrl"
-                      placeholder="/images/models/anissa.jpg"
-                      className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-neutral-200" htmlFor="model-gallery">
-                      Gallery image URLs (comma separated)
-                    </label>
-                    <input
-                      id="model-gallery"
-                      name="gallery"
-                      placeholder="/images/models/anissa-1.jpg, /images/models/anissa-2.jpg"
-                      className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-                    />
-                  </div>
-                    <button className="btn-gradient col-span-full justify-center text-sm">
-                      Add model
-                    </button>
-                  </form>
+                  <CreateModelForm action={createModelAction} />
                   <form action={toggleModelAction} className="mt-4 space-y-2 text-xs">
                     <p className="font-semibold text-neutral-300">Current roster</p>
                     <div className="max-h-40 space-y-1 overflow-y-auto">
@@ -471,21 +485,49 @@ export default function AdminPage() {
                       Delete model
                     </button>
                   </form>
+
+                  <div className="mt-6 space-y-3 border-t border-white/10 pt-4">
+                    <h3 className="text-sm font-semibold text-neutral-200">Model gallery (paste URLs)</h3>
+                    <p className="text-[11px] text-neutral-400">
+                      Paste image URLs to append to a model&apos;s gallery (one per line or comma-separated). Full URLs or short form: <code className="rounded bg-white/10 px-1">cdn.net/.../IMG_0001.JPG</code>
+                    </p>
+                    <form action={addModelGalleryAction} className="space-y-3 text-sm">
+                      <div className="space-y-1">
+                        <label className="text-neutral-200">Model</label>
+                        <select
+                          name="modelId"
+                          required
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                        >
+                          <option value="">— Select model —</option>
+                          {models.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.stageName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-neutral-200">Gallery URLs</label>
+                        <textarea
+                          name="modelGalleryUrls"
+                          rows={6}
+                          placeholder={"https://.../IMG_0002.JPG\nhttps://.../IMG_0003.JPG\n\nOr: cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG,cdn.net/.../IMG_0003.JPG"}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 font-mono text-xs"
+                        />
+                      </div>
+                      <button type="submit" className="btn-gradient justify-center text-sm px-4 py-2">
+                        Add to model gallery
+                      </button>
+                    </form>
+                  </div>
                 </div>
 
                 <div className="card-surface p-5 space-y-3">
                   <h2 className="text-lg font-semibold">Categories</h2>
-                  <form action={createCategoryAction} className="flex gap-2 text-sm">
-                    <input
-                      name="name"
-                      placeholder="e.g. Cosplay, Threesome"
-                      required
-                      className="flex-1 rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-                    />
-                    <button className="btn-gradient px-4 py-2 text-xs">Add</button>
-                  </form>
+                  <CreateCategoryForm action={createCategoryAction} />
                   <div className="flex flex-wrap gap-2 text-[11px] text-neutral-200">
-                    {categories.map((cat) => (
+                    {getCategories().map((cat) => (
                       <span
                         key={cat.id}
                         className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"

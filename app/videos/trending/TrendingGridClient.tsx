@@ -1,0 +1,25 @@
+"use client";
+
+import type { Video } from "@/lib/types";
+import { VideoCardWithPreview } from "../VideoCardWithPreview";
+
+type Props = {
+  videos: Video[];
+};
+
+export function TrendingGridClient({ videos }: Props) {
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {videos.map((video) => (
+        <div key={video.id} className="card-surface overflow-hidden">
+          <VideoCardWithPreview
+            video={video}
+            thumbClassName="aspect-video w-full overflow-hidden bg-neutral-900"
+            titleClassName="p-3 text-sm font-semibold line-clamp-2 group-hover:text-accent-pinkSoft"
+            dateClassName="px-3 pb-3 text-[11px] text-neutral-400"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}

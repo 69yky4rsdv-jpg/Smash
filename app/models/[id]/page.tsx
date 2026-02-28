@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
+import { GalleryWithLightbox } from "../../(site)/GalleryWithLightbox";
 import { getModels, getVideos } from "@/lib/data";
 
 type Props = {
@@ -56,20 +57,13 @@ export default async function ModelDetailPage({ params }: Props) {
           {galleryUrls.length > 0 && (
             <section className="space-y-3">
               <h2 className="text-lg font-semibold">Gallery</h2>
-              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-                {galleryUrls.map((url, i) => (
-                  <div
-                    key={i}
-                    className="aspect-[4/3] overflow-hidden rounded-lg bg-neutral-900"
-                  >
-                    <img
-                      src={url}
-                      alt={`${model.stageName} gallery ${i + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
+              <p className="text-xs text-neutral-500">Click any image to zoom</p>
+              <GalleryWithLightbox
+                urls={galleryUrls}
+                altPrefix={`${model.stageName} gallery`}
+                gridClassName="grid gap-3 sm:grid-cols-2 md:grid-cols-3"
+                itemClassName="aspect-[4/3]"
+              />
             </section>
           )}
 

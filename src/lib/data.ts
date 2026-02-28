@@ -34,13 +34,39 @@ export const subscriptionPlans: SubscriptionPlan[] = [
   }
 ];
 
-export const categories: Category[] = [
+const DEFAULT_CATEGORIES: Category[] = [
   { id: "featured", name: "Featured" },
   { id: "trending", name: "Trending" },
   { id: "new", name: "Latest Releases" },
   { id: "cosplay", name: "Cosplay" },
   { id: "threesome", name: "Threesome" }
 ];
+
+function getCategoriesPath(): string {
+  return join(process.cwd(), "data", "categories.json");
+}
+
+export function getCategories(): Category[] {
+  try {
+    const path = getCategoriesPath();
+    if (!existsSync(path)) return [...DEFAULT_CATEGORIES];
+    const raw = readFileSync(path, "utf-8");
+    const data = JSON.parse(raw) as Category[];
+    return Array.isArray(data) ? data : [...DEFAULT_CATEGORIES];
+  } catch {
+    return [...DEFAULT_CATEGORIES];
+  }
+}
+
+export function saveCategories(categoriesList: Category[]): void {
+  try {
+    const dir = join(process.cwd(), "data");
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(getCategoriesPath(), JSON.stringify(categoriesList, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write categories.json:", e);
+  }
+}
 
 const DEFAULT_MODELS: Model[] = [
   {
@@ -202,6 +228,60 @@ export function updateVideo(
   if (updates.isTrending !== undefined) video.isTrending = updates.isTrending;
    if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   saveVideos(list);
+}
+
+/** Video photo galleries: videoId -> array of image URLs */
+function getVideoPhotosPath(): string {
+  return join(process.cwd(), "data", "video-photos.json");
+}
+
+function readVideoPhotosMap(): Record<string, string[]> {
+  try {
+    const path = getVideoPhotosPath();
+    if (!existsSync(path)) return {};
+    const raw = readFileSync(path, "utf-8");
+    const data = JSON.parse(raw) as Record<string, string[]>;
+    if (data && typeof data === "object") return data;
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+export function getVideoPhotoUrls(videoId: string): string[] {
+  const map = readVideoPhotosMap();
+  const urls = map[videoId];
+  return Array.isArray(urls) ? urls : [];
+}
+
+export function setVideoPhotos(videoId: string, urls: string[]): void {
+  const map = readVideoPhotosMap();
+  map[videoId] = urls;
+  try {
+    const dir = join(process.cwd(), "data");
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(getVideoPhotosPath(), JSON.stringify(map, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write video-photos.json:", e);
+  }
+}
+
+export function addVideoPhotos(videoId: string, urls: string[]): void {
+  const existing = getVideoPhotoUrls(videoId);
+  const combined = [...existing];
+  for (const url of urls) {
+    const u = url.trim();
+    if (u && !combined.includes(u)) combined.push(u);
+  }
+  setVideoPhotos(videoId, combined);
+}
+
+/** Parse pasted URLs (newline or comma separated); normalize short form (cdn.net/...) to full Bunny URL. */
+export function parsePhotoUrls(paste: string): string[] {
+  const raw = paste.split(/[\n,]+/).map((u) => u.trim()).filter(Boolean);
+  return raw.map((u) =>
+    u.startsWith("http://") || u.startsWith("https://") ? u : `https://Pull-Video-Load.b-${u}`
+  );
 }
 
 // Simple in-memory user store for demo purposes only.
