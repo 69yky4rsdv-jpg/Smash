@@ -6,7 +6,9 @@ export async function GET() {
   res.cookies.set("vs_userId", "", {
     httpOnly: false,
     path: "/",
-    maxAge: 0
+    maxAge: 0,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
   });
   return res;
 }

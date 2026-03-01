@@ -11,16 +11,27 @@ type Props = {
   videos: Video[];
 };
 
+type MeResponse = { isLoggedIn: boolean };
+
 export function CategoriesGate({ categories, videos }: Props) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    if (typeof document === "undefined") return;
-    const raw = document.cookie ?? "";
-    const match = raw.match(/vs_userId=([^;]+)/);
-    setIsLoggedIn(!!match);
+    let cancelled = false;
+    async function check() {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (cancelled) return;
+        const data = (await res.json()) as MeResponse;
+        setIsLoggedIn(!!data.isLoggedIn);
+      } catch {
+        if (!cancelled) setIsLoggedIn(false);
+      }
+    }
+    check();
+    return () => { cancelled = true; };
   }, []);
 
   if (!mounted) {

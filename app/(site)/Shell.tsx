@@ -5,21 +5,34 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
+type MeResponse = { isLoggedIn: boolean; user?: { role?: string } };
+
 export default function SiteShell({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { siteName, logoUrl } = useSiteSettings();
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
-    const raw = document.cookie ?? "";
-    const match = raw.match(/vs_userId=([^;]+)/);
-    if (!match) return;
-    const userId = decodeURIComponent(match[1]);
-    setIsLoggedIn(true);
-    if (userId === "admin") {
-      setIsAdmin(true);
+    let cancelled = false;
+
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (cancelled) return;
+        const data = (await res.json()) as MeResponse;
+        setIsLoggedIn(!!data.isLoggedIn);
+        setIsAdmin(data.user?.role === "admin");
+      } catch {
+        if (cancelled) return;
+        setIsLoggedIn(false);
+        setIsAdmin(false);
+      }
     }
+
+    checkAuth();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
