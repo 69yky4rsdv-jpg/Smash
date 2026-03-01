@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 type MeResponse = {
   isLoggedIn: boolean;
   hasSubscription: boolean;
+  user?: { role?: string };
 };
 
 type Props = {
@@ -24,7 +25,7 @@ export function SubscriptionGate({ children }: Props) {
       if (typeof document !== "undefined") {
         const raw = document.cookie ?? "";
         const match = raw.match(/vs_userId=([^;]+)/);
-        const userId = match ? decodeURIComponent(match[1]) : null;
+        const userId = match ? decodeURIComponent(match[1].trim()) : null;
         if (userId === "admin") {
           setState("ok");
           return;
@@ -41,15 +42,26 @@ export function SubscriptionGate({ children }: Props) {
         const data = (await res.json()) as MeResponse;
         if (cancelled) return;
 
+        const isAdmin = data.user?.role === "admin";
         if (!data.isLoggedIn) {
           setState("no-auth");
-        } else if (!data.hasSubscription) {
-          setState("no-sub");
-        } else {
+        } else if (data.hasSubscription || isAdmin) {
           setState("ok");
+        } else {
+          setState("no-sub");
         }
       } catch {
         if (!cancelled) {
+          // If API failed but cookie has admin, allow (e.g. multi-instance deploy)
+          if (typeof document !== "undefined") {
+            const raw = document.cookie ?? "";
+            const match = raw.match(/vs_userId=([^;]+)/);
+            const userId = match ? decodeURIComponent(match[1].trim()) : null;
+            if (userId === "admin") {
+              setState("ok");
+              return;
+            }
+          }
           setState("no-auth");
         }
       }

@@ -11,7 +11,7 @@ type Props = {
   videos: Video[];
 };
 
-type MeResponse = { isLoggedIn: boolean };
+type MeResponse = { isLoggedIn: boolean; user?: { role?: string } };
 
 export function CategoriesGate({ categories, videos }: Props) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -21,11 +21,21 @@ export function CategoriesGate({ categories, videos }: Props) {
     setMounted(true);
     let cancelled = false;
     async function check() {
+      // Short-circuit for admin: cookie vs_userId "admin" means logged in even if API fails
+      if (typeof document !== "undefined") {
+        const raw = document.cookie ?? "";
+        const match = raw.match(/vs_userId=([^;]+)/);
+        const userId = match ? decodeURIComponent(match[1].trim()) : null;
+        if (userId === "admin") {
+          setIsLoggedIn(true);
+          return;
+        }
+      }
       try {
         const res = await fetch("/api/auth/me", { credentials: "include" });
         if (cancelled) return;
         const data = (await res.json()) as MeResponse;
-        setIsLoggedIn(!!data.isLoggedIn);
+        setIsLoggedIn(!!data.isLoggedIn || data.user?.role === "admin");
       } catch {
         if (!cancelled) setIsLoggedIn(false);
       }
