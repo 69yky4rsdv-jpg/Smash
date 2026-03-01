@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { AgeGate } from "../../(site)/AgeGate";
 import { SubscriptionGate } from "../../(site)/SubscriptionGate";
 import { ScrollingTitle } from "../../(site)/ScrollingTitle";
 import { getCategories, getModels, getVideos, getUsers, getVideoPhotoUrls, updateVideo } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
 import { AdminThumbnailSelector } from "./AdminThumbnailSelector";
@@ -33,8 +33,7 @@ export default async function VideoDetailPage({ params }: Props) {
     redirect("/videos");
   }
 
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value?.trim() ?? "";
+  const userId = await getAuthUserId();
   const users = getUsers();
   const user = users.find((u) => u.id === userId);
   const isAdmin = user?.role === "admin" || userId === "admin";

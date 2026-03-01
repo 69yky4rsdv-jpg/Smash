@@ -1,12 +1,11 @@
-import { cookies } from "next/headers";
 import { AgeGate } from "../(site)/AgeGate";
 import { getCategories, getVideos, getUsers } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
 import { CategoriesGate } from "./CategoriesGate";
 
 export default async function CategoriesPage() {
   const videos = getVideos();
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value?.trim() ?? "";
+  const userId = await getAuthUserId();
   const user = getUsers().find((u) => u.id === userId);
   const initialLoggedIn = !!user || !!userId;
   const isAdmin = user?.role === "admin" || userId === "admin";

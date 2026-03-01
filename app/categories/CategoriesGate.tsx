@@ -31,7 +31,7 @@ export function CategoriesGate({
 }: Props) {
   if (skipGate) return <CategoriesClient categories={categories} videos={videos} />;
 
-  const [isLoggedIn, setIsLoggedIn] = useState(() => initialLoggedIn || isAdminCookie());
+  const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
   const [mounted, setMounted] = useState(true);
 
   useEffect(() => {

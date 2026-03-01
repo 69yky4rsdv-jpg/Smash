@@ -14,6 +14,7 @@ import { fetchAllBunnyVideos, buildBunnyHlsUrl, buildBunnyThumbnailUrl } from "@
 import { parseTxtMetadata, applyTxtMetadataToVideos } from "@/lib/import-txt";
 import { importPhotoSetsFromBunny } from "@/lib/import-photosets";
 import { listBunnyStorageDir } from "@/lib/bunny-storage";
+import { getBunnyStreamConfig, isBunnyStreamEnabled } from "@/lib/bunny-config";
 import { getSiteSettings, setSiteSettings } from "@/lib/site-settings";
 import { revalidatePath } from "next/cache";
 import { TagMultiSelect } from "./TagMultiSelect";
@@ -283,11 +284,24 @@ async function importFromBunnyAction(
   formData: FormData
 ) {
   "use server";
-  const accessKey = String(formData.get("bunnyAccessKey") ?? "").trim();
-  const libraryId = String(formData.get("bunnyLibraryId") ?? "").trim();
-  const videoPullZone = String(formData.get("bunnyVideoPullZone") ?? "").trim();
-  const thumbnailPullZone = String(formData.get("bunnyThumbnailPullZone") ?? "").trim();
-  if (!accessKey || !libraryId || !videoPullZone) return { error: "Missing API key, Library ID, or Video pull zone." };
+  const formAccessKey = String(formData.get("bunnyAccessKey") ?? "").trim();
+  const formLibraryId = String(formData.get("bunnyLibraryId") ?? "").trim();
+  const formVideoPullZone = String(formData.get("bunnyVideoPullZone") ?? "").trim();
+  const formThumbnailPullZone = String(formData.get("bunnyThumbnailPullZone") ?? "").trim();
+
+  const envConfig = getBunnyStreamConfig();
+  const accessKey = formAccessKey || (envConfig?.streamAccessKey ?? "");
+  const libraryId = formLibraryId || (envConfig?.libraryId ?? "");
+  const videoPullZone = formVideoPullZone || (envConfig?.videoPullZone ?? "");
+  const thumbnailPullZone = formThumbnailPullZone || (envConfig?.thumbnailPullZone ?? "");
+
+  if (!accessKey || !libraryId || !videoPullZone) {
+    return {
+      error: envConfig
+        ? "Missing API key, Library ID, or Video pull zone. Set BUNNY_STREAM_ACCESS_KEY, BUNNY_LIBRARY_ID, BUNNY_VIDEO_PULL_ZONE in env, or fill the form."
+        : "Missing API key, Library ID, or Video pull zone."
+    };
+  }
   try {
     const items = await fetchAllBunnyVideos(libraryId, accessKey);
     const existingUrls = new Set(getVideos(true).map((v) => v.videoUrl));
@@ -758,6 +772,11 @@ export default function AdminPage() {
               </div>
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">1. Fetch videos from Bunny Stream</h3>
+                {isBunnyStreamEnabled() && (
+                  <p className="text-[11px] text-emerald-400/90 rounded-lg bg-emerald-500/10 px-3 py-2">
+                    SmashPov Bunny API enabled via env (BUNNY_*). Leave fields blank to use it.
+                  </p>
+                )}
                 <BunnyImportForm action={importFromBunnyAction} />
               </div>
               <div className="pt-6 border-t border-white/10 space-y-4">

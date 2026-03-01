@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { AgeGate } from "../../../(site)/AgeGate";
 import { SubscriptionGate } from "../../../(site)/SubscriptionGate";
 import { GalleryWithLightbox } from "../../../(site)/GalleryWithLightbox";
 import { getVideos, getVideoPhotoUrls, getUsers } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -19,8 +19,7 @@ export default async function VideoPhotosPage({ params }: Props) {
     redirect("/videos");
   }
 
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value?.trim() ?? "";
+  const userId = await getAuthUserId();
   const user = getUsers().find((u) => u.id === userId);
   const isAdmin = user?.role === "admin" || userId === "admin";
   const hasAccess =

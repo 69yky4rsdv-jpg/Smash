@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ReactNode } from "react";
-import { cookies } from "next/headers";
 import { getSiteSettings } from "@/lib/site-settings";
 import { getUsers } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
 import { SiteSettingsProvider } from "./(site)/SiteSettingsProvider";
 import SiteShell from "./(site)/Shell";
 
@@ -14,8 +14,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const site = getSiteSettings();
-  const cookieStore = await cookies();
-  const userId = (cookieStore.get("vs_userId")?.value ?? "").trim();
+  const userId = await getAuthUserId();
   const user = userId ? getUsers().find((u) => u.id === userId) : null;
   const initialIsLoggedIn = !!userId || !!user;
   const initialIsAdmin = user?.role === "admin" || userId === "admin";

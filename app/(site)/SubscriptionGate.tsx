@@ -27,8 +27,8 @@ function isAdminCookie(): boolean {
 export function SubscriptionGate({ children, initialHasAccess = false, skipGate = false }: Props) {
   if (skipGate) return <>{children}</>;
 
-  const [state, setState] = useState<"loading" | "no-auth" | "no-sub" | "ok">(() =>
-    initialHasAccess || isAdminCookie() ? "ok" : "loading"
+  const [state, setState] = useState<"loading" | "no-auth" | "no-sub" | "ok">(
+    initialHasAccess ? "ok" : "loading"
   );
 
   useEffect(() => {
