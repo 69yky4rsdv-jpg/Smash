@@ -11,13 +11,28 @@ type Props = {
   videos: Video[];
   /** When true, server already verified user is logged in (cookie + user lookup). */
   initialLoggedIn?: boolean;
+  /** When true, admin bypass — show categories immediately, no gate. */
+  skipGate?: boolean;
 };
 
 type MeResponse = { isLoggedIn: boolean; user?: { role?: string } };
 
-export function CategoriesGate({ categories, videos, initialLoggedIn = false }: Props) {
-  const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
-  const [mounted, setMounted] = useState(initialLoggedIn);
+function isAdminCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  const match = document.cookie?.match(/vs_userId=([^;]+)/);
+  return match ? decodeURIComponent(match[1].trim()) === "admin" : false;
+}
+
+export function CategoriesGate({
+  categories,
+  videos,
+  initialLoggedIn = false,
+  skipGate = false
+}: Props) {
+  if (skipGate) return <CategoriesClient categories={categories} videos={videos} />;
+
+  const [isLoggedIn, setIsLoggedIn] = useState(() => initialLoggedIn || isAdminCookie());
+  const [mounted, setMounted] = useState(true);
 
   useEffect(() => {
     if (initialLoggedIn) {

@@ -15,16 +15,10 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const site = getSiteSettings();
   const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value;
-  let initialIsLoggedIn = false;
-  let initialIsAdmin = false;
-  if (userId) {
-    const user = getUsers().find((u) => u.id === userId);
-    if (user) {
-      initialIsLoggedIn = true;
-      initialIsAdmin = user.role === "admin";
-    }
-  }
+  const userId = (cookieStore.get("vs_userId")?.value ?? "").trim();
+  const user = userId ? getUsers().find((u) => u.id === userId) : null;
+  const initialIsLoggedIn = !!userId || !!user;
+  const initialIsAdmin = user?.role === "admin" || userId === "admin";
   return (
     <html lang="en" className="bg-background">
       <body className="min-h-screen bg-gradient-to-b from-black via-background to-black text-foreground antialiased">

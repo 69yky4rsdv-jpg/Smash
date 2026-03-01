@@ -14,11 +14,21 @@ type Props = {
   children: ReactNode;
   /** When true, server already verified access (cookie + user lookup). Skip blocking. */
   initialHasAccess?: boolean;
+  /** When true, admin bypass — render children immediately, no gate. */
+  skipGate?: boolean;
 };
 
-export function SubscriptionGate({ children, initialHasAccess = false }: Props) {
-  const [state, setState] = useState<"loading" | "no-auth" | "no-sub" | "ok">(
-    initialHasAccess ? "ok" : "loading"
+function isAdminCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  const match = document.cookie?.match(/vs_userId=([^;]+)/);
+  return match ? decodeURIComponent(match[1].trim()) === "admin" : false;
+}
+
+export function SubscriptionGate({ children, initialHasAccess = false, skipGate = false }: Props) {
+  if (skipGate) return <>{children}</>;
+
+  const [state, setState] = useState<"loading" | "no-auth" | "no-sub" | "ok">(() =>
+    initialHasAccess || isAdminCookie() ? "ok" : "loading"
   );
 
   useEffect(() => {

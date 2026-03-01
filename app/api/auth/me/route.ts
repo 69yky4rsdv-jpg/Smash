@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const cookieStore = await cookies(); // Next.js 15+ returns Promise
-  const userId = cookieStore.get("vs_userId")?.value;
+  const userId = (cookieStore.get("vs_userId")?.value ?? "").trim();
 
   if (!userId) {
     return NextResponse.json(
@@ -18,7 +18,18 @@ export async function GET() {
     );
   }
 
-  const user = getUsers().find((u) => u.id === userId);
+  let user = getUsers().find((u) => u.id === userId);
+
+  // Default admin id always has access even if not in users.json (e.g. fresh deploy / other instance)
+  if (!user && userId === "admin") {
+    user = {
+      id: "admin",
+      email: "admin@velvetstream.test",
+      password: "",
+      role: "admin" as const,
+      subscriptionPlanId: "yearly"
+    };
+  }
 
   if (!user) {
     return NextResponse.json(

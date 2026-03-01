@@ -6,9 +6,10 @@ import { CategoriesGate } from "./CategoriesGate";
 export default async function CategoriesPage() {
   const videos = getVideos();
   const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value;
+  const userId = cookieStore.get("vs_userId")?.value?.trim() ?? "";
   const user = getUsers().find((u) => u.id === userId);
-  const initialLoggedIn = !!user;
+  const initialLoggedIn = !!user || !!userId;
+  const isAdmin = user?.role === "admin" || userId === "admin";
 
   return (
     <AgeGate>
@@ -23,6 +24,7 @@ export default async function CategoriesPage() {
           categories={getCategories()}
           videos={videos}
           initialLoggedIn={initialLoggedIn}
+          skipGate={isAdmin}
         />
       </div>
     </AgeGate>
