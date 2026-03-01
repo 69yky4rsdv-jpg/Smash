@@ -12,12 +12,17 @@ type MeResponse = {
 
 type Props = {
   children: ReactNode;
+  /** When true, server already verified access (cookie + user lookup). Skip blocking. */
+  initialHasAccess?: boolean;
 };
 
-export function SubscriptionGate({ children }: Props) {
-  const [state, setState] = useState<"loading" | "no-auth" | "no-sub" | "ok">("loading");
+export function SubscriptionGate({ children, initialHasAccess = false }: Props) {
+  const [state, setState] = useState<"loading" | "no-auth" | "no-sub" | "ok">(
+    initialHasAccess ? "ok" : "loading"
+  );
 
   useEffect(() => {
+    if (initialHasAccess) return;
     let cancelled = false;
 
     async function check() {
@@ -52,7 +57,6 @@ export function SubscriptionGate({ children }: Props) {
         }
       } catch {
         if (!cancelled) {
-          // If API failed but cookie has admin, allow (e.g. multi-instance deploy)
           if (typeof document !== "undefined") {
             const raw = document.cookie ?? "";
             const match = raw.match(/vs_userId=([^;]+)/);
@@ -72,7 +76,7 @@ export function SubscriptionGate({ children }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialHasAccess]);
 
   if (state === "loading") {
     return (

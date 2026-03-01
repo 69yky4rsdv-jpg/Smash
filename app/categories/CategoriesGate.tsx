@@ -9,19 +9,24 @@ import { CategoriesClient } from "./CategoriesClient";
 type Props = {
   categories: Category[];
   videos: Video[];
+  /** When true, server already verified user is logged in (cookie + user lookup). */
+  initialLoggedIn?: boolean;
 };
 
 type MeResponse = { isLoggedIn: boolean; user?: { role?: string } };
 
-export function CategoriesGate({ categories, videos }: Props) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [mounted, setMounted] = useState(false);
+export function CategoriesGate({ categories, videos, initialLoggedIn = false }: Props) {
+  const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
+  const [mounted, setMounted] = useState(initialLoggedIn);
 
   useEffect(() => {
+    if (initialLoggedIn) {
+      setMounted(true);
+      return;
+    }
     setMounted(true);
     let cancelled = false;
     async function check() {
-      // Short-circuit for admin: cookie vs_userId "admin" means logged in even if API fails
       if (typeof document !== "undefined") {
         const raw = document.cookie ?? "";
         const match = raw.match(/vs_userId=([^;]+)/);
@@ -42,7 +47,7 @@ export function CategoriesGate({ categories, videos }: Props) {
     }
     check();
     return () => { cancelled = true; };
-  }, []);
+  }, [initialLoggedIn]);
 
   if (!mounted) {
     return (

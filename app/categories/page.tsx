@@ -1,9 +1,15 @@
+import { cookies } from "next/headers";
 import { AgeGate } from "../(site)/AgeGate";
-import { getCategories, getVideos } from "@/lib/data";
+import { getCategories, getVideos, getUsers } from "@/lib/data";
 import { CategoriesGate } from "./CategoriesGate";
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
   const videos = getVideos();
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("vs_userId")?.value;
+  const user = getUsers().find((u) => u.id === userId);
+  const initialLoggedIn = !!user;
+
   return (
     <AgeGate>
       <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
@@ -13,7 +19,11 @@ export default function CategoriesPage() {
             Choose a category and search to browse videos.
           </p>
         </header>
-        <CategoriesGate categories={getCategories()} videos={videos} />
+        <CategoriesGate
+          categories={getCategories()}
+          videos={videos}
+          initialLoggedIn={initialLoggedIn}
+        />
       </div>
     </AgeGate>
   );

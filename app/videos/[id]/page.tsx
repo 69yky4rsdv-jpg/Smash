@@ -38,6 +38,7 @@ export default async function VideoDetailPage({ params }: Props) {
   const users = getUsers();
   const user = users.find((u) => u.id === userId);
   const isAdmin = user?.role === "admin";
+  const hasAccess = !!user && (user.role === "admin" || !!user.subscriptionPlanId);
   const photoUrls = isAdmin ? getVideoPhotoUrls(video.id) : [];
 
   const models = getModels();
@@ -54,7 +55,7 @@ export default async function VideoDetailPage({ params }: Props) {
 
   return (
     <AgeGate>
-      <SubscriptionGate>
+      <SubscriptionGate initialHasAccess={hasAccess}>
         <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
           <header className="space-y-3">
             <Link

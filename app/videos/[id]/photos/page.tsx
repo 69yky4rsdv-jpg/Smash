@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { AgeGate } from "../../../(site)/AgeGate";
 import { SubscriptionGate } from "../../../(site)/SubscriptionGate";
 import { GalleryWithLightbox } from "../../../(site)/GalleryWithLightbox";
-import { getVideos, getVideoPhotoUrls } from "@/lib/data";
+import { getVideos, getVideoPhotoUrls, getUsers } from "@/lib/data";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -18,11 +19,15 @@ export default async function VideoPhotosPage({ params }: Props) {
     redirect("/videos");
   }
 
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("vs_userId")?.value;
+  const user = getUsers().find((u) => u.id === userId);
+  const hasAccess = !!user && (user.role === "admin" || !!user.subscriptionPlanId);
   const photoUrls = getVideoPhotoUrls(video.id);
 
   return (
     <AgeGate>
-      <SubscriptionGate>
+      <SubscriptionGate initialHasAccess={hasAccess}>
         <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
             <header className="space-y-2">
               <Link
