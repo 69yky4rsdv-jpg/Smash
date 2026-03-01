@@ -11,6 +11,8 @@ import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
 import { AdminThumbnailSelector } from "./AdminThumbnailSelector";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ id: string }>;
 };

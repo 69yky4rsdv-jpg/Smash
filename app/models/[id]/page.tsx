@@ -9,6 +9,8 @@ import { getModels, getVideos, getUsers, getVideoPhotoUrls } from "@/lib/data";
 import { updateModel } from "@/lib/admin";
 import { ModelAdminSelectors } from "./ModelAdminSelectors";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ id: string }>;
 };
