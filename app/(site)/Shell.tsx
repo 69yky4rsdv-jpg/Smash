@@ -7,33 +7,21 @@ import { useSiteSettings } from "./SiteSettingsProvider";
 
 type MeResponse = { isLoggedIn: boolean; user?: { role?: string } };
 
-function getInitialAuthFromCookie(): { isLoggedIn: boolean; isAdmin: boolean } {
-  if (typeof document === "undefined") return { isLoggedIn: false, isAdmin: false };
-  const raw = document.cookie ?? "";
-  const match = raw.match(/vs_userId=([^;]+)/);
-  if (!match) return { isLoggedIn: false, isAdmin: false };
-  const userId = decodeURIComponent(match[1].trim());
-  return { isLoggedIn: true, isAdmin: userId === "admin" };
-}
-
-export default function SiteShell({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(() => getInitialAuthFromCookie().isLoggedIn);
-  const [isAdmin, setIsAdmin] = useState(() => getInitialAuthFromCookie().isAdmin);
+export default function SiteShell({
+  children,
+  initialIsLoggedIn = false,
+  initialIsAdmin = false
+}: {
+  children: ReactNode;
+  initialIsLoggedIn?: boolean;
+  initialIsAdmin?: boolean;
+}) {
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
+  const [isAdmin, setIsAdmin] = useState(initialIsAdmin);
   const { siteName, logoUrl } = useSiteSettings();
 
   useEffect(() => {
     let cancelled = false;
-
-    if (typeof document !== "undefined") {
-      const raw = document.cookie ?? "";
-      const match = raw.match(/vs_userId=([^;]+)/);
-      if (match) {
-        const userId = decodeURIComponent(match[1].trim());
-        setIsLoggedIn(true);
-        setIsAdmin(userId === "admin");
-      }
-    }
-
     async function checkAuth() {
       try {
         const res = await fetch("/api/auth/me", { credentials: "include" });
@@ -47,7 +35,6 @@ export default function SiteShell({ children }: { children: ReactNode }) {
         if (cancelled) return;
       }
     }
-
     checkAuth();
     return () => {
       cancelled = true;

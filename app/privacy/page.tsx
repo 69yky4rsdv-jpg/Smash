@@ -1,11 +1,9 @@
-import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
 
 export default function PrivacyPage() {
   return (
     <AgeGate>
-      <SiteShell>
-        <div className="mx-auto max-w-3xl px-4 py-10 space-y-8">
+      <div className="mx-auto max-w-3xl px-4 py-10 space-y-8">
           <header className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">Privacy Policy</h1>
             <p className="text-sm text-neutral-400">Last updated: {new Date().toLocaleDateString()}</p>
@@ -39,7 +37,6 @@ export default function PrivacyPage() {
             </p>
           </div>
         </div>
-      </SiteShell>
     </AgeGate>
   );
 }

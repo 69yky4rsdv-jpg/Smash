@@ -1,4 +1,3 @@
-import SiteShell from "./(site)/Shell";
 import { AgeGate } from "./(site)/AgeGate";
 import { getVideos, subscriptionPlans } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -16,8 +15,7 @@ export default function HomePage() {
 
   return (
     <AgeGate>
-      <SiteShell>
-        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 py-10 space-y-12">
+      <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 py-10 space-y-12">
           {/* Hero banner image — 1/3 size */}
           <section className="overflow-hidden rounded-xl">
             <div className="h-32 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 md:h-48">
@@ -92,7 +90,6 @@ export default function HomePage() {
             </div>
           </section>
         </div>
-      </SiteShell>
     </AgeGate>
   );
 }

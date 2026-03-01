@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 import { GalleryWithLightbox } from "../../(site)/GalleryWithLightbox";
 import { getModels, getVideos, getUsers, getVideoPhotoUrls } from "@/lib/data";
@@ -92,8 +91,7 @@ export default async function ModelDetailPage({ params }: Props) {
 
   return (
     <AgeGate>
-      <SiteShell>
-        <div className="mx-auto max-w-5xl px-4 py-10 space-y-8">
+      <div className="mx-auto max-w-5xl px-4 py-10 space-y-8">
           <header className="space-y-2">
             <Link
               href="/models"
@@ -189,7 +187,6 @@ export default async function ModelDetailPage({ params }: Props) {
             )}
           </section>
         </div>
-      </SiteShell>
     </AgeGate>
   );
 }

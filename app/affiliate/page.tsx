@@ -1,11 +1,9 @@
-import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
 
 export default function AffiliatePage() {
   return (
     <AgeGate>
-      <SiteShell>
-        <div className="mx-auto max-w-3xl px-4 py-10 space-y-8">
+      <div className="mx-auto max-w-3xl px-4 py-10 space-y-8">
           <header className="space-y-3 text-center">
             <h1 className="text-3xl font-semibold tracking-tight">
               Become a <span className="text-accent-pink">SmashPOV</span> affiliate
@@ -105,7 +103,6 @@ export default function AffiliatePage() {
             </form>
           </section>
         </div>
-      </SiteShell>
     </AgeGate>
   );
 }

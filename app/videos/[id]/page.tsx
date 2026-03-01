@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 import { SubscriptionGate } from "../../(site)/SubscriptionGate";
 import { ScrollingTitle } from "../../(site)/ScrollingTitle";
@@ -55,9 +54,8 @@ export default async function VideoDetailPage({ params }: Props) {
 
   return (
     <AgeGate>
-      <SiteShell>
-        <SubscriptionGate>
-          <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
+      <SubscriptionGate>
+        <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
           <header className="space-y-3">
             <Link
               href="/videos"
@@ -202,8 +200,7 @@ export default async function VideoDetailPage({ params }: Props) {
             </aside>
           </section>
         </div>
-        </SubscriptionGate>
-      </SiteShell>
+      </SubscriptionGate>
     </AgeGate>
   );
 }

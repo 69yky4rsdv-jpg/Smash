@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import SiteShell from "../../../(site)/Shell";
 import { AgeGate } from "../../../(site)/AgeGate";
 import { SubscriptionGate } from "../../../(site)/SubscriptionGate";
 import { GalleryWithLightbox } from "../../../(site)/GalleryWithLightbox";
@@ -23,9 +22,8 @@ export default async function VideoPhotosPage({ params }: Props) {
 
   return (
     <AgeGate>
-      <SiteShell>
-        <SubscriptionGate>
-          <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
+      <SubscriptionGate>
+        <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
             <header className="space-y-2">
               <Link
                 href={`/videos/${video.id}`}
@@ -56,7 +54,6 @@ export default async function VideoPhotosPage({ params }: Props) {
             )}
           </div>
         </SubscriptionGate>
-      </SiteShell>
     </AgeGate>
   );
 }

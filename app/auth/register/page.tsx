@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 
 export default function RegisterPage() {
@@ -34,8 +33,7 @@ export default function RegisterPage() {
 
   return (
     <AgeGate>
-      <SiteShell>
-        <div className="mx-auto flex max-w-md flex-col px-4 py-10">
+      <div className="mx-auto flex max-w-md flex-col px-4 py-10">
           <h1 className="mb-2 text-2xl font-semibold tracking-tight">
             Join <span className="text-accent-pink">SmashPOV</span>
           </h1>
@@ -86,7 +84,6 @@ export default function RegisterPage() {
             </Link>
           </p>
         </div>
-      </SiteShell>
     </AgeGate>
   );
 }

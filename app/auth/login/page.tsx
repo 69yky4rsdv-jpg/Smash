@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 
 export default function LoginPage() {
@@ -35,8 +34,7 @@ export default function LoginPage() {
 
   return (
     <AgeGate>
-      <SiteShell>
-        <div className="mx-auto flex max-w-md flex-col px-4 py-10">
+      <div className="mx-auto flex max-w-md flex-col px-4 py-10">
           <h1 className="mb-2 text-2xl font-semibold tracking-tight">Welcome back</h1>
           <p className="mb-6 text-sm text-neutral-300">
             Log in to resume your subscription and keep watching.
@@ -89,7 +87,6 @@ export default function LoginPage() {
             admin dashboard.
           </p>
         </div>
-      </SiteShell>
     </AgeGate>
   );
 }
