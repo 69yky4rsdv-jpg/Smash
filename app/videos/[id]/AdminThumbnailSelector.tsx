@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Props = {
   videoId: string;
@@ -19,7 +20,22 @@ export function AdminThumbnailSelector({
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
 
-  if (!photoUrls.length) return null;
+  if (!photoUrls.length) {
+    return (
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+        <p className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
+          Admin — Choose thumbnail
+        </p>
+        <p className="text-[11px] text-neutral-400">
+          No photos for this video yet. Add photos in{" "}
+          <Link href="/admin#import" className="text-amber-300 hover:text-amber-200 underline">
+            Admin → Import PhotoSets
+          </Link>
+          , then refresh this page to pick a thumbnail.
+        </p>
+      </div>
+    );
+  }
 
   async function handleSelect(url: string) {
     setPending(url);

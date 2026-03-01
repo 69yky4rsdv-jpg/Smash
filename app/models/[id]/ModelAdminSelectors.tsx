@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ImageCropper } from "../../components/ImageCropper";
 
 type Props = {
@@ -32,7 +33,22 @@ export function ModelAdminSelectors({
 
   const existingGallerySet = new Set(currentGalleryUrls);
 
-  if (!photoPoolUrls.length) return null;
+  if (!photoPoolUrls.length) {
+    return (
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-2">
+        <p className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
+          Admin — Profile & gallery from scene photos
+        </p>
+        <p className="text-[11px] text-neutral-400">
+          No scene photos for this model yet. Add video photos in{" "}
+          <Link href="/admin#import" className="text-amber-300 hover:text-amber-200 underline">
+            Admin → Import PhotoSets
+          </Link>
+          , then refresh this page to set profile picture or gallery from those photos.
+        </p>
+      </div>
+    );
+  }
 
   function handleOpenProfileCrop(url: string) {
     setCropProfileUrl(url);

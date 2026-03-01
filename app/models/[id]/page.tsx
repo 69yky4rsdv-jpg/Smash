@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { AgeGate } from "../../(site)/AgeGate";
 import { GalleryWithLightbox } from "../../(site)/GalleryWithLightbox";
 import { getModels, getVideos, getUsers, getVideoPhotoUrls } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
+import { getSiteSettings } from "@/lib/site-settings";
 import { updateModel } from "@/lib/admin";
 import { ModelAdminSelectors } from "./ModelAdminSelectors";
 
@@ -69,11 +70,12 @@ export default async function ModelDetailPage({ params }: Props) {
   const videos = getVideos().filter((v) => v.models.includes(model.id));
   const galleryUrls = model.galleryUrls ?? [];
 
-  const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value;
+  const userId = await getAuthUserId();
   const users = getUsers();
   const user = users.find((u) => u.id === userId);
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || userId === "admin";
+  const site = getSiteSettings();
+  const enableAdminProfileGallery = site.siteName === "SmashPov";
 
   const photoPoolUrls: string[] = [];
   if (isAdmin && videos.length > 0) {
@@ -128,7 +130,7 @@ export default async function ModelDetailPage({ params }: Props) {
             </div>
           </header>
 
-          {isAdmin && photoPoolUrls.length > 0 && (
+          {isAdmin && enableAdminProfileGallery && (
             <ModelAdminSelectors
               modelId={model.id}
               currentAvatarUrl={model.avatarUrl}

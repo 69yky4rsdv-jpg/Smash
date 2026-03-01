@@ -6,6 +6,7 @@ import { SubscriptionGate } from "../../(site)/SubscriptionGate";
 import { ScrollingTitle } from "../../(site)/ScrollingTitle";
 import { getCategories, getModels, getVideos, getUsers, getVideoPhotoUrls, updateVideo } from "@/lib/data";
 import { getAuthUserId } from "@/lib/auth-server";
+import { getSiteSettings } from "@/lib/site-settings";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
 import { AdminThumbnailSelector } from "./AdminThumbnailSelector";
@@ -40,6 +41,8 @@ export default async function VideoDetailPage({ params }: Props) {
   const hasAccess =
     (!!user && (user.role === "admin" || !!user.subscriptionPlanId)) || userId === "admin";
   const photoUrls = isAdmin ? getVideoPhotoUrls(video.id) : [];
+  const site = getSiteSettings();
+  const enableAdminThumbnail = site.siteName === "SmashPov";
 
   const models = getModels();
   const videoModels = models.filter((m) => video.models.includes(m.id));
@@ -113,7 +116,7 @@ export default async function VideoDetailPage({ params }: Props) {
                   />
                 ) : null}
               </div>
-              {isAdmin && photoUrls.length > 0 && (
+              {isAdmin && enableAdminThumbnail && (
                 <AdminThumbnailSelector
                   videoId={video.id}
                   currentThumbnailUrl={video.thumbnailUrl}
