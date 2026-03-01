@@ -52,4 +52,3 @@ export function AgeGate({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
