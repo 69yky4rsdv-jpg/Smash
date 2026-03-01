@@ -10,11 +10,12 @@ export async function POST(request: Request) {
     const user = registerUser(email, password);
 
     const res = NextResponse.json({ ok: true, userId: user.id });
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookies.set("vs_userId", user.id, {
       httpOnly: false,
       path: "/",
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       maxAge: 60 * 60 * 24 * 365
     });
 
