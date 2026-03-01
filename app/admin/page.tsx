@@ -1,7 +1,8 @@
 import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
-import { addVideoPhotos, deleteVideo, getCategories, getModels, getVideos, parsePhotoUrls, setVideoHidden, subscriptionPlans, updateVideo, users } from "@/lib/data";
+import { addVideoPhotos, deleteVideo, getCategories, getModels, getVideos, getUsers, parsePhotoUrls, setVideoHidden, subscriptionPlans, updateVideo } from "@/lib/data";
 import {
+  autoCategorizeModelGenders,
   createCategory,
   createModel,
   createVideo,
@@ -10,6 +11,10 @@ import {
   toggleModelActive,
   updateModel
 } from "@/lib/admin";
+import { fetchAllBunnyVideos, buildBunnyHlsUrl, buildBunnyThumbnailUrl } from "@/lib/bunny";
+import { parseTxtMetadata, applyTxtMetadataToVideos } from "@/lib/import-txt";
+import { importPhotoSetsFromBunny } from "@/lib/import-photosets";
+import { listBunnyStorageDir } from "@/lib/bunny-storage";
 import { getSiteSettings, setSiteSettings } from "@/lib/site-settings";
 import { revalidatePath } from "next/cache";
 import { TagMultiSelect } from "./TagMultiSelect";
@@ -17,6 +22,10 @@ import { EditVideoForm } from "./EditVideoForm";
 import { EditModelForm } from "./EditModelForm";
 import { CreateCategoryForm } from "./CreateCategoryForm";
 import { CreateModelForm } from "./CreateModelForm";
+import { BunnyImportForm } from "./BunnyImportForm";
+import { TxtMetadataForm } from "./TxtMetadataForm";
+import { AutoGenderButton } from "./AutoGenderButton";
+import { ImportPhotoSetsForm } from "./ImportPhotoSetsForm";
 
 async function createCategoryAction(formData: FormData) {
   "use server";
@@ -35,8 +44,10 @@ async function createModelAction(formData: FormData) {
   const avatarUrl = String(formData.get("avatarUrl") ?? "").trim() || undefined;
   const galleryRaw = String(formData.get("gallery") ?? "").trim();
   const galleryUrls = galleryRaw.length > 0 ? parsePhotoUrls(galleryRaw) : undefined;
+  const genderRaw = String(formData.get("gender") ?? "").trim();
+  const gender = genderRaw === "female" || genderRaw === "male" ? genderRaw : undefined;
   if (name) {
-    createModel(name, bio, avatarUrl, galleryUrls);
+    createModel(name, bio, avatarUrl, galleryUrls, gender);
   }
 }
 
@@ -138,8 +149,10 @@ async function updateModelAction(formData: FormData) {
   const galleryRaw = String(formData.get("gallery") ?? "").trim();
   const galleryUrls = galleryRaw.length > 0 ? parsePhotoUrls(galleryRaw) : undefined;
   const active = String(formData.get("active") ?? "") === "true";
+  const genderRaw = String(formData.get("gender") ?? "").trim();
+  const gender = genderRaw === "female" || genderRaw === "male" ? genderRaw : undefined;
   if (!modelId || !stageName) return;
-  updateModel(modelId, { stageName, bio, avatarUrl, galleryUrls, active });
+  updateModel(modelId, { stageName, bio, avatarUrl, galleryUrls, active, gender });
   revalidatePath("/");
   revalidatePath("/models");
   revalidatePath("/admin");
@@ -150,13 +163,16 @@ async function updateSiteBrandingAction(formData: FormData) {
   const siteName = String(formData.get("siteName") ?? "").trim();
   const logoUrl = String(formData.get("logoUrl") ?? "").trim() || undefined;
   const heroBannerImageUrl = String(formData.get("heroBannerImageUrl") ?? "").trim() || undefined;
+  const hideMalePerformersOnModelsPage = String(formData.get("hideMalePerformersOnModelsPage") ?? "") === "true";
   setSiteSettings({
     siteName: siteName || undefined,
     logoUrl,
-    heroBannerImageUrl
+    heroBannerImageUrl,
+    hideMalePerformersOnModelsPage
   });
   revalidatePath("/");
   revalidatePath("/admin");
+  revalidatePath("/models");
 }
 
 async function setSubscriptionAction(formData: FormData) {
@@ -180,6 +196,68 @@ async function addVideoPhotosAction(formData: FormData) {
   revalidatePath(`/videos/${videoId}/photos`);
 }
 
+/** Browse a path in Bunny Storage and return folder names so the user can find the correct PhotoSets path. */
+async function browseStoragePathAction(
+  _prev: { path?: string; folders?: string[]; fileCount?: number; error?: string } | null,
+  formData: FormData
+) {
+  "use server";
+  const storageZoneName = String(formData.get("browseStorageZone") ?? "").trim() || "featurevideo-storage";
+  const storageAccessKey = String(formData.get("browseStoragePassword") ?? "").trim();
+  const storageHost = String(formData.get("browseStorageHost") ?? "").trim() || "storage.bunnycdn.com";
+  const path = String(formData.get("browsePath") ?? "").trim();
+  if (!storageAccessKey) return { error: "Storage password is required." };
+  try {
+    const items = await listBunnyStorageDir(storageZoneName, path, storageAccessKey, storageHost);
+    const folders = (items || []).filter((i) => i.IsDirectory).map((i) => (i.ObjectName || "").replace(/\/$/, "")).filter(Boolean);
+    const fileCount = (items || []).filter((i) => !i.IsDirectory).length;
+    return { path: path || "(root)", folders, fileCount, error: undefined };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { error: message, path: path || "(root)", folders: [], fileCount: 0 };
+  }
+}
+
+async function importPhotoSetsAction(
+  _prev: { photosetsProcessed?: number; videosUpdated?: number; thumbnailsSet?: number; error?: string; errors?: string[] } | null,
+  formData: FormData
+) {
+  "use server";
+  const storageZoneName = String(formData.get("photosetsStorageZone") ?? "").trim() || "featurevideo-storage";
+  const storageAccessKey = String(formData.get("photosetsStoragePassword") ?? "").trim();
+  const storageHost = String(formData.get("photosetsStorageHost") ?? "").trim() || "storage.bunnycdn.com";
+  const photosetsPath = String(formData.get("photosetsPath") ?? "").trim();
+  const pullZoneHost = String(formData.get("photosetsPullZoneHost") ?? "").trim();
+  const urlPrefix = String(formData.get("photosetsUrlPrefix") ?? "").trim() || undefined;
+  const txtMetadata = String(formData.get("photosetsTxtMetadata") ?? "").trim() || undefined;
+  if (!storageAccessKey || !pullZoneHost) {
+    return { error: "Storage password and Pull zone host are required." };
+  }
+  try {
+    const result = await importPhotoSetsFromBunny({
+      storageZoneName,
+      storageAccessKey,
+      storageHost,
+      photosetsPath,
+      pullZoneHost,
+      urlPrefix,
+      txtMetadata,
+    });
+    revalidatePath("/admin");
+    revalidatePath("/");
+    revalidatePath("/videos");
+    return {
+      photosetsProcessed: result.photosetsProcessed,
+      videosUpdated: result.videosUpdated,
+      thumbnailsSet: result.thumbnailsSet,
+      errors: result.errors.length ? result.errors : undefined,
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { error: message };
+  }
+}
+
 async function addModelGalleryAction(formData: FormData) {
   "use server";
   const modelId = String(formData.get("modelId") ?? "").trim();
@@ -201,25 +279,120 @@ async function addModelGalleryAction(formData: FormData) {
   revalidatePath(`/models/${modelId}`);
 }
 
+async function importFromBunnyAction(
+  _prev: { created?: number; total?: number; error?: string } | null,
+  formData: FormData
+) {
+  "use server";
+  const accessKey = String(formData.get("bunnyAccessKey") ?? "").trim();
+  const libraryId = String(formData.get("bunnyLibraryId") ?? "").trim();
+  const videoPullZone = String(formData.get("bunnyVideoPullZone") ?? "").trim();
+  const thumbnailPullZone = String(formData.get("bunnyThumbnailPullZone") ?? "").trim();
+  if (!accessKey || !libraryId || !videoPullZone) return { error: "Missing API key, Library ID, or Video pull zone." };
+  try {
+    const items = await fetchAllBunnyVideos(libraryId, accessKey);
+    const existingUrls = new Set(getVideos(true).map((v) => v.videoUrl));
+    let created = 0;
+    const FINISHED = 4;
+    for (const item of items) {
+      if (item.status !== FINISHED || !item.guid || !item.title) continue;
+      const videoUrl = buildBunnyHlsUrl(videoPullZone, item.guid);
+      if (existingUrls.has(videoUrl)) continue;
+      const thumbnailUrl = thumbnailPullZone
+        ? buildBunnyThumbnailUrl(thumbnailPullZone, item.guid, item.thumbnailFileName)
+        : undefined;
+      createVideo({
+        title: item.title,
+        description: item.description ?? undefined,
+        thumbnailUrl,
+        videoUrl,
+        categoryIds: [],
+        modelIds: []
+      });
+      existingUrls.add(videoUrl);
+      created++;
+    }
+    revalidatePath("/");
+    revalidatePath("/videos");
+    revalidatePath("/videos/trending");
+    revalidatePath("/admin");
+    return { created, total: items.length };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { error: message };
+  }
+}
+
+async function autoCategorizeGendersAction() {
+  "use server";
+  const result = autoCategorizeModelGenders();
+  revalidatePath("/models");
+  revalidatePath("/admin");
+  return result;
+}
+
+async function applyTxtMetadataAction(
+  _prev: { videosUpdated?: number; modelsCreated?: number; categoriesCreated?: number; error?: string } | null,
+  formData: FormData
+) {
+  "use server";
+  const txt = String(formData.get("txtMetadata") ?? "").trim();
+  if (!txt) return { error: "Paste TXT content first." };
+  try {
+    const entries = parseTxtMetadata(txt);
+    const result = applyTxtMetadataToVideos(entries);
+    revalidatePath("/");
+    revalidatePath("/videos");
+    revalidatePath("/admin");
+    revalidatePath("/models");
+    revalidatePath("/categories");
+    return result;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { error: message };
+  }
+}
+
 export default function AdminPage() {
   const site = getSiteSettings();
   const videos = getVideos(true);
   const models = getModels();
+  const users = getUsers();
 
   return (
     <AgeGate>
       <SiteShell>
-          <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
-            <header className="space-y-2">
+          <div className="mx-auto max-w-6xl px-4 py-8 space-y-12">
+            <header className="space-y-4">
               <h1 className="text-3xl font-semibold tracking-tight">Admin dashboard</h1>
-              <p className="text-sm text-neutral-300">
-                Manage videos, models, categories, and user subscriptions.
+              <p className="text-sm text-neutral-400 max-w-xl">
+                Manage videos, models, categories, imports, and user subscriptions.
               </p>
+              <nav className="flex flex-wrap gap-2 pt-2" aria-label="Admin sections">
+                <a href="#settings" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Settings
+                </a>
+                <a href="#videos" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Videos
+                </a>
+                <a href="#models" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Models
+                </a>
+                <a href="#categories" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Categories
+                </a>
+                <a href="#import" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Import
+                </a>
+                <a href="#users" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Users
+                </a>
+              </nav>
             </header>
 
             {/* Site branding */}
-            <section className="card-surface p-5 space-y-4">
-              <h2 className="text-lg font-semibold">Site branding</h2>
+            <section id="settings" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-amber-500/50">
+              <h2 className="text-lg font-semibold text-neutral-100">Site settings</h2>
               <p className="text-[11px] text-neutral-400">
                 Change the site name and logo shown in the header and footer. Logo URL can be a path (e.g. /logo.png) or full URL.
               </p>
@@ -263,19 +436,35 @@ export default function AdminPage() {
                     className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
                   />
                 </div>
+                <div className="flex items-center gap-2 sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    id="hideMalePerformersOnModelsPage"
+                    name="hideMalePerformersOnModelsPage"
+                    value="true"
+                    defaultChecked={Boolean(site.hideMalePerformersOnModelsPage)}
+                    className="h-4 w-4 rounded border-white/20 bg-black/70"
+                  />
+                  <input type="hidden" name="hideMalePerformersOnModelsPage" value="false" />
+                  <label className="text-sm text-neutral-200" htmlFor="hideMalePerformersOnModelsPage">
+                    Hide male performers on the models page
+                  </label>
+                </div>
                 <button className="btn-gradient col-span-full sm:col-span-1 w-full sm:w-auto justify-center text-sm">
                   Save branding
                 </button>
               </form>
             </section>
 
-            <section className="grid gap-6 md:grid-cols-2">
-              {/* Video management */}
-              <div className="card-surface p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Upload / add video</h2>
-                  <span className="text-[11px] text-neutral-400">Creates an entry in memory</span>
+            <section id="videos" className="scroll-mt-24 space-y-6">
+              <div className="card-surface p-6 space-y-6 border-l-4 border-l-pink-500/50">
+                <div>
+                  <h2 className="text-lg font-semibold text-neutral-100">Videos</h2>
+                  <p className="text-xs text-neutral-500 mt-0.5">Add, edit, and manage video galleries.</p>
                 </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Add video</h3>
                 <form action={createVideoAction} className="space-y-3 text-sm">
                   <div className="space-y-1">
                     <label className="text-neutral-200" htmlFor="title">
@@ -341,9 +530,10 @@ export default function AdminPage() {
                     Save video
                   </button>
                 </form>
+                </div>
 
-                <div className="mt-6 space-y-3 border-t border-white/10 pt-4">
-                  <h3 className="text-sm font-semibold text-neutral-200">Edit existing video</h3>
+                <div className="pt-6 border-t border-white/10 space-y-3">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Edit video</h3>
                   <EditVideoForm
                     videos={videos}
                     categories={getCategories()}
@@ -352,10 +542,14 @@ export default function AdminPage() {
                   />
                 </div>
 
-                <div className="mt-6 space-y-3 border-t border-white/10 pt-4">
-                  <h3 className="text-sm font-semibold text-neutral-200">Video photo galleries</h3>
-                  <p className="text-[11px] text-neutral-400">
-                    Paste image URLs (one per line or comma-separated). Full URLs or short form: <code className="rounded bg-white/10 px-1">cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG</code>
+                <div className="pt-6 border-t border-white/10 space-y-3">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Photo galleries</h3>
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-4 space-y-3">
+                    <h4 className="text-xs font-medium text-neutral-400">Import from Bunny Storage</h4>
+                    <ImportPhotoSetsForm action={importPhotoSetsAction} browseAction={browseStoragePathAction} />
+                  </div>
+                  <p className="text-[11px] text-neutral-400 mt-4">
+                    Or paste image URLs manually (one per line or comma-separated). Full URLs or short form: <code className="rounded bg-white/10 px-1">cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG</code>
                   </p>
                   <form action={addVideoPhotosAction} className="space-y-3 text-sm">
                     <div className="space-y-1">
@@ -388,8 +582,8 @@ export default function AdminPage() {
                   </form>
                 </div>
 
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs font-semibold text-neutral-300">Existing videos — hide or remove</p>
+                <div className="pt-6 border-t border-white/10 space-y-2">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">All videos — hide or remove</h3>
                   <div className="max-h-52 space-y-1 overflow-y-auto text-[11px] text-neutral-300">
                     {videos.map((video) => (
                       <div
@@ -429,14 +623,22 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
+            </section>
 
-              {/* Models & categories */}
-              <div className="space-y-4">
-                <div className="card-surface p-5 space-y-3">
-                  <h2 className="text-lg font-semibold">Models</h2>
+            <section id="models" className="scroll-mt-24 space-y-6">
+              <div className="card-surface p-6 space-y-6 border-l-4 border-l-violet-500/50">
+                <div>
+                  <h2 className="text-lg font-semibold text-neutral-100">Models</h2>
+                  <p className="text-xs text-neutral-500 mt-0.5">Roster, galleries, and gender.</p>
+                </div>
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Add model</h3>
                   <CreateModelForm action={createModelAction} />
-                  <form action={toggleModelAction} className="mt-4 space-y-2 text-xs">
-                    <p className="font-semibold text-neutral-300">Current roster</p>
+                </div>
+
+                <div className="pt-6 border-t border-white/10 space-y-2">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Roster (click to toggle active)</h3>
+                  <form action={toggleModelAction} className="space-y-2 text-xs">
                     <div className="max-h-40 space-y-1 overflow-y-auto">
                       {models.map((model) => (
                         <button
@@ -456,17 +658,61 @@ export default function AdminPage() {
                         </button>
                       ))}
                     </div>
-                    <p className="text-[10px] text-neutral-500">
-                      Click a model to toggle active/hidden.
-                    </p>
                   </form>
-                  <div className="mt-6 space-y-3 border-t border-white/10 pt-4">
-                    <h3 className="text-sm font-semibold text-neutral-200">Edit existing model</h3>
-                    <EditModelForm models={models} updateModelAction={updateModelAction} />
-                  </div>
+                </div>
 
-                  <form action={deleteModelAction} className="mt-3 space-y-2 text-xs">
-                    <p className="font-semibold text-red-400">Remove model</p>
+                <div className="pt-6 border-t border-white/10 space-y-3">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Auto-categorize gender</h3>
+                    <p className="text-[11px] text-neutral-400">
+                      Set male/female for models that have no gender, using a built-in list of male names (first word of stage name).
+                    </p>
+                    <AutoGenderButton action={autoCategorizeGendersAction} />
+                </div>
+
+                <div className="pt-6 border-t border-white/10 space-y-3">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Edit model</h3>
+                    <EditModelForm models={models} updateModelAction={updateModelAction} />
+                </div>
+
+                <div className="pt-6 border-t border-white/10 space-y-2">
+                  <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Model gallery (paste URLs)</h3>
+                  <p className="text-[11px] text-neutral-400">
+                    Paste image URLs to append to a model&apos;s gallery (one per line or comma-separated). Full URLs or short form: <code className="rounded bg-white/10 px-1">cdn.net/.../IMG_0001.JPG</code>
+                  </p>
+                  <form action={addModelGalleryAction} className="space-y-3 text-sm">
+                    <div className="space-y-1">
+                      <label className="text-neutral-200">Model</label>
+                      <select
+                        name="modelId"
+                        required
+                        className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                      >
+                        <option value="">— Select model —</option>
+                        {models.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.stageName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-neutral-200">Gallery URLs</label>
+                      <textarea
+                        name="modelGalleryUrls"
+                        rows={6}
+                        placeholder={"https://.../IMG_0002.JPG\nhttps://.../IMG_0003.JPG\n\nOr: cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG,cdn.net/.../IMG_0003.JPG"}
+                        className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 font-mono text-xs"
+                      />
+                    </div>
+                    <button type="submit" className="btn-gradient justify-center text-sm px-4 py-2">
+                      Add to model gallery
+                    </button>
+                  </form>
+                </div>
+
+                <div className="pt-6 border-t border-white/10 space-y-2">
+                  <h3 className="text-sm font-semibold text-red-400/90 uppercase tracking-wider">Remove model</h3>
+                  <form action={deleteModelAction} className="space-y-2 text-xs">
                     <p className="text-[10px] text-neutral-500">
                       Select a model below to permanently remove them and detach from any videos.
                     </p>
@@ -485,46 +731,15 @@ export default function AdminPage() {
                       Delete model
                     </button>
                   </form>
-
-                  <div className="mt-6 space-y-3 border-t border-white/10 pt-4">
-                    <h3 className="text-sm font-semibold text-neutral-200">Model gallery (paste URLs)</h3>
-                    <p className="text-[11px] text-neutral-400">
-                      Paste image URLs to append to a model&apos;s gallery (one per line or comma-separated). Full URLs or short form: <code className="rounded bg-white/10 px-1">cdn.net/.../IMG_0001.JPG</code>
-                    </p>
-                    <form action={addModelGalleryAction} className="space-y-3 text-sm">
-                      <div className="space-y-1">
-                        <label className="text-neutral-200">Model</label>
-                        <select
-                          name="modelId"
-                          required
-                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-                        >
-                          <option value="">— Select model —</option>
-                          {models.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.stageName}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-neutral-200">Gallery URLs</label>
-                        <textarea
-                          name="modelGalleryUrls"
-                          rows={6}
-                          placeholder={"https://.../IMG_0002.JPG\nhttps://.../IMG_0003.JPG\n\nOr: cdn.net/Folder%20pics/PhotoSets/HCPS0606/IMG_0002.JPG,cdn.net/.../IMG_0003.JPG"}
-                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 font-mono text-xs"
-                        />
-                      </div>
-                      <button type="submit" className="btn-gradient justify-center text-sm px-4 py-2">
-                        Add to model gallery
-                      </button>
-                    </form>
-                  </div>
                 </div>
+              </div>
+            </section>
 
-                <div className="card-surface p-5 space-y-3">
-                  <h2 className="text-lg font-semibold">Categories</h2>
+            <section id="categories" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-emerald-500/50">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-100">Categories</h2>
+                <p className="text-xs text-neutral-500 mt-0.5">Add and view categories used on videos.</p>
+              </div>
                   <CreateCategoryForm action={createCategoryAction} />
                   <div className="flex flex-wrap gap-2 text-[11px] text-neutral-200">
                     {getCategories().map((cat) => (
@@ -535,18 +750,28 @@ export default function AdminPage() {
                         {cat.name}
                       </span>
                     ))}
-                  </div>
                 </div>
+            </section>
+
+            <section id="import" className="scroll-mt-24 card-surface p-6 space-y-6 border-l-4 border-l-sky-500/50">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-100">Import</h2>
+                <p className="text-xs text-neutral-500 mt-0.5">Bunny.net videos, TXT metadata, and PhotoSets from storage.</p>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">1. Fetch videos from Bunny Stream</h3>
+                <BunnyImportForm action={importFromBunnyAction} />
+              </div>
+              <div className="pt-6 border-t border-white/10 space-y-4">
+                <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">2. Apply TXT metadata (performers & categories)</h3>
+                <TxtMetadataForm action={applyTxtMetadataAction} />
               </div>
             </section>
 
-            {/* Users & subscriptions */}
-            <section className="card-surface p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Users & subscriptions</h2>
-                <span className="text-[11px] text-neutral-400">
-                  Assign or clear plans for testing.
-                </span>
+            <section id="users" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-amber-500/50">
+              <div>
+                <h2 className="text-lg font-semibold text-neutral-100">Users & subscriptions</h2>
+                <p className="text-xs text-neutral-500 mt-0.5">Assign or clear plans. All registered users appear here.</p>
               </div>
               <form action={setSubscriptionAction} className="space-y-3 text-sm">
                 <div className="grid gap-3 sm:grid-cols-[2fr,2fr,auto]">

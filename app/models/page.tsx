@@ -1,10 +1,15 @@
 import SiteShell from "../(site)/Shell";
 import { AgeGate } from "../(site)/AgeGate";
 import { getModels } from "@/lib/data";
+import { getSiteSettings } from "@/lib/site-settings";
 import { ModelsGridClient } from "./ModelsGridClient";
 
 export default function ModelsPage() {
-  const models = getModels();
+  const allModels = getModels();
+  const { hideMalePerformersOnModelsPage } = getSiteSettings();
+  const models = hideMalePerformersOnModelsPage
+    ? allModels.filter((m) => m.gender !== "male")
+    : allModels;
   return (
     <AgeGate>
       <SiteShell>

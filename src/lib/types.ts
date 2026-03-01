@@ -13,6 +13,8 @@ export type Category = {
   name: string;
 };
 
+export type ModelGender = "female" | "male";
+
 export type Model = {
   id: string;
   stageName: string;
@@ -20,6 +22,8 @@ export type Model = {
   avatarUrl?: string;
   galleryUrls?: string[];
   active: boolean;
+  /** Used to separate models into Female / Male on the models page. */
+  gender?: ModelGender;
 };
 
 export type Video = {

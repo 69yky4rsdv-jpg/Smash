@@ -57,6 +57,18 @@ export function EditModelForm({ models, updateModelAction }: Props) {
             />
           </div>
           <div className="space-y-1">
+            <label className="text-xs text-neutral-200">Gender (for models page)</label>
+            <select
+              name="gender"
+              defaultValue={model.gender ?? ""}
+              className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+            >
+              <option value="">— Not set —</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+            </select>
+          </div>
+          <div className="space-y-1">
             <label className="text-xs text-neutral-200">Gallery image URLs (one per line or comma-separated; short form cdn.net/... supported)</label>
             <textarea
               name="gallery"

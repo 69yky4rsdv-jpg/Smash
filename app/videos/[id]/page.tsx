@@ -1,16 +1,27 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 import { SubscriptionGate } from "../../(site)/SubscriptionGate";
 import { ScrollingTitle } from "../../(site)/ScrollingTitle";
-import { getCategories, getModels, getVideos } from "@/lib/data";
+import { getCategories, getModels, getVideos, getUsers, getVideoPhotoUrls, updateVideo } from "@/lib/data";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
+import { AdminThumbnailSelector } from "./AdminThumbnailSelector";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+async function setVideoThumbnailAction(videoId: string, thumbnailUrl: string) {
+  "use server";
+  updateVideo(videoId, { thumbnailUrl });
+  revalidatePath(`/videos/${videoId}`);
+  revalidatePath("/");
+  revalidatePath("/videos");
+}
 
 export default async function VideoDetailPage({ params }: Props) {
   const { id } = await params;
@@ -20,6 +31,13 @@ export default async function VideoDetailPage({ params }: Props) {
   if (!video) {
     redirect("/videos");
   }
+
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("vs_userId")?.value;
+  const users = getUsers();
+  const user = users.find((u) => u.id === userId);
+  const isAdmin = user?.role === "admin";
+  const photoUrls = isAdmin ? getVideoPhotoUrls(video.id) : [];
 
   const models = getModels();
   const videoModels = models.filter((m) => video.models.includes(m.id));
@@ -94,6 +112,14 @@ export default async function VideoDetailPage({ params }: Props) {
                   />
                 ) : null}
               </div>
+              {isAdmin && photoUrls.length > 0 && (
+                <AdminThumbnailSelector
+                  videoId={video.id}
+                  currentThumbnailUrl={video.thumbnailUrl}
+                  photoUrls={photoUrls}
+                  setThumbnailAction={setVideoThumbnailAction}
+                />
+              )}
               <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
                 {video.description && (
                   <p className="text-[13px] text-neutral-200">{video.description}</p>

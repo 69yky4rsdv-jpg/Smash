@@ -60,6 +60,21 @@ export function CreateModelForm({ action }: Props) {
         />
       </div>
       <div className="space-y-1">
+        <label className="text-neutral-200" htmlFor="model-gender">
+          Gender (for models page sections)
+        </label>
+        <select
+          id="model-gender"
+          name="gender"
+          disabled={isPending}
+          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 disabled:opacity-60"
+        >
+          <option value="">— Not set —</option>
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+        </select>
+      </div>
+      <div className="space-y-1">
         <label className="text-neutral-200" htmlFor="model-gallery">
           Gallery image URLs (one per line or comma-separated; short form cdn.net/... supported)
         </label>

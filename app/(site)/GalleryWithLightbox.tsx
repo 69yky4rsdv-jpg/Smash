@@ -39,6 +39,9 @@ export function GalleryWithLightbox({ urls, altPrefix, gridClassName, itemClassN
 
   if (urls.length === 0) return null;
 
+  const defaultItemClass = "flex justify-center overflow-hidden rounded-xl transition hover:ring-2 hover:ring-accent-pink/50 focus:outline-none focus:ring-2 focus:ring-accent-pink/50";
+  const imgClass = "max-h-[70vh] max-w-full w-auto h-auto object-contain";
+
   return (
     <>
       <div className={gridClassName ?? "grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"}>
@@ -47,12 +50,12 @@ export function GalleryWithLightbox({ urls, altPrefix, gridClassName, itemClassN
             key={`${url}-${i}`}
             type="button"
             onClick={() => setIndex(i)}
-            className={`overflow-hidden rounded-xl bg-neutral-900 ring-1 ring-white/10 transition hover:ring-accent-pink/50 focus:outline-none focus:ring-2 focus:ring-accent-pink/50 ${itemClassName ?? "aspect-square"}`}
+            className={itemClassName ?? defaultItemClass}
           >
             <img
               src={url}
               alt={`${altPrefix} ${i + 1}`}
-              className="h-full w-full object-cover"
+              className={imgClass}
             />
           </button>
         ))}

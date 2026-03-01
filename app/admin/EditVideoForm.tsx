@@ -129,6 +129,7 @@ export function EditVideoForm({ videos, categories, models, updateVideoAction }:
               defaultValue={video.thumbnailUrl ?? ""}
               className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
             />
+            <p className="text-[11px] text-neutral-500">To pick a thumbnail from this video’s photo gallery, open the video scene page (as admin) and use “Admin — Choose thumbnail” there.</p>
           </div>
           <div className="space-y-1">
             <label className="text-xs text-neutral-200">Video URL</label>

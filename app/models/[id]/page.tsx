@@ -1,13 +1,60 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import SiteShell from "../../(site)/Shell";
 import { AgeGate } from "../../(site)/AgeGate";
 import { GalleryWithLightbox } from "../../(site)/GalleryWithLightbox";
-import { getModels, getVideos } from "@/lib/data";
+import { getModels, getVideos, getUsers, getVideoPhotoUrls } from "@/lib/data";
+import { updateModel } from "@/lib/admin";
+import { ModelAdminSelectors } from "./ModelAdminSelectors";
 
 type Props = {
   params: Promise<{ id: string }>;
 };
+
+async function setModelAvatarAction(modelId: string, avatarUrl: string) {
+  "use server";
+  updateModel(modelId, { avatarUrl });
+  revalidatePath("/models");
+  revalidatePath(`/models/${modelId}`);
+}
+
+async function setRandomModelAvatarAction(modelId: string) {
+  "use server";
+  const models = getModels();
+  const model = models.find((m) => m.id === modelId);
+  if (!model) return;
+  const videos = getVideos(true).filter((v) => v.models.includes(modelId));
+  const pool: string[] = [];
+  for (const v of videos) {
+    const urls = getVideoPhotoUrls(v.id);
+    for (const u of urls) {
+      if (u && !pool.includes(u)) pool.push(u);
+    }
+  }
+  if (pool.length === 0) return;
+  const randomUrl = pool[Math.floor(Math.random() * pool.length)]!;
+  updateModel(modelId, { avatarUrl: randomUrl });
+  revalidatePath("/models");
+  revalidatePath(`/models/${modelId}`);
+}
+
+async function addModelGalleryUrlsAction(modelId: string, urls: string[]) {
+  "use server";
+  const models = getModels();
+  const model = models.find((m) => m.id === modelId);
+  if (!model || urls.length === 0) return;
+  const existing = model.galleryUrls ?? [];
+  const combined = [...existing];
+  for (const u of urls) {
+    const url = u.trim();
+    if (url && !combined.includes(url)) combined.push(url);
+  }
+  updateModel(modelId, { galleryUrls: combined });
+  revalidatePath("/models");
+  revalidatePath(`/models/${modelId}`);
+}
 
 export default async function ModelDetailPage({ params }: Props) {
   const { id } = await params;
@@ -20,6 +67,26 @@ export default async function ModelDetailPage({ params }: Props) {
 
   const videos = getVideos().filter((v) => v.models.includes(model.id));
   const galleryUrls = model.galleryUrls ?? [];
+
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("vs_userId")?.value;
+  const users = getUsers();
+  const user = users.find((u) => u.id === userId);
+  const isAdmin = user?.role === "admin";
+
+  const photoPoolUrls: string[] = [];
+  if (isAdmin && videos.length > 0) {
+    const seen = new Set<string>();
+    for (const v of videos) {
+      const urls = getVideoPhotoUrls(v.id);
+      for (const u of urls) {
+        if (u && !seen.has(u)) {
+          seen.add(u);
+          photoPoolUrls.push(u);
+        }
+      }
+    }
+  }
 
   return (
     <AgeGate>
@@ -38,21 +105,40 @@ export default async function ModelDetailPage({ params }: Props) {
                   <img
                     src={model.avatarUrl}
                     alt={model.stageName}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                   />
                 ) : null}
               </div>
               <div className="space-y-1">
                 <h1 className="text-3xl font-semibold tracking-tight">{model.stageName}</h1>
-                <p className="text-xs text-neutral-400">
-                  {model.active ? "Active" : "Taking a break"}
-                </p>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+                  {model.gender && (
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-neutral-300">
+                      {model.gender === "female" ? "Female" : "Male"} performer
+                    </span>
+                  )}
+                  <span>
+                    {model.active ? "Active" : "Taking a break"}
+                  </span>
+                </div>
                 {model.bio && (
                   <p className="mt-3 max-w-xl text-sm text-neutral-300">{model.bio}</p>
                 )}
               </div>
             </div>
           </header>
+
+          {isAdmin && photoPoolUrls.length > 0 && (
+            <ModelAdminSelectors
+              modelId={model.id}
+              currentAvatarUrl={model.avatarUrl}
+              currentGalleryUrls={galleryUrls}
+              photoPoolUrls={photoPoolUrls}
+              setAvatarAction={setModelAvatarAction}
+              setRandomAvatarAction={setRandomModelAvatarAction}
+              addGalleryUrlsAction={addModelGalleryUrlsAction}
+            />
+          )}
 
           {galleryUrls.length > 0 && (
             <section className="space-y-3">
@@ -62,7 +148,6 @@ export default async function ModelDetailPage({ params }: Props) {
                 urls={galleryUrls}
                 altPrefix={`${model.stageName} gallery`}
                 gridClassName="grid gap-3 sm:grid-cols-2 md:grid-cols-3"
-                itemClassName="aspect-[4/3]"
               />
             </section>
           )}

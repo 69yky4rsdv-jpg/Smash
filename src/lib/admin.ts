@@ -1,5 +1,6 @@
-import { getCategories, saveCategories, getModels, getVideos, saveModels, saveVideos, subscriptionPlans, users, appendVideo } from "./data";
+import { getCategories, saveCategories, getModels, getVideos, saveModels, saveVideos, subscriptionPlans, getUsers, saveUsers, appendVideo } from "./data";
 import type { Category, Model, SubscriptionPlan, Video } from "./types";
+import { inferModelGender } from "./model-gender";
 import { randomUUID } from "crypto";
 
 export function createCategory(name: string): Category {
@@ -13,7 +14,22 @@ export function createCategory(name: string): Category {
   return category;
 }
 
-export function createModel(stageName: string, bio?: string, avatarUrl?: string, galleryUrls?: string[]): Model {
+/** Get existing category by name (case-insensitive) or create one. */
+export function getOrCreateCategory(name: string): Category {
+  const list = getCategories();
+  const n = name.trim();
+  const existing = list.find((c) => c.name.toLowerCase() === n.toLowerCase());
+  if (existing) return existing;
+  return createCategory(n);
+}
+
+export function createModel(
+  stageName: string,
+  bio?: string,
+  avatarUrl?: string,
+  galleryUrls?: string[],
+  gender?: Model["gender"]
+): Model {
   const list = getModels();
   const model: Model = {
     id: randomUUID(),
@@ -21,11 +37,21 @@ export function createModel(stageName: string, bio?: string, avatarUrl?: string,
     bio,
     avatarUrl,
     galleryUrls,
-    active: true
+    active: true,
+    gender
   };
   list.push(model);
   saveModels(list);
   return model;
+}
+
+/** Get existing model by stage name (case-insensitive) or create one. */
+export function getOrCreateModel(stageName: string): Model {
+  const list = getModels();
+  const n = stageName.trim();
+  const existing = list.find((m) => m.stageName.toLowerCase() === n.toLowerCase());
+  if (existing) return existing;
+  return createModel(n);
 }
 
 export function deleteModel(id: string): void {
@@ -52,7 +78,7 @@ export function toggleModelActive(id: string): Model | null {
 
 export function updateModel(
   id: string,
-  updates: Partial<Pick<Model, "stageName" | "bio" | "avatarUrl" | "galleryUrls" | "active">>
+  updates: Partial<Pick<Model, "stageName" | "bio" | "avatarUrl" | "galleryUrls" | "active" | "gender">>
 ): Model | null {
   const list = getModels();
   const model = list.find((m) => m.id === id);
@@ -62,6 +88,7 @@ export function updateModel(
   if (updates.avatarUrl !== undefined) model.avatarUrl = updates.avatarUrl;
   if (updates.galleryUrls !== undefined) model.galleryUrls = updates.galleryUrls;
   if (updates.active !== undefined) model.active = updates.active;
+  if (updates.gender !== undefined) model.gender = updates.gender;
   saveModels(list);
   return model;
 }
@@ -90,12 +117,30 @@ export function createVideo(input: {
 }
 
 export function setUserSubscription(userId: string, planId: string | undefined) {
+  const users = getUsers();
   const user = users.find((u) => u.id === userId);
   if (!user) return;
   if (planId && !subscriptionPlans.find((p) => p.id === planId)) {
     return;
   }
   user.subscriptionPlanId = planId;
+  saveUsers(users);
+}
+
+/**
+ * Set gender on all models that don't have it, using name-based inference (male name list).
+ * Returns how many models were updated.
+ */
+export function autoCategorizeModelGenders(): { updated: number } {
+  const models = getModels();
+  let updated = 0;
+  for (const model of models) {
+    if (model.gender != null) continue;
+    const inferred = inferModelGender(model.stageName);
+    updateModel(model.id, { gender: inferred });
+    updated++;
+  }
+  return { updated };
 }
 
 export function updateSubscriptionPlan(

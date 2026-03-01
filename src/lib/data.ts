@@ -284,9 +284,7 @@ export function parsePhotoUrls(paste: string): string[] {
   );
 }
 
-// Simple in-memory user store for demo purposes only.
-// In a real deployment this should be replaced with a database.
-export const users: User[] = [
+const DEFAULT_USERS: User[] = [
   {
     id: "admin",
     email: "admin@velvetstream.test",
@@ -295,4 +293,30 @@ export const users: User[] = [
     subscriptionPlanId: "yearly"
   }
 ];
+
+function getUsersPath(): string {
+  return join(process.cwd(), "data", "users.json");
+}
+
+export function getUsers(): User[] {
+  try {
+    const path = getUsersPath();
+    if (!existsSync(path)) return [...DEFAULT_USERS];
+    const raw = readFileSync(path, "utf-8");
+    const data = JSON.parse(raw) as User[];
+    return Array.isArray(data) ? data : [...DEFAULT_USERS];
+  } catch {
+    return [...DEFAULT_USERS];
+  }
+}
+
+export function saveUsers(usersList: User[]): void {
+  try {
+    const dir = join(process.cwd(), "data");
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(getUsersPath(), JSON.stringify(usersList, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write users.json:", e);
+  }
+}
 

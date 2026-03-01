@@ -7,6 +7,8 @@ export type SiteSettings = {
   heroBannerLine1: string;
   heroBannerLine2: string;
   heroBannerImageUrl?: string;
+  /** When true, male performers are hidden on the public /models page. */
+  hideMalePerformersOnModelsPage?: boolean;
 };
 
 const DEFAULT: SiteSettings = {
@@ -14,7 +16,8 @@ const DEFAULT: SiteSettings = {
   logoUrl: undefined,
   heroBannerLine1: "A fan favorite.",
   heroBannerLine2: "Take it all in.",
-  heroBannerImageUrl: "https://picsum.photos/1600/400?blur=2"
+  heroBannerImageUrl: "https://picsum.photos/1600/400?blur=2",
+  hideMalePerformersOnModelsPage: false
 };
 
 function getFilePath(): string {
@@ -32,7 +35,8 @@ export function getSiteSettings(): SiteSettings {
       logoUrl: data.logoUrl ?? DEFAULT.logoUrl,
       heroBannerLine1: data.heroBannerLine1 ?? DEFAULT.heroBannerLine1,
       heroBannerLine2: data.heroBannerLine2 ?? DEFAULT.heroBannerLine2,
-      heroBannerImageUrl: data.heroBannerImageUrl ?? DEFAULT.heroBannerImageUrl
+      heroBannerImageUrl: data.heroBannerImageUrl ?? DEFAULT.heroBannerImageUrl,
+      hideMalePerformersOnModelsPage: Boolean(data.hideMalePerformersOnModelsPage ?? DEFAULT.hideMalePerformersOnModelsPage)
     };
   } catch {
     return { ...DEFAULT };
@@ -46,7 +50,8 @@ export function setSiteSettings(updates: Partial<SiteSettings>): SiteSettings {
     logoUrl: updates.logoUrl !== undefined ? updates.logoUrl : current.logoUrl,
     heroBannerLine1: updates.heroBannerLine1 ?? current.heroBannerLine1,
     heroBannerLine2: updates.heroBannerLine2 ?? current.heroBannerLine2,
-    heroBannerImageUrl: updates.heroBannerImageUrl !== undefined ? updates.heroBannerImageUrl : current.heroBannerImageUrl
+    heroBannerImageUrl: updates.heroBannerImageUrl !== undefined ? updates.heroBannerImageUrl : current.heroBannerImageUrl,
+    hideMalePerformersOnModelsPage: updates.hideMalePerformersOnModelsPage !== undefined ? updates.hideMalePerformersOnModelsPage : current.hideMalePerformersOnModelsPage
   };
   try {
     const dir = join(process.cwd(), "data");

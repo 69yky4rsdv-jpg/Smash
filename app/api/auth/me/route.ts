@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { subscriptionPlans, users } from "@/lib/data";
+import { subscriptionPlans, getUsers } from "@/lib/data";
 
 export async function GET() {
-  const cookieStore = await cookies();
+  const cookieStore = await cookies(); // Next.js 15+ returns Promise
   const userId = cookieStore.get("vs_userId")?.value;
 
   if (!userId) {
@@ -16,7 +16,7 @@ export async function GET() {
     );
   }
 
-  const user = users.find((u) => u.id === userId);
+  const user = getUsers().find((u) => u.id === userId);
 
   if (!user) {
     return NextResponse.json(

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "admin",
+    "email": "admin@velvetstream.test",
+    "password": "admin",
+    "role": "admin",
+    "subscriptionPlanId": "yearly"
+  },
+  {
+    "id": "219b44a2-f0bf-4a23-9ac2-5e60faffa767",
+    "email": "jdwalk365@gmail.com",
+    "password": "Monster80",
+    "role": "user",
+    "subscriptionPlanId": "6month"
+  }
+]
