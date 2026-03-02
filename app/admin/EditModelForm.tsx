@@ -159,11 +159,28 @@ export function EditModelForm({ models, modelPhotoMap, updateModelAction }: Prop
               <div className="text-[11px] text-neutral-400">
                 <p>Current profile photo (if set).</p>
                 <p className="text-[10px]">
-                  To pick from scene photos, open the model page (as admin) and use
-                  {" “Profile & gallery from scene photos”. "}
+                  You can paste a URL below, or auto-fill from this model&apos;s scene photos.
                 </p>
               </div>
             </div>
+            {photoPool.length > 0 && (
+              <div className="flex flex-wrap gap-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const first = photoPool[0];
+                    if (!first) return;
+                    setAvatarPreviewUrl(first);
+                    if (avatarInputRef.current) {
+                      avatarInputRef.current.value = first;
+                    }
+                  }}
+                  className="rounded-full bg-accent-pink/20 px-3 py-1.5 text-[11px] font-medium text-accent-pink hover:bg-accent-pink/30"
+                >
+                  Auto set from first scene photo
+                </button>
+              </div>
+            )}
             <div className="space-y-1">
               <label className="text-xs text-neutral-200">Profile photo URL</label>
               <input

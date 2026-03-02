@@ -126,6 +126,19 @@ export function ModelAdminSelectors({
     }
   }
 
+  async function handleAddAllToGallery() {
+    const urls = photoPoolUrls.filter((u) => !existingGallerySet.has(u));
+    if (urls.length === 0) return;
+    setPendingGallery(true);
+    try {
+      await addGalleryUrlsAction(modelId, urls);
+      setSelectedForGallery(new Set());
+      router.refresh();
+    } finally {
+      setPendingGallery(false);
+    }
+  }
+
   return (
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 space-y-5 sm:space-y-6">
       <p className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
@@ -175,7 +188,9 @@ export function ModelAdminSelectors({
       </div>
 
       <div className="pt-4 border-t border-white/10 space-y-2">
-        <p className="text-[11px] sm:text-xs text-neutral-400">Add to model gallery (select one or more, then Add):</p>
+        <p className="text-[11px] sm:text-xs text-neutral-400">
+          Add to model gallery (select one or more, or auto-add all remaining):
+        </p>
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3 max-h-52 sm:max-h-64 overflow-y-auto overflow-x-hidden overscroll-behavior-contain scroll-smooth p-0.5">
           {photoPoolUrls.map((url) => {
             const inGallery = existingGallerySet.has(url);
@@ -210,26 +225,40 @@ export function ModelAdminSelectors({
             );
           })}
         </div>
-        {selectedForGallery.size > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleAddToGallery}
-              disabled={pendingGallery}
-              className="rounded-lg bg-amber-500/30 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/40 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
-            >
-              Add {selectedForGallery.size} to gallery
-            </button>
-            <button
-              type="button"
-              onClick={() => handleAddToGalleryWithCropped([...selectedForGallery].filter((u) => !existingGallerySet.has(u)))}
-              disabled={pendingGallery}
-              className="rounded-lg border border-amber-400/50 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
-            >
-              Add with crop ({selectedForGallery.size})
-            </button>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {selectedForGallery.size > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={handleAddToGallery}
+                disabled={pendingGallery}
+                className="rounded-lg bg-amber-500/30 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/40 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
+              >
+                Add {selectedForGallery.size} to gallery
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleAddToGalleryWithCropped(
+                    [...selectedForGallery].filter((u) => !existingGallerySet.has(u))
+                  )
+                }
+                disabled={pendingGallery}
+                className="rounded-lg border border-amber-400/50 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
+              >
+                Add with crop ({selectedForGallery.size})
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={handleAddAllToGallery}
+            disabled={pendingGallery}
+            className="rounded-lg bg-emerald-500/25 px-3 py-2 sm:py-1.5 text-xs font-medium text-emerald-200 hover:bg-emerald-500/35 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
+          >
+            Auto add all remaining photos
+          </button>
+        </div>
         {pendingGallery && <p className="text-[11px] sm:text-xs text-amber-300">Adding…</p>}
       </div>
 
