@@ -1,4 +1,5 @@
 import { AgeGate } from "../(site)/AgeGate";
+import { redirect } from "next/navigation";
 import {
   addVideoPhotos,
   deleteVideo,
