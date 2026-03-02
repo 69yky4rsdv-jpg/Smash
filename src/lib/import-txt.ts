@@ -35,16 +35,22 @@ function parseList(s: string): string[] {
 }
 
 /**
- * Detect table format: header contains "Name", "Type", "Performer", "Artists", "Categories".
+ * Find the index of a table header line:
+ * something like: "Name | Type | Performer | Artists | Categories"
+ * It may not be the very first non-empty line (there can be a title line above).
  */
-function isTableFormat(lines: string[]): boolean {
-  if (lines.length < 2) return false;
-  const header = lines[0].toLowerCase();
-  return (
-    header.includes("name") &&
-    (header.includes("performer") || header.includes("artist")) &&
-    header.includes("categor")
-  );
+function findTableHeaderIndex(lines: string[]): number {
+  for (let i = 0; i < lines.length; i++) {
+    const header = lines[i].toLowerCase();
+    if (
+      header.includes("name") &&
+      (header.includes("performer") || header.includes("artist")) &&
+      header.includes("categor")
+    ) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 /**
@@ -103,8 +109,11 @@ export function parseTxtMetadata(txt: string): TxtMetadataEntry[] {
   const lines = txt.split(/\r?\n/).map((l) => l.trim());
   const nonEmpty = lines.filter(Boolean);
 
-  if (isTableFormat(nonEmpty)) {
-    return parseTableFormat(nonEmpty);
+  // Prefer table format if we can find a header row anywhere in the text.
+  const headerIndex = findTableHeaderIndex(nonEmpty);
+  if (headerIndex !== -1) {
+    const tableLines = nonEmpty.slice(headerIndex);
+    return parseTableFormat(tableLines);
   }
 
   const result: TxtMetadataEntry[] = [];

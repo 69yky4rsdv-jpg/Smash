@@ -19,6 +19,7 @@ import {
   createCategory,
   createModel,
   createVideo,
+  deleteCategories,
   deleteModel,
   setUserSubscription,
   toggleModelActive,
@@ -380,6 +381,35 @@ async function applyTxtMetadataAction(
   }
 }
 
+async function clearAllVideoCategoriesAction() {
+  "use server";
+  const videos = getVideos(true);
+  for (const v of videos) {
+    if (v.categories && v.categories.length > 0) {
+      updateVideo(v.id, { categories: [] });
+    }
+  }
+  revalidatePath("/");
+  revalidatePath("/videos");
+  revalidatePath("/videos/trending");
+  revalidatePath("/categories");
+  revalidatePath("/admin");
+}
+
+async function deleteCategoriesAction(formData: FormData) {
+  "use server";
+  const raw = formData.getAll("categoryIds").map(String).filter(Boolean);
+  if (!raw.length) return;
+  // Safety: only process the first 30 selected at a time.
+  const ids = raw.slice(0, 30);
+  deleteCategories(ids);
+  revalidatePath("/");
+  revalidatePath("/videos");
+  revalidatePath("/videos/trending");
+  revalidatePath("/categories");
+  revalidatePath("/admin");
+}
+
 export default async function AdminPage() {
   const { isAdmin } = await getSession();
   if (!isAdmin) {
@@ -390,6 +420,7 @@ export default async function AdminPage() {
   const videos = getVideos(true);
   const models = getModels();
   const users = getUsers();
+  const categories = getCategories();
 
   const modelPhotoMap: Record<string, string[]> = {};
   const videoPhotoMap: Record<string, string[]> = {};
@@ -563,7 +594,7 @@ export default async function AdminPage() {
                     <TagMultiSelect
                       name="categories"
                       label="Categories"
-                      items={getCategories().map((cat) => ({ id: cat.id, label: cat.name }))}
+                      items={categories.map((cat) => ({ id: cat.id, label: cat.name }))}
                     />
                     <TagMultiSelect
                       name="models"
@@ -584,7 +615,7 @@ export default async function AdminPage() {
                   <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Edit video</h3>
                   <EditVideoForm
                     videos={videos}
-                    categories={getCategories()}
+                    categories={categories}
                     models={models}
                     updateVideoAction={updateVideoAction}
                     videoPhotoMap={videoPhotoMap}
@@ -793,17 +824,68 @@ export default async function AdminPage() {
                 <h2 className="text-lg font-semibold text-neutral-100">Categories</h2>
                 <p className="text-xs text-neutral-500 mt-0.5">Add and view categories used on videos.</p>
               </div>
-                  <CreateCategoryForm action={createCategoryAction} />
-                  <div className="flex flex-wrap gap-2 text-[11px] text-neutral-200">
-                    {getCategories().map((cat) => (
-                      <span
+              <CreateCategoryForm action={createCategoryAction} />
+              <div className="flex flex-wrap gap-2 text-[11px] text-neutral-200">
+                {categories.map((cat) => (
+                  <span
+                    key={cat.id}
+                    className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"
+                  >
+                    {cat.name}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-red-300">
+                  Bulk remove categories from all videos
+                </p>
+                <p className="text-[11px] text-red-200/80">
+                  This will clear the category list on <strong>every video</strong>. Use this if a TXT
+                  import assigned the wrong categories and you want to start over.
+                </p>
+                <form action={clearAllVideoCategoriesAction} className="mt-1">
+                  <button
+                    type="submit"
+                    className="rounded-full border border-red-500/70 bg-red-500/20 px-4 py-1.5 text-[11px] font-semibold text-red-100 hover:bg-red-500/30"
+                  >
+                    Remove all categories from all videos
+                  </button>
+                </form>
+              </div>
+              <div className="mt-4 rounded-lg border border-white/15 bg-white/5 p-3 space-y-2">
+                <p className="text-xs font-semibold text-neutral-100">
+                  Delete categories (up to 30 at a time)
+                </p>
+                <p className="text-[11px] text-neutral-400">
+                  Select categories below and click delete to remove them from the category list and
+                  from any videos that use them. For safety, only the first 30 selected will be
+                  deleted per request.
+                </p>
+                <form action={deleteCategoriesAction} className="space-y-2 text-xs">
+                  <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/40 p-2">
+                    {categories.map((cat) => (
+                      <label
                         key={cat.id}
-                        className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"
+                        className="flex items-center gap-2 rounded px-2 py-1 hover:bg-white/10"
                       >
-                        {cat.name}
-                      </span>
+                        <input
+                          type="checkbox"
+                          name="categoryIds"
+                          value={cat.id}
+                          className="h-3 w-3 rounded border-white/30 bg-black"
+                        />
+                        <span className="truncate">{cat.name}</span>
+                      </label>
                     ))}
-                </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="rounded-full border border-red-400/70 bg-red-500/30 px-4 py-1.5 text-[11px] font-semibold text-red-50 hover:bg-red-500/50"
+                  >
+                    Delete selected categories (max 30)
+                  </button>
+                </form>
+              </div>
             </section>
 
             <section id="import" className="scroll-mt-24 card-surface p-6 space-y-6 border-l-4 border-l-sky-500/50">

@@ -14,6 +14,33 @@ export function createCategory(name: string): Category {
   return category;
 }
 
+/**
+ * Delete one or more categories by id and remove them from all videos.
+ */
+export function deleteCategories(categoryIds: string[]): void {
+  if (categoryIds.length === 0) return;
+  const toDelete = new Set(categoryIds);
+
+  // Remove from category list
+  const categories = getCategories().filter((c) => !toDelete.has(c.id));
+  saveCategories(categories);
+
+  // Remove from videos
+  const videos = getVideos(true);
+  let changed = false;
+  for (const video of videos) {
+    const original = video.categories ?? [];
+    const filtered = original.filter((id) => !toDelete.has(id));
+    if (filtered.length !== original.length) {
+      video.categories = filtered;
+      changed = true;
+    }
+  }
+  if (changed) {
+    saveVideos(videos);
+  }
+}
+
 /** Get existing category by name (case-insensitive) or create one. */
 export function getOrCreateCategory(name: string): Category {
   const list = getCategories();
