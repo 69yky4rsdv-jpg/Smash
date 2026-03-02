@@ -1,14 +1,21 @@
 import { AgeGate } from "../(site)/AgeGate";
 import { SubscriptionGate } from "../(site)/SubscriptionGate";
-import { getVideos } from "@/lib/data";
+import { getVideos, getUsers } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
 import Link from "next/link";
 import { VideosListClient } from "./VideosListClient";
 
-export default function AllVideosPage() {
+export default async function AllVideosPage() {
   const videos = getVideos();
+  const userId = await getAuthUserId();
+  const user = getUsers().find((u) => u.id === userId);
+  const isAdmin = user?.role === "admin" || userId === "admin";
+  const hasSubscription =
+    (!!user && (user.role === "admin" || !!user.subscriptionPlanId)) || userId === "admin";
+
   return (
     <AgeGate>
-      <SubscriptionGate>
+      <SubscriptionGate initialHasAccess={hasSubscription} skipGate={isAdmin}>
         <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
           <header className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight">All videos</h1>
