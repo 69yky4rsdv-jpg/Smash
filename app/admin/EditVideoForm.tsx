@@ -151,10 +151,29 @@ export function EditVideoForm({
               <div className="text-[11px] text-neutral-400">
                 <p>Current thumbnail preview.</p>
                 <p className="text-[10px]">
-                  You can paste a URL below or pick from this video&apos;s photo gallery.
+                  You can paste a URL below, auto-fill from scene photos, or pick from this
+                  video&apos;s photo gallery.
                 </p>
               </div>
             </div>
+            {photoPool.length > 0 && (
+              <div className="flex flex-wrap gap-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const first = photoPool[0];
+                    if (!first) return;
+                    setThumbPreviewUrl(first);
+                    if (thumbnailInputRef.current) {
+                      thumbnailInputRef.current.value = first;
+                    }
+                  }}
+                  className="rounded-full bg-accent-pink/20 px-3 py-1.5 text-[11px] font-medium text-accent-pink hover:bg-accent-pink/30"
+                >
+                  Auto set from first scene photo
+                </button>
+              </div>
+            )}
             <div className="space-y-1">
               <label className="text-xs text-neutral-200">Thumbnail URL</label>
               <input

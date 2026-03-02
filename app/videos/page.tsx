@@ -4,7 +4,10 @@ import Link from "next/link";
 import { VideosListClient } from "./VideosListClient";
 
 export default async function AllVideosPage() {
-  const videos = getVideos();
+  // Only show videos that have a real source file and thumbnail,
+  // so the page doesn't list "phantom" videos with missing assets.
+  const all = getVideos();
+  const videos = all.filter((v) => v.videoUrl && v.thumbnailUrl);
 
   return (
     <AgeGate>
