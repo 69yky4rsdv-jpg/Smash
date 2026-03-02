@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { subscriptionPlans, getUsers } from "@/lib/data";
+import { getAuthUserId } from "@/lib/auth-server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const cookieStore = await cookies(); // Next.js 15+ returns Promise
-  const userId = (cookieStore.get("vs_userId")?.value ?? "").trim();
+  const userId = (await getAuthUserId()).trim();
 
   if (!userId) {
     return NextResponse.json(
