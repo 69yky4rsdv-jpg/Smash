@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AgeGate } from "../../(site)/AgeGate";
 import { ScrollingTitle } from "../../(site)/ScrollingTitle";
-import { getCategories, getModels, getVideos, getUsers, getVideoPhotoUrls, updateVideo } from "@/lib/data";
-import { getAuthUserId } from "@/lib/auth-server";
+import { getCategories, getModels, getVideos, getVideoPhotoUrls, updateVideo } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
 import { AdminThumbnailSelector } from "./AdminThumbnailSelector";
+import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -33,23 +33,16 @@ export default async function VideoDetailPage({ params }: Props) {
     redirect("/videos");
   }
 
-  const userId = await getAuthUserId();
-  const users = getUsers();
-  const user = users.find((u) => u.id === userId);
-  const isAdmin = user?.role === "admin" || userId === "admin";
-  const hasSubscription =
-    (!!user && (user.role === "admin" || !!user.subscriptionPlanId)) || userId === "admin";
+  const { isAdmin, hasSubscription } = await getSession();
 
-  // Gate scene page on the server: only admins and subscribed users can view.
-  if (!userId) {
+  // If not logged in, or logged in without a subscription, send to pricing.
+  if (!isAdmin && !hasSubscription) {
     redirect("/pricing");
   }
-  if (!hasSubscription) {
-    redirect("/pricing");
-  }
-  const photoUrls = isAdmin ? getVideoPhotoUrls(video.id) : [];
+
+  const photoUrls = getVideoPhotoUrls(video.id);
   const site = getSiteSettings();
-  const enableAdminThumbnail = site.siteName === "SmashPov";
+  const enableAdminThumbnail = site.siteName === "SmashPov" && photoUrls.length > 0;
 
   const models = getModels();
   const videoModels = models.filter((m) => video.models.includes(m.id));
@@ -122,7 +115,7 @@ export default async function VideoDetailPage({ params }: Props) {
                   />
                 ) : null}
               </div>
-              {isAdmin && enableAdminThumbnail && (
+              {enableAdminThumbnail && (
                 <AdminThumbnailSelector
                   videoId={video.id}
                   currentThumbnailUrl={video.thumbnailUrl}

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AgeGate } from "../../../(site)/AgeGate";
 import { GalleryWithLightbox } from "../../../(site)/GalleryWithLightbox";
-import { getVideos, getVideoPhotoUrls, getUsers } from "@/lib/data";
-import { getAuthUserId } from "@/lib/auth-server";
+import { getVideos, getVideoPhotoUrls } from "@/lib/data";
+import { getSession } from "@/lib/auth";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -18,20 +18,12 @@ export default async function VideoPhotosPage({ params }: Props) {
     redirect("/videos");
   }
 
-  const userId = await getAuthUserId();
-  const user = getUsers().find((u) => u.id === userId);
-  const isAdmin = user?.role === "admin" || userId === "admin";
-  const hasSubscription =
-    (!!user && (user.role === "admin" || !!user.subscriptionPlanId)) || userId === "admin";
-  const photoUrls = getVideoPhotoUrls(video.id);
+  const { isAdmin, hasSubscription } = await getSession();
+  if (!isAdmin && !hasSubscription) {
+    redirect("/pricing");
+  }
 
-  // Gate photos page on the server: only admins and subscribed users can view.
-  if (!userId) {
-    redirect("/pricing");
-  }
-  if (!hasSubscription) {
-    redirect("/pricing");
-  }
+  const photoUrls = getVideoPhotoUrls(video.id);
 
   return (
     <AgeGate>

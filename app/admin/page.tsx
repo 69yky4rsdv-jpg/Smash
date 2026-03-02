@@ -12,6 +12,7 @@ import {
   subscriptionPlans,
   updateVideo
 } from "@/lib/data";
+import { getSession } from "@/lib/auth";
 import {
   autoCategorizeModelGenders,
   createCategory,
@@ -378,7 +379,12 @@ async function applyTxtMetadataAction(
   }
 }
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const { isAdmin } = await getSession();
+  if (!isAdmin) {
+    // Non-admins should not reach the dashboard.
+    redirect("/");
+  }
   const site = getSiteSettings();
   const videos = getVideos(true);
   const models = getModels();

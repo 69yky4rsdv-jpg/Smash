@@ -5,40 +5,23 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
-type MeResponse = { isLoggedIn: boolean; user?: { role?: string } };
-
 export default function SiteShell({
   children,
-  initialIsLoggedIn = false,
-  initialIsAdmin = false
 }: {
   children: ReactNode;
-  initialIsLoggedIn?: boolean;
-  initialIsAdmin?: boolean;
 }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
-  const [isAdmin, setIsAdmin] = useState(initialIsAdmin);
   const { siteName, logoUrl } = useSiteSettings();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    async function checkAuth() {
-      try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
-        if (cancelled) return;
-        const data = (await res.json()) as MeResponse;
-        if (data.isLoggedIn) {
-          setIsLoggedIn(true);
-          setIsAdmin(data.user?.role === "admin");
-        }
-      } catch {
-        if (cancelled) return;
-      }
-    }
-    checkAuth();
-    return () => {
-      cancelled = true;
-    };
+    if (typeof document === "undefined") return;
+    const raw = document.cookie ?? "";
+    const hasUser = raw.includes("vs_userId=");
+    const roleMatch = raw.match(/vs_role=([^;]+)/);
+    const role = roleMatch ? decodeURIComponent(roleMatch[1]) : "";
+    setIsLoggedIn(hasUser);
+    setIsAdmin(role === "admin");
   }, []);
 
   return (
@@ -71,14 +54,12 @@ export default function SiteShell({
             >
               Models
             </Link>
-            {isLoggedIn && (
-              <Link
-                href="/categories"
-                className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
-              >
-                Categories
-              </Link>
-            )}
+            <Link
+              href="/categories"
+              className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
+            >
+              Categories
+            </Link>
             <Link
               href="/videos"
               className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
@@ -94,7 +75,10 @@ export default function SiteShell({
               </Link>
             )}
             {isLoggedIn ? (
-              <Link href="/auth/logout" className="btn-gradient ml-2 text-xs px-4 py-1.5">
+              <Link
+                href="/auth/logout"
+                className="btn-gradient ml-2 text-xs px-4 py-1.5"
+              >
                 Logout
               </Link>
             ) : (
