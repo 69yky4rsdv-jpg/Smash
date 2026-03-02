@@ -1,5 +1,17 @@
 import { AgeGate } from "../(site)/AgeGate";
-import { addVideoPhotos, deleteVideo, getCategories, getModels, getVideos, getUsers, parsePhotoUrls, setVideoHidden, subscriptionPlans, updateVideo } from "@/lib/data";
+import {
+  addVideoPhotos,
+  deleteVideo,
+  getCategories,
+  getModels,
+  getVideos,
+  getUsers,
+  getVideoPhotoUrls,
+  parsePhotoUrls,
+  setVideoHidden,
+  subscriptionPlans,
+  updateVideo
+} from "@/lib/data";
 import {
   autoCategorizeModelGenders,
   createCategory,
@@ -372,6 +384,23 @@ export default function AdminPage() {
   const models = getModels();
   const users = getUsers();
 
+  const modelPhotoMap: Record<string, string[]> = {};
+  const videoPhotoMap: Record<string, string[]> = {};
+  for (const video of videos) {
+    const photoUrls = getVideoPhotoUrls(video.id);
+    if (!photoUrls.length) continue;
+    videoPhotoMap[video.id] = photoUrls;
+    if (!video.models || video.models.length === 0) continue;
+    for (const modelId of video.models) {
+      if (!modelPhotoMap[modelId]) modelPhotoMap[modelId] = [];
+      const bucket = modelPhotoMap[modelId]!;
+      for (const url of photoUrls) {
+        const clean = url.trim();
+        if (clean && !bucket.includes(clean)) bucket.push(clean);
+      }
+    }
+  }
+
   return (
     <AgeGate>
       <div className="mx-auto max-w-6xl px-4 py-8 space-y-12">
@@ -551,6 +580,7 @@ export default function AdminPage() {
                     categories={getCategories()}
                     models={models}
                     updateVideoAction={updateVideoAction}
+                    videoPhotoMap={videoPhotoMap}
                   />
                 </div>
 
@@ -683,7 +713,11 @@ export default function AdminPage() {
 
                 <div className="pt-6 border-t border-white/10 space-y-3">
                   <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">Edit model</h3>
-                    <EditModelForm models={models} updateModelAction={updateModelAction} />
+                  <EditModelForm
+                    models={models}
+                    modelPhotoMap={modelPhotoMap}
+                    updateModelAction={updateModelAction}
+                  />
                 </div>
 
                 <div className="pt-6 border-t border-white/10 space-y-2">

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Category, Model, Video } from "@/lib/types";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { TagMultiSelect } from "./TagMultiSelect";
 
 const PER_PAGE = 20;
@@ -11,12 +11,20 @@ type Props = {
   categories: Category[];
   models: Model[];
   updateVideoAction: (formData: FormData) => Promise<void>;
+  videoPhotoMap: Record<string, string[]>;
 };
 
-export function EditVideoForm({ videos, categories, models, updateVideoAction }: Props) {
+export function EditVideoForm({
+  videos,
+  categories,
+  models,
+  updateVideoAction,
+  videoPhotoMap
+}: Props) {
   const [videoId, setVideoId] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
+  const [thumbPreviewUrl, setThumbPreviewUrl] = useState<string | null>(null);
 
   const normalizedQuery = query.toLowerCase().trim();
   const filteredVideos = videos.filter((v) =>
@@ -28,6 +36,10 @@ export function EditVideoForm({ videos, categories, models, updateVideoAction }:
   const pageVideos = filteredVideos.slice(start, start + PER_PAGE);
 
   const video = videos.find((v) => v.id === videoId);
+  const thumbnailInputRef = useRef<HTMLInputElement | null>(null);
+  const effectiveThumb = thumbPreviewUrl ?? video?.thumbnailUrl ?? "";
+
+  const photoPool = video ? videoPhotoMap[video.id] ?? [] : [];
 
   return (
     <div className="space-y-4">
@@ -53,7 +65,10 @@ export function EditVideoForm({ videos, categories, models, updateVideoAction }:
             <li key={v.id}>
               <button
                 type="button"
-                onClick={() => setVideoId(v.id)}
+                onClick={() => {
+                  setVideoId(v.id);
+                  setThumbPreviewUrl(null);
+                }}
                 className={`block w-full text-left px-3 py-2 text-xs transition ${
                   videoId === v.id
                     ? "bg-accent-pink/20 text-accent-pinkSoft"
@@ -122,14 +137,69 @@ export function EditVideoForm({ videos, categories, models, updateVideoAction }:
               className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-neutral-200">Thumbnail URL</label>
-            <input
-              name="thumbnailUrl"
-              defaultValue={video.thumbnailUrl ?? ""}
-              className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
-            />
-            <p className="text-[11px] text-neutral-500">To pick a thumbnail from this video’s photo gallery, open the video scene page (as admin) and use “Admin — Choose thumbnail” there.</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-20 shrink-0 overflow-hidden rounded-lg bg-gradient-to-tr from-pink-500/40 via-black to-pink-700/40">
+                {effectiveThumb ? (
+                  <img
+                    src={effectiveThumb}
+                    alt={video.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
+              <div className="text-[11px] text-neutral-400">
+                <p>Current thumbnail preview.</p>
+                <p className="text-[10px]">
+                  You can paste a URL below or pick from this video&apos;s photo gallery.
+                </p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-neutral-200">Thumbnail URL</label>
+              <input
+                name="thumbnailUrl"
+                defaultValue={video.thumbnailUrl ?? ""}
+                ref={thumbnailInputRef}
+                className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                onChange={(e) => setThumbPreviewUrl(e.target.value || null)}
+              />
+            </div>
+            {photoPool.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[11px] text-neutral-400">
+                  Or pick a thumbnail from this video&apos;s photo gallery:
+                </p>
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 sm:gap-3 max-h-40 overflow-y-auto p-0.5 rounded-lg border border-white/10 bg-black/40">
+                  {photoPool.map((url) => (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => {
+                        setThumbPreviewUrl(url);
+                        if (thumbnailInputRef.current) {
+                          thumbnailInputRef.current.value = url;
+                        }
+                      }}
+                      className={`relative aspect-square min-w-0 overflow-hidden rounded-md border-2 transition-all duration-150 active:scale-[0.98] ${
+                        effectiveThumb === url
+                          ? "border-accent-pink ring-1 ring-accent-pink/60"
+                          : "border-white/15 hover:border-accent-pink/70"
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <label className="text-xs text-neutral-200">Video URL</label>

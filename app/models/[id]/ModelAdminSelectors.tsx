@@ -35,11 +35,11 @@ export function ModelAdminSelectors({
 
   if (!photoPoolUrls.length) {
     return (
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-2">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 space-y-2">
         <p className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
           Admin — Profile & gallery from scene photos
         </p>
-        <p className="text-[11px] text-neutral-400">
+        <p className="text-[11px] sm:text-xs text-neutral-400">
           No scene photos for this model yet. Add video photos in{" "}
           <Link href="/admin#import" className="text-amber-300 hover:text-amber-200 underline">
             Admin → Import PhotoSets
@@ -127,12 +127,12 @@ export function ModelAdminSelectors({
   }
 
   return (
-    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 space-y-6">
+    <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 space-y-5 sm:space-y-6">
       <p className="text-xs font-semibold text-amber-200 uppercase tracking-wider">
         Admin — Profile & gallery from scene photos
       </p>
-      <p className="text-[11px] text-neutral-400">
-        Photos below are from video galleries for this model’s scenes. Set one as profile picture or add any to the model gallery.
+      <p className="text-[11px] sm:text-xs text-neutral-400">
+        Photos below are from video galleries for this model’s scenes. Tap or click to set profile picture or add to the model gallery.
       </p>
 
       <div className="space-y-2">
@@ -141,20 +141,20 @@ export function ModelAdminSelectors({
             type="button"
             onClick={handleSetRandomAvatar}
             disabled={pendingAvatar}
-            className="rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/30 disabled:opacity-50"
+            className="rounded-lg border border-amber-400/50 bg-amber-500/20 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/30 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
           >
             Set random profile picture
           </button>
         </div>
-        <p className="text-[11px] text-neutral-500">Or click a photo to set as profile picture:</p>
-        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+        <p className="text-[11px] sm:text-xs text-neutral-500">Or tap a photo to set as profile picture:</p>
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 sm:gap-3 max-h-44 sm:max-h-52 overflow-y-auto overflow-x-hidden overscroll-behavior-contain scroll-smooth p-0.5">
           {photoPoolUrls.map((url) => (
             <button
               key={url}
               type="button"
               onClick={() => handleOpenProfileCrop(url)}
               disabled={pendingAvatar}
-              className={`shrink-0 w-14 h-14 rounded-lg border-2 overflow-hidden focus:ring-2 ring-amber-400/50 focus:outline-none transition ${
+              className={`relative aspect-square min-w-0 rounded-lg border-2 overflow-hidden focus:ring-2 ring-amber-400/50 focus:outline-none transition-all duration-150 active:scale-[0.98] ${
                 currentAvatarUrl === url
                   ? "border-amber-400 ring-2 ring-amber-400/50"
                   : "border-white/20 hover:border-amber-400/50"
@@ -163,18 +163,20 @@ export function ModelAdminSelectors({
               <img
                 src={url}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </button>
           ))}
         </div>
-        {pendingAvatar && <p className="text-[11px] text-amber-300">Updating…</p>}
+        {pendingAvatar && <p className="text-[11px] sm:text-xs text-amber-300">Updating…</p>}
       </div>
 
       <div className="pt-4 border-t border-white/10 space-y-2">
-        <p className="text-[11px] text-neutral-400">Add to model gallery (select one or more, then Add):</p>
-        <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto p-1">
+        <p className="text-[11px] sm:text-xs text-neutral-400">Add to model gallery (select one or more, then Add):</p>
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3 max-h-52 sm:max-h-64 overflow-y-auto overflow-x-hidden overscroll-behavior-contain scroll-smooth p-0.5">
           {photoPoolUrls.map((url) => {
             const inGallery = existingGallerySet.has(url);
             const selected = selectedForGallery.has(url);
@@ -183,7 +185,7 @@ export function ModelAdminSelectors({
                 key={url}
                 type="button"
                 onClick={() => !inGallery && toggleGallerySelection(url)}
-                className={`relative shrink-0 w-14 h-14 rounded-lg border-2 overflow-hidden focus:ring-2 ring-amber-400/50 focus:outline-none transition ${
+                className={`relative aspect-square min-w-0 rounded-lg border-2 overflow-hidden focus:ring-2 ring-amber-400/50 focus:outline-none transition-all duration-150 active:scale-[0.98] ${
                   inGallery
                     ? "border-emerald-500/50 opacity-75 cursor-default"
                     : selected
@@ -194,6 +196,8 @@ export function ModelAdminSelectors({
                 <img
                   src={url}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
@@ -212,7 +216,7 @@ export function ModelAdminSelectors({
               type="button"
               onClick={handleAddToGallery}
               disabled={pendingGallery}
-              className="rounded-lg bg-amber-500/30 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/40 disabled:opacity-50"
+              className="rounded-lg bg-amber-500/30 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/40 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
             >
               Add {selectedForGallery.size} to gallery
             </button>
@@ -220,13 +224,13 @@ export function ModelAdminSelectors({
               type="button"
               onClick={() => handleAddToGalleryWithCropped([...selectedForGallery].filter((u) => !existingGallerySet.has(u)))}
               disabled={pendingGallery}
-              className="rounded-lg border border-amber-400/50 px-3 py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50"
+              className="rounded-lg border border-amber-400/50 px-3 py-2 sm:py-1.5 text-xs font-medium text-amber-200 hover:bg-amber-500/20 disabled:opacity-50 min-h-[44px] sm:min-h-0 touch-manipulation"
             >
               Add with crop ({selectedForGallery.size})
             </button>
           </div>
         )}
-        {pendingGallery && <p className="text-[11px] text-amber-300">Adding…</p>}
+        {pendingGallery && <p className="text-[11px] sm:text-xs text-amber-300">Adding…</p>}
       </div>
 
       {cropProfileUrl && (
