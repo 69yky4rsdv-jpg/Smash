@@ -304,7 +304,11 @@ export function getUsers(): User[] {
     if (!existsSync(path)) return [...DEFAULT_USERS];
     const raw = readFileSync(path, "utf-8");
     const data = JSON.parse(raw) as User[];
-    return Array.isArray(data) ? data : [...DEFAULT_USERS];
+    if (!Array.isArray(data)) return [...DEFAULT_USERS];
+
+    // Always ensure the default admin user exists, even when users.json is present.
+    const hasAdmin = data.some((u) => u.id === "admin" || u.email === "admin@velvetstream.test");
+    return hasAdmin ? data : [...data, ...DEFAULT_USERS];
   } catch {
     return [...DEFAULT_USERS];
   }

@@ -35,6 +35,18 @@ export function SubscriptionGate({
     let cancelled = false;
 
     async function check() {
+      // Client-side admin cookie fallback so admin always bypasses gate,
+      // even if /api/auth/me cannot see the cookie on the server.
+      if (typeof document !== "undefined") {
+        const raw = document.cookie ?? "";
+        const match = raw.match(/vs_userId=([^;]+)/);
+        const userId = match ? decodeURIComponent(match[1].trim()) : null;
+        if (userId === "admin") {
+          setState("ok");
+          return;
+        }
+      }
+
       try {
         const res = await fetch("/api/auth/me", { credentials: "include" });
         if (!res.ok) {
