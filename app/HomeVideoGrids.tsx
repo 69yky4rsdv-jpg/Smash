@@ -14,7 +14,7 @@ export function HomeVideoGrids({ latest, trending }: Props) {
     <>
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Latest videos</h2>
+          <h2 className="text-xl font-semibold">Featured</h2>
           <Link
             href="/videos"
             className="text-xs text-accent-pinkSoft hover:text-accent-pink"

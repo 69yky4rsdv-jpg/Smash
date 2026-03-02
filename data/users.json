@@ -12,5 +12,11 @@
     "password": "Monster80",
     "role": "user",
     "subscriptionPlanId": "6month"
+  },
+  {
+    "id": "c4057c5f-8d2c-4418-a47e-aaad2e48be3a",
+    "email": "povstuffed@gmail.com",
+    "password": "monster80",
+    "role": "user"
   }
 ]

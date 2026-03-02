@@ -59,10 +59,13 @@ export function JoinNowButton() {
   const effectiveState = state === "loading" ? "anon" : state;
 
   let href = "/auth/register";
+  let label = "Join now";
   if (effectiveState === "no-sub") {
     href = "/pricing";
+    label = "View plans";
   } else if (effectiveState === "has-sub") {
     href = "/videos";
+    label = "Continue watching";
   }
 
   return (
@@ -70,7 +73,7 @@ export function JoinNowButton() {
       href={href}
       className="mt-6 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-accent-pink via-accent-pinkSoft to-pink-400 px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-pink-500/25 transition hover:scale-[1.02] hover:shadow-pink-500/40 focus:outline-none focus:ring-2 focus:ring-accent-pink/50 focus:ring-offset-2 focus:ring-offset-black"
     >
-      Join now
+      {label}
     </Link>
   );
 }

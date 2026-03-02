@@ -8,7 +8,8 @@ import { HomeVideoGrids } from "./HomeVideoGrids";
 export default function HomePage() {
   const site = getSiteSettings();
   const videos = getVideos();
-  const latest = videos.slice(0, 3);
+  const featured = videos.filter((v) => v.categories?.includes("featured"));
+  const latest = (featured.length > 0 ? featured : videos).slice(0, 3);
   const trending = videos.filter(
     (v) => v.isTrending || (v.categories && v.categories.includes("trending"))
   );

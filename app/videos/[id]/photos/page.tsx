@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AgeGate } from "../../../(site)/AgeGate";
-import { SubscriptionGate } from "../../../(site)/SubscriptionGate";
 import { GalleryWithLightbox } from "../../../(site)/GalleryWithLightbox";
 import { getVideos, getVideoPhotoUrls, getUsers } from "@/lib/data";
 import { getAuthUserId } from "@/lib/auth-server";
@@ -22,13 +21,20 @@ export default async function VideoPhotosPage({ params }: Props) {
   const userId = await getAuthUserId();
   const user = getUsers().find((u) => u.id === userId);
   const isAdmin = user?.role === "admin" || userId === "admin";
-  const hasAccess =
+  const hasSubscription =
     (!!user && (user.role === "admin" || !!user.subscriptionPlanId)) || userId === "admin";
   const photoUrls = getVideoPhotoUrls(video.id);
 
+  // Gate photos page on the server: only admins and subscribed users can view.
+  if (!userId) {
+    redirect("/pricing");
+  }
+  if (!hasSubscription) {
+    redirect("/pricing");
+  }
+
   return (
     <AgeGate>
-      <SubscriptionGate initialHasAccess={hasAccess} skipGate={userId === "admin" || isAdmin}>
         <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
             <header className="space-y-2">
               <Link
@@ -59,7 +65,6 @@ export default async function VideoPhotosPage({ params }: Props) {
               </section>
             )}
           </div>
-        </SubscriptionGate>
     </AgeGate>
   );
 }

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AgeGate } from "../../(site)/AgeGate";
-import { SubscriptionGate } from "../../(site)/SubscriptionGate";
 import { ScrollingTitle } from "../../(site)/ScrollingTitle";
 import { getCategories, getModels, getVideos, getUsers, getVideoPhotoUrls, updateVideo } from "@/lib/data";
 import { getAuthUserId } from "@/lib/auth-server";
@@ -38,8 +37,16 @@ export default async function VideoDetailPage({ params }: Props) {
   const users = getUsers();
   const user = users.find((u) => u.id === userId);
   const isAdmin = user?.role === "admin" || userId === "admin";
-  const hasAccess =
+  const hasSubscription =
     (!!user && (user.role === "admin" || !!user.subscriptionPlanId)) || userId === "admin";
+
+  // Gate scene page on the server: only admins and subscribed users can view.
+  if (!userId) {
+    redirect("/pricing");
+  }
+  if (!hasSubscription) {
+    redirect("/pricing");
+  }
   const photoUrls = isAdmin ? getVideoPhotoUrls(video.id) : [];
   const site = getSiteSettings();
   const enableAdminThumbnail = site.siteName === "SmashPov";
@@ -58,7 +65,6 @@ export default async function VideoDetailPage({ params }: Props) {
 
   return (
     <AgeGate>
-      <SubscriptionGate initialHasAccess={hasAccess} skipGate={userId === "admin" || isAdmin}>
         <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
           <header className="space-y-3">
             <Link
@@ -204,7 +210,6 @@ export default async function VideoDetailPage({ params }: Props) {
             </aside>
           </section>
         </div>
-      </SubscriptionGate>
     </AgeGate>
   );
 }
