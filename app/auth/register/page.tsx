@@ -1,9 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import { registerAction } from "../actions";
+import { useSearchParams } from "next/navigation";
+import { FormEvent, useState } from "react";
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const emailParam = searchParams.get("email") ?? "";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +52,7 @@ export default function RegisterPage() {
               name="email"
               type="email"
               required
+              defaultValue={emailParam}
               className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
             />
           </div>

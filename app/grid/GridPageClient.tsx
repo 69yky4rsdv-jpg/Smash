@@ -1,0 +1,275 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import type { GridPhoto } from "@/lib/data";
+
+const DEFAULT_MAX_PHOTOS = 30;
+
+type Props = {
+  siteName: string;
+  allPhotos: GridPhoto[];
+  selectedIds: string[];
+  isAdmin: boolean;
+  saveAction: (formData: FormData) => Promise<void>;
+  addPhotosAction: (formData: FormData) => Promise<void>;
+  maxPhotos?: number;
+};
+
+export function GridPageClient({
+  siteName,
+  allPhotos,
+  selectedIds,
+  isAdmin,
+  saveAction,
+  addPhotosAction,
+  maxPhotos = DEFAULT_MAX_PHOTOS,
+}: Props) {
+  const [selecting, setSelecting] = useState(false);
+  const [showAddPhotos, setShowAddPhotos] = useState(false);
+  const [checked, setChecked] = useState<Set<string>>(() => new Set(selectedIds));
+
+  const selectedPhotos = allPhotos.filter((p) => selectedIds.includes(p.id));
+  const displayPhotos = selecting ? allPhotos : selectedPhotos;
+
+  const toggle = (id: string) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else if (next.size < maxPhotos) {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () =>
+    setChecked(new Set(allPhotos.slice(0, maxPhotos).map((p) => p.id)));
+  const clearAll = () => setChecked(new Set());
+
+  const handleSave = () => {
+    const formData = new FormData();
+    checked.forEach((id) => formData.append("photoIds", id));
+    saveAction(formData).then(() => {
+      setSelecting(false);
+      window.location.reload();
+    });
+  };
+
+  const handleAddPhotos = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    addPhotosAction(formData).then(() => {
+      form.reset();
+      setShowAddPhotos(false);
+      window.location.reload();
+    });
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-black">
+      {/* Header: site name centered, Join Now on the right */}
+      <header className="border-b border-white/10 bg-black">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center gap-4 px-4 py-3">
+          <div />
+          <Link
+            href="/start"
+            className="text-center text-2xl font-bold uppercase tracking-[0.25em] text-neutral-100 hover:text-white sm:text-3xl"
+          >
+            {siteName}
+          </Link>
+          <div className="flex justify-end">
+            <Link
+              href="/start"
+              className="rounded-lg bg-green-500 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-green-400 hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-black"
+            >
+              Join Now
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {isAdmin && (
+        <div className="fixed top-14 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-white/20 bg-black/90 px-4 py-2 text-sm shadow-xl">
+          {!selecting ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setSelecting(true)}
+                className="rounded bg-white/15 px-3 py-1.5 font-medium text-white hover:bg-white/25"
+              >
+                Select photos
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddPhotos((v) => !v)}
+                className="rounded bg-white/15 px-3 py-1.5 font-medium text-white hover:bg-white/25"
+              >
+                Add photos
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="text-xs text-neutral-400">
+                {checked.size}/{maxPhotos}
+              </span>
+              <button
+                type="button"
+                onClick={selectAll}
+                className="rounded bg-white/10 px-2 py-1 text-xs text-neutral-200 hover:bg-white/20"
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={clearAll}
+                className="rounded bg-white/10 px-2 py-1 text-xs text-neutral-200 hover:bg-white/20"
+              >
+                None
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="rounded bg-accent-pink/80 px-3 py-1.5 font-medium text-white hover:bg-accent-pink"
+              >
+                Save selection
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelecting(false);
+                  setChecked(new Set(selectedIds));
+                }}
+                className="rounded bg-white/10 px-2 py-1 text-xs text-neutral-300 hover:bg-white/20"
+              >
+                Cancel
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Add photos form (admin) */}
+      {isAdmin && showAddPhotos && (
+        <div className="fixed left-1/2 top-28 z-50 w-full max-w-md -translate-x-1/2 rounded-lg border border-white/20 bg-black/95 p-4 shadow-xl">
+          <h3 className="mb-2 text-sm font-semibold text-white">Add photos by URL</h3>
+          <p className="mb-3 text-xs text-neutral-400">
+            Paste image URLs, one per line or comma-separated. New photos are added to the grid and selected.
+          </p>
+          <form onSubmit={handleAddPhotos} className="space-y-2">
+            <textarea
+              name="photoUrls"
+              rows={4}
+              placeholder={"https://example.com/image1.jpg\nhttps://example.com/image2.jpg"}
+              className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm text-neutral-200 placeholder:text-neutral-500 focus:border-accent-pink/50 focus:outline-none focus:ring-1 focus:ring-accent-pink/50"
+            />
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="rounded bg-accent-pink/80 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-pink"
+              >
+                Add to grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddPhotos(false)}
+                className="rounded bg-white/10 px-3 py-1.5 text-sm text-neutral-300 hover:bg-white/20"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className={`mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4 sm:py-5 ${isAdmin ? "pt-20" : ""}`}>
+        {/* Masonry-style columns: photos keep natural aspect (vertical + horizontal) */}
+        <div
+          className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5"
+          style={{ columnFill: "balance" }}
+        >
+          {displayPhotos.map((photo, index) => {
+            const isAboveFold = index < 8;
+            return (
+              <div
+                key={photo.id}
+                className="group relative mb-3 break-inside-avoid sm:mb-4 lg:mb-5"
+              >
+                {selecting && isAdmin && (
+                  <label
+                    className={`absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded border-2 border-white bg-black/70 shadow-lg ${
+                      !checked.has(photo.id) && checked.size >= maxPhotos
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer"
+                    }`}
+                    title={
+                      !checked.has(photo.id) && checked.size >= maxPhotos
+                        ? `Max ${maxPhotos} photos`
+                        : undefined
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked.has(photo.id)}
+                      onChange={() => toggle(photo.id)}
+                      disabled={!checked.has(photo.id) && checked.size >= maxPhotos}
+                      className="sr-only"
+                    />
+                    {checked.has(photo.id) ? (
+                      <span className="text-sm text-white" aria-hidden>✓</span>
+                    ) : (
+                      <span className="h-3 w-3 rounded bg-transparent" />
+                    )}
+                  </label>
+                )}
+              {selecting ? (
+                <div className="block overflow-hidden rounded-lg bg-neutral-900">
+                  <img
+                    src={photo.url}
+                    alt=""
+                    loading={isAboveFold ? "eager" : "lazy"}
+                    decoding="async"
+                    {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
+                    className="block w-full h-auto object-contain transition-transform group-hover:scale-[1.02]"
+                  />
+                </div>
+              ) : (
+                <Link
+                  href="/start"
+                  className="block overflow-hidden rounded-lg bg-neutral-900"
+                >
+                  <img
+                    src={photo.url}
+                    alt=""
+                    loading={isAboveFold ? "eager" : "lazy"}
+                    decoding="async"
+                    {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
+                    className="block w-full h-auto object-contain transition-transform group-hover:scale-[1.02]"
+                  />
+                </Link>
+              )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Footer with Unlock now */}
+      <footer className="border-t border-white/10 bg-black/60 py-8">
+        <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-center gap-4 px-4">
+          <Link
+            href="/start"
+            className="inline-flex items-center justify-center rounded-lg bg-green-500 px-8 py-4 text-base font-bold uppercase tracking-wider text-white transition hover:bg-green-400 hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-black"
+          >
+            Unlock now
+          </Link>
+          <p className="text-xs text-neutral-500">
+            Start your membership to access exclusive content
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}

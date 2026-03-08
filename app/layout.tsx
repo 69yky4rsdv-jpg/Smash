@@ -4,7 +4,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettingsProvider } from "./(site)/SiteSettingsProvider";
-import SiteShell from "./(site)/Shell";
+import { ConditionalShell } from "./(site)/ConditionalShell";
 import { AgeGate } from "./(site)/AgeGate";
 
 export const metadata: Metadata = {
@@ -20,9 +20,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en" className="bg-background">
       <body className="min-h-screen bg-gradient-to-b from-black via-background to-black text-foreground antialiased">
         <SiteSettingsProvider siteName={site.siteName} logoUrl={site.logoUrl}>
-          <SiteShell>
-            <AgeGate initialPassed={agePassed}>{children}</AgeGate>
-          </SiteShell>
+          <AgeGate initialPassed={agePassed}>
+          <ConditionalShell>{children}</ConditionalShell>
+        </AgeGate>
         </SiteSettingsProvider>
       </body>
     </html>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   addVideoPhotos,
@@ -189,6 +190,57 @@ async function updateSiteBrandingAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/models");
+}
+
+async function updateStartPageImagesAction(formData: FormData) {
+  "use server";
+  const startPageLeftHeroUrl = String(formData.get("startPageLeftHeroUrl") ?? "").trim() || undefined;
+  const startPageRightHeroUrl = String(formData.get("startPageRightHeroUrl") ?? "").trim() || undefined;
+  const startPageBottomImageUrls = [
+    String(formData.get("startPageBottomImage1") ?? "").trim(),
+    String(formData.get("startPageBottomImage2") ?? "").trim(),
+    String(formData.get("startPageBottomImage3") ?? "").trim(),
+    String(formData.get("startPageBottomImage4") ?? "").trim()
+  ];
+  setSiteSettings({
+    startPageLeftHeroUrl,
+    startPageRightHeroUrl,
+    startPageBottomImageUrls: startPageBottomImageUrls.some(Boolean) ? startPageBottomImageUrls : undefined
+  });
+  revalidatePath("/start");
+  revalidatePath("/admin");
+}
+
+async function updateStartPagePlansAction(formData: FormData) {
+  "use server";
+  const freeTrialStickerText = String(formData.get("freeTrialStickerText") ?? "").trim() || undefined;
+  const weeklyName = String(formData.get("weeklyName") ?? "").trim() || undefined;
+  const weeklyPriceRaw = String(formData.get("weeklyPricePerMonth") ?? "").trim();
+  const weeklyBillingLabel = String(formData.get("weeklyBillingLabel") ?? "").trim() || undefined;
+  const monthlyName = String(formData.get("monthlyName") ?? "").trim() || undefined;
+  const monthlyPriceRaw = String(formData.get("monthlyPricePerMonth") ?? "").trim();
+  const monthlyBillingLabel = String(formData.get("monthlyBillingLabel") ?? "").trim() || undefined;
+  const weeklyPrice = weeklyPriceRaw === "" ? undefined : parseFloat(weeklyPriceRaw);
+  const monthlyPrice = monthlyPriceRaw === "" ? undefined : parseFloat(monthlyPriceRaw);
+  const planDisplayOverrides: Record<string, { name?: string; pricePerMonth?: number; billingLabel?: string }> = {
+    weekly: {
+      name: weeklyName,
+      pricePerMonth: weeklyPrice !== undefined && !Number.isNaN(weeklyPrice) ? weeklyPrice : undefined,
+      billingLabel: weeklyBillingLabel
+    },
+    monthly: {
+      name: monthlyName,
+      pricePerMonth: monthlyPrice !== undefined && !Number.isNaN(monthlyPrice) ? monthlyPrice : undefined,
+      billingLabel: monthlyBillingLabel
+    }
+  };
+  setSiteSettings({
+    freeTrialStickerText,
+    planDisplayOverrides
+  });
+  revalidatePath("/start");
+  revalidatePath("/start/plan");
+  revalidatePath("/admin");
 }
 
 async function setSubscriptionAction(formData: FormData) {
@@ -493,6 +545,20 @@ export default async function AdminPage() {
                 <a href="#users" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Users
                 </a>
+                <a href="#start-page" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Start page
+                </a>
+                <a href="#start-plans" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                  Plan prices
+                </a>
+                <Link
+                  href="/grid"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition"
+                >
+                  Grid page
+                </Link>
               </nav>
             </header>
 
@@ -561,6 +627,171 @@ export default async function AdminPage() {
                 </button>
               </form>
             </section>
+
+            {/* Start page images */}
+            <section id="start-page" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-pink-500/50">
+              <h2 className="text-lg font-semibold text-neutral-100">Start page images</h2>
+              <p className="text-[11px] text-neutral-400">
+                Images for the /start signup page. Left and right are the two vertical side panels. Bottom 1–4 are the four content blocks at the bottom. Leave empty to use the site hero banner for sides or show a placeholder for bottom blocks.
+              </p>
+              <form action={updateStartPageImagesAction} className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-neutral-200 text-sm" htmlFor="startPageLeftHeroUrl">
+                      Left side image URL
+                    </label>
+                    <input
+                      id="startPageLeftHeroUrl"
+                      name="startPageLeftHeroUrl"
+                      defaultValue={site.startPageLeftHeroUrl ?? ""}
+                      placeholder="https://... or leave empty for hero banner"
+                      className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-neutral-200 text-sm" htmlFor="startPageRightHeroUrl">
+                      Right side image URL
+                    </label>
+                    <input
+                      id="startPageRightHeroUrl"
+                      name="startPageRightHeroUrl"
+                      defaultValue={site.startPageRightHeroUrl ?? ""}
+                      placeholder="https://... or leave empty for hero banner"
+                      className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-neutral-300">Bottom 4 block images</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="space-y-1">
+                        <label className="text-neutral-200 text-sm" htmlFor={`startPageBottomImage${i}`}>
+                          Block {i} image URL
+                        </label>
+                        <input
+                          id={`startPageBottomImage${i}`}
+                          name={`startPageBottomImage${i}`}
+                          defaultValue={site.startPageBottomImageUrls?.[i - 1] ?? ""}
+                          placeholder="https://..."
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <button type="submit" className="btn-gradient justify-center text-sm px-4 py-2">
+                  Save start page images
+                </button>
+              </form>
+            </section>
+
+            {/* Start page plans: prices + free trial sticker */}
+            {(() => {
+              const weekly = subscriptionPlans.find((p) => p.id === "weekly");
+              const monthly = subscriptionPlans.find((p) => p.id === "monthly");
+              const ow = site.planDisplayOverrides?.weekly;
+              const om = site.planDisplayOverrides?.monthly;
+              return (
+                <section id="start-plans" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-emerald-500/50">
+                  <h2 className="text-lg font-semibold text-neutral-100">Start page plans</h2>
+                  <p className="text-[11px] text-neutral-400">
+                    Edit the prices and labels shown on the /start/plan page (7 day trial and 30 day membership). Free trial sticker is the badge on the 7-day card (e.g. &quot;Free 7 days&quot;). Leave a field empty to use the default.
+                  </p>
+                  <form action={updateStartPagePlansAction} className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-neutral-200 text-sm" htmlFor="freeTrialStickerText">
+                        Free trial sticker text
+                      </label>
+                      <input
+                        id="freeTrialStickerText"
+                        name="freeTrialStickerText"
+                        defaultValue={site.freeTrialStickerText ?? "Free 7 days"}
+                        placeholder="Free 7 days"
+                        className="w-full max-w-xs rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                      />
+                    </div>
+                    <div className="grid gap-6 sm:grid-cols-2">
+                      <div className="space-y-3 rounded-xl border border-white/10 bg-black/30 p-4">
+                        <h3 className="text-sm font-semibold text-neutral-200">7 Day Trial</h3>
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-neutral-400" htmlFor="weeklyName">Plan name</label>
+                          <input
+                            id="weeklyName"
+                            name="weeklyName"
+                            defaultValue={ow?.name ?? weekly?.name ?? ""}
+                            placeholder={weekly?.name ?? "7 Day Trial"}
+                            className="w-full rounded-lg border border-white/10 bg-black/60 px-2 py-1.5 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-neutral-400" htmlFor="weeklyPricePerMonth">Price (displayed as first week)</label>
+                          <input
+                            id="weeklyPricePerMonth"
+                            name="weeklyPricePerMonth"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            defaultValue={ow?.pricePerMonth ?? weekly?.pricePerMonth ?? ""}
+                            placeholder={String(weekly?.pricePerMonth ?? "7")}
+                            className="w-full rounded-lg border border-white/10 bg-black/60 px-2 py-1.5 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-neutral-400" htmlFor="weeklyBillingLabel">Billing label</label>
+                          <input
+                            id="weeklyBillingLabel"
+                            name="weeklyBillingLabel"
+                            defaultValue={ow?.billingLabel ?? weekly?.billingLabel ?? ""}
+                            placeholder={weekly?.billingLabel ?? "First week just $7.00"}
+                            className="w-full rounded-lg border border-white/10 bg-black/60 px-2 py-1.5 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3 rounded-xl border border-white/10 bg-black/30 p-4">
+                        <h3 className="text-sm font-semibold text-neutral-200">30 Day Membership</h3>
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-neutral-400" htmlFor="monthlyName">Plan name</label>
+                          <input
+                            id="monthlyName"
+                            name="monthlyName"
+                            defaultValue={om?.name ?? monthly?.name ?? ""}
+                            placeholder={monthly?.name ?? "30 Day Membership"}
+                            className="w-full rounded-lg border border-white/10 bg-black/60 px-2 py-1.5 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-neutral-400" htmlFor="monthlyPricePerMonth">Price (USD)</label>
+                          <input
+                            id="monthlyPricePerMonth"
+                            name="monthlyPricePerMonth"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            defaultValue={om?.pricePerMonth ?? monthly?.pricePerMonth ?? ""}
+                            placeholder={String(monthly?.pricePerMonth ?? "33.99")}
+                            className="w-full rounded-lg border border-white/10 bg-black/60 px-2 py-1.5 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] text-neutral-400" htmlFor="monthlyBillingLabel">Billing label</label>
+                          <input
+                            id="monthlyBillingLabel"
+                            name="monthlyBillingLabel"
+                            defaultValue={om?.billingLabel ?? monthly?.billingLabel ?? ""}
+                            placeholder={monthly?.billingLabel ?? "Billed monthly at $33.99"}
+                            className="w-full rounded-lg border border-white/10 bg-black/60 px-2 py-1.5 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <button type="submit" className="btn-gradient justify-center text-sm px-4 py-2">
+                      Save plan display
+                    </button>
+                  </form>
+                </section>
+              );
+            })()}
 
             <section id="videos" className="scroll-mt-24 space-y-6">
               <div className="card-surface p-6 space-y-6 border-l-4 border-l-pink-500/50">

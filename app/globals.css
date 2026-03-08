@@ -23,3 +23,98 @@ a {
   @apply rounded-2xl border border-white/5 bg-gradient-to-b from-white/5 to-white/0 backdrop-blur-xl shadow-[0_18px_45px_rgba(0,0,0,0.65)];
 }
 
+/* Plan page countdown timer */
+@keyframes countdown-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(236, 72, 153, 0);
+  }
+}
+
+@keyframes countdown-tick {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.92;
+  }
+}
+
+.countdown-timer-box {
+  animation: countdown-pulse 2s ease-in-out infinite;
+}
+
+.countdown-digit {
+  animation: countdown-tick 1s ease-in-out infinite;
+  color: rgb(244 114 182);
+}
+
+/* Limited time button (non-clickable) */
+@keyframes limited-time-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.3), 0 0 0 0 rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    opacity: 0.95;
+    box-shadow: 0 10px 25px -5px rgba(236, 72, 153, 0.4), 0 0 0 8px rgba(236, 72, 153, 0);
+  }
+}
+
+.limited-time-btn {
+  animation: limited-time-pulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Grid page: Join Now + Unlock now buttons */
+@keyframes join-now-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(236, 72, 153, 0.4), 0 0 24px rgba(236, 72, 153, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.6), 0 0 36px rgba(236, 72, 153, 0.3);
+  }
+}
+
+@keyframes join-now-glow-green {
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.4), 0 0 24px rgba(34, 197, 94, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6), 0 0 36px rgba(34, 197, 94, 0.3);
+  }
+}
+
+@keyframes unlock-now-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4), 0 0 0 0 rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 6px 28px rgba(34, 197, 94, 0.5), 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+}
+
+.btn-join-now {
+  animation: join-now-glow 2.5s ease-in-out infinite;
+}
+
+.btn-join-now-green {
+  animation: join-now-glow-green 2.5s ease-in-out infinite;
+}
+
+.btn-unlock-now {
+  animation: unlock-now-pulse 2s ease-in-out infinite;
+}
+

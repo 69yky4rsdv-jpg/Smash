@@ -32,7 +32,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: "30 Day Membership",
     pricePerMonth: 33.99,
     billingLabel: "Billed monthly at $33.99",
-    checkoutUrl: "https://buy.stripe.com/5kQ00l3vT5tKbvM1vrgjC05"
+    checkoutUrl: "https://buy.stripe.com/4gMfZj6I51du2Zgb61gjC08"
   },
   {
     id: "weekly",
@@ -291,6 +291,119 @@ export function addVideoPhotos(videoId: string, urls: string[]): void {
     if (u && !combined.includes(u)) combined.push(u);
   }
   setVideoPhotos(videoId, combined);
+}
+
+/** Grid page: which photo ids are shown + custom photos. */
+const MAX_GRID_PHOTOS = 30;
+
+function getGridPhotosPath(): string {
+  return join(getDataDir(), "grid-photos.json");
+}
+
+type GridPhotosFile = { photoIds?: string[]; customPhotos?: { id: string; url: string }[] };
+
+function readGridPhotosFile(): GridPhotosFile {
+  try {
+    const path = getGridPhotosPath();
+    if (!existsSync(path)) return {};
+    const raw = readFileSync(path, "utf-8");
+    const data = JSON.parse(raw) as GridPhotosFile;
+    return data && typeof data === "object" ? data : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeGridPhotosFile(data: GridPhotosFile): void {
+  try {
+    const dir = getDataDir();
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(getGridPhotosPath(), JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write grid-photos.json:", e);
+  }
+}
+
+export function getGridPhotoIds(): string[] {
+  const data = readGridPhotosFile();
+  return Array.isArray(data.photoIds) ? data.photoIds : [];
+}
+
+export function setGridPhotoIds(photoIds: string[]): void {
+  const data = readGridPhotosFile();
+  writeGridPhotosFile({ ...data, photoIds: photoIds.slice(0, MAX_GRID_PHOTOS) });
+}
+
+export type GridPhoto = { id: string; url: string; videoId: string };
+
+/** All photos that can be shown on the grid: video thumbnails + gallery photos + custom photos. */
+export function getGridPhotos(): GridPhoto[] {
+  const videos = getVideos(true).filter((v) => v.thumbnailUrl || getVideoPhotoUrls(v.id).length > 0);
+  const out: GridPhoto[] = [];
+  for (const v of videos) {
+    const gallery = getVideoPhotoUrls(v.id);
+    if (gallery.length) {
+      gallery.forEach((url, i) => out.push({ id: `${v.id}-${i}`, url, videoId: v.id }));
+    } else if (v.thumbnailUrl) {
+      out.push({ id: v.id, url: v.thumbnailUrl, videoId: v.id });
+    }
+  }
+  const data = readGridPhotosFile();
+  const custom = Array.isArray(data.customPhotos) ? data.customPhotos : [];
+  for (const cp of custom) {
+    if (cp?.id && cp?.url) out.push({ id: cp.id, url: cp.url, videoId: "" });
+  }
+  return out;
+}
+
+/** Add custom photo URLs to the grid (and to selected ids). Ids are generated as custom-0, custom-1, ... Max 30 photos total. */
+export function addGridCustomPhotos(urls: string[]): void {
+  const data = readGridPhotosFile();
+  const custom = Array.isArray(data.customPhotos) ? data.customPhotos : [];
+  const photoIds = Array.isArray(data.photoIds) ? data.photoIds : [];
+  const nextIndex = custom.length;
+  const normalized = urls.map((u) => u.trim()).filter(Boolean);
+  const fullUrls = normalized.map((u) =>
+    u.startsWith("http://") || u.startsWith("https://") ? u : `https://Pull-Video-Load.b-${u}`
+  );
+  const room = Math.max(0, MAX_GRID_PHOTOS - photoIds.length);
+  const toAdd = fullUrls.slice(0, room);
+  const newCustom = toAdd.map((url, i) => ({
+    id: `custom-${nextIndex + i}`,
+    url
+  }));
+  const newIds = newCustom.map((c) => c.id);
+  writeGridPhotosFile({
+    photoIds: [...photoIds, ...newIds],
+    customPhotos: [...custom, ...newCustom]
+  });
+}
+
+/** Pending signups (email collected on start page before account creation). */
+function getPendingSignupsPath(): string {
+  return join(getDataDir(), "pending-signups.json");
+}
+
+export function addPendingSignupEmail(email: string): void {
+  const path = getPendingSignupsPath();
+  let list: { email: string; createdAt: string }[] = [];
+  if (existsSync(path)) {
+    try {
+      const raw = readFileSync(path, "utf-8");
+      list = JSON.parse(raw);
+      if (!Array.isArray(list)) list = [];
+    } catch {
+      list = [];
+    }
+  }
+  list.push({ email: email.trim().toLowerCase(), createdAt: new Date().toISOString() });
+  try {
+    const dir = getDataDir();
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(path, JSON.stringify(list, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write pending-signups.json:", e);
+  }
 }
 
 /** Parse pasted URLs (newline or comma separated); normalize short form (cdn.net/...) to full Bunny URL. */
