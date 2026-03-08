@@ -54,9 +54,9 @@ export function VideoEngagementControls({ videoId }: Props) {
       <button
         type="button"
         onClick={() => toggle("vs-liked-videos", setLiked)}
-        className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 transition ${
+        className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 transition ${
           liked
-            ? "border-accent-pink bg-accent-pink/20 text-accent-pink"
+            ? "border-pink-400 bg-pink-400/25 text-pink-200"
             : "border-white/15 bg-white/5 hover:bg-white/10"
         }`}
       >
@@ -66,7 +66,7 @@ export function VideoEngagementControls({ videoId }: Props) {
       <button
         type="button"
         onClick={() => toggle("vs-saved-videos", setSaved)}
-        className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 transition ${
+        className={`inline-flex items-center gap-1 rounded-lg border px-3 py-1 transition ${
           saved
             ? "border-sky-400 bg-sky-400/15 text-sky-300"
             : "border-white/15 bg-white/5 hover:bg-white/10"

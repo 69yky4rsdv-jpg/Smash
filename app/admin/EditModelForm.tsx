@@ -9,9 +9,10 @@ type Props = {
   models: Model[];
   modelPhotoMap: Record<string, string[]>;
   updateModelAction: (formData: FormData) => Promise<void>;
+  deleteModelAction: (formData: FormData) => Promise<void>;
 };
 
-export function EditModelForm({ models, modelPhotoMap, updateModelAction }: Props) {
+export function EditModelForm({ models, modelPhotoMap, updateModelAction, deleteModelAction }: Props) {
   const [modelId, setModelId] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -119,12 +120,31 @@ export function EditModelForm({ models, modelPhotoMap, updateModelAction }: Prop
       )}
 
       {model && (
-        <form
-          key={model.id}
-          action={updateModelAction}
-          className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4"
-        >
-          <input type="hidden" name="modelId" value={model.id} />
+        <>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2">
+            <span className="text-xs text-neutral-400 mr-2">Selected:</span>
+            <form
+              action={deleteModelAction}
+              className="inline"
+              onSubmit={(e) => {
+                if (!confirm("Permanently remove this model and detach from all videos?")) e.preventDefault();
+              }}
+            >
+              <input type="hidden" name="id" value={model.id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-[11px] font-medium text-red-200 hover:bg-red-500/20"
+              >
+                Remove model
+              </button>
+            </form>
+          </div>
+          <form
+            key={model.id}
+            action={updateModelAction}
+            className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4"
+          >
+            <input type="hidden" name="modelId" value={model.id} />
 
           <div className="space-y-1">
             <label className="text-xs text-neutral-200">Stage name</label>
@@ -175,7 +195,7 @@ export function EditModelForm({ models, modelPhotoMap, updateModelAction }: Prop
                       avatarInputRef.current.value = first;
                     }
                   }}
-                  className="rounded-full bg-accent-pink/20 px-3 py-1.5 text-[11px] font-medium text-accent-pink hover:bg-accent-pink/30"
+                  className="rounded-lg bg-pink-400/25 px-3 py-1.5 text-[11px] font-medium text-pink-200 hover:bg-pink-400/40"
                 >
                   Auto set from first scene photo
                 </button>
@@ -296,7 +316,8 @@ export function EditModelForm({ models, modelPhotoMap, updateModelAction }: Prop
           <button type="submit" className="btn-gradient w-full justify-center text-sm">
             Save changes
           </button>
-        </form>
+          </form>
+        </>
       )}
     </div>
   );

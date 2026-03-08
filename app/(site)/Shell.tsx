@@ -31,9 +31,13 @@ export default function SiteShell({
           <div className="flex items-center gap-2">
             <Link
               href={isLoggedIn ? "/profile" : "/"}
-              className="flex items-center justify-center"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-pink-400/30 to-pink-500/30 text-pink-200 transition hover:from-pink-400/50 hover:to-pink-500/50 hover:text-pink-100"
+              aria-label={isLoggedIn ? "Profile" : "Home"}
             >
-              <div className="h-8 w-8 rounded-full bg-gradient-pink" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="12" cy="8" r="3" />
+                <path d="M4 20v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2" />
+              </svg>
             </Link>
             <Link href="/" className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-200">
               <span className="bg-gradient-to-r from-accent-pink via-accent-pinkSoft to-pink-300 bg-clip-text text-transparent drop-shadow-sm">
@@ -44,32 +48,32 @@ export default function SiteShell({
           <nav className="flex items-center gap-1 text-sm sm:gap-2">
             <Link
               href="/pricing"
-              className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
+              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Pricing
             </Link>
             <Link
               href="/models"
-              className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
+              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Models
             </Link>
             <Link
               href="/categories"
-              className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
+              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Categories
             </Link>
             <Link
               href="/videos"
-              className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-accent-pink hover:shadow-[0_0_20px_rgba(255,46,159,0.15)]"
+              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Videos
             </Link>
             {isAdmin && (
               <Link
                 href="/admin"
-                className="rounded-full px-3 py-2 font-medium uppercase tracking-wider text-accent-pinkSoft transition hover:bg-accent-pink/20 hover:text-white hover:shadow-[0_0_20px_rgba(255,46,159,0.25)]"
+                className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-pink-300 transition hover:bg-pink-500/20 hover:text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]"
               >
                 Admin
               </Link>
@@ -85,7 +89,7 @@ export default function SiteShell({
               <div className="ml-2 flex items-center gap-2">
                 <Link
                   href="/auth/login"
-                  className="rounded-full border border-white/30 px-4 py-1.5 text-xs font-medium text-neutral-100 hover:bg-white/10"
+                  className="rounded-lg border border-white/30 px-4 py-1.5 text-xs font-medium text-neutral-100 hover:bg-white/10"
                 >
                   Login
                 </Link>

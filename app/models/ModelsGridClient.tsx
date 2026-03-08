@@ -31,7 +31,7 @@ function ModelCard({ model }: { model: Model }) {
         </div>
         <div className="mt-2 flex items-center justify-between text-[11px]">
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 ${
+            className={`inline-flex items-center rounded-lg px-2 py-0.5 ${
               model.active
                 ? "bg-emerald-500/15 text-emerald-300"
                 : "bg-neutral-700/40 text-neutral-300"
@@ -77,7 +77,7 @@ export function ModelsGridClient({ models }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search models by name…"
-          className="w-full max-w-xs rounded-full border border-white/10 bg-black/60 px-4 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+          className="w-full max-w-xs rounded-lg border border-white/10 bg-black/60 px-4 py-2 text-sm outline-none ring-pink-400/30 focus:ring-2"
         />
       </div>
 

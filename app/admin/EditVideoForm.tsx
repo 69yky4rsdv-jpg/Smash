@@ -11,6 +11,8 @@ type Props = {
   categories: Category[];
   models: Model[];
   updateVideoAction: (formData: FormData) => Promise<void>;
+  hideVideoAction: (formData: FormData) => Promise<void>;
+  deleteVideoAction: (formData: FormData) => Promise<void>;
   videoPhotoMap: Record<string, string[]>;
 };
 
@@ -19,6 +21,8 @@ export function EditVideoForm({
   categories,
   models,
   updateVideoAction,
+  hideVideoAction,
+  deleteVideoAction,
   videoPhotoMap
 }: Props) {
   const [videoId, setVideoId] = useState("");
@@ -113,12 +117,41 @@ export function EditVideoForm({
       )}
 
       {video && (
-        <form
-          key={video.id}
-          action={updateVideoAction}
-          className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4"
-        >
-          <input type="hidden" name="videoId" value={video.id} />
+        <>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2">
+            <span className="text-xs text-neutral-400 mr-2">Selected:</span>
+            <form action={hideVideoAction} className="inline">
+              <input type="hidden" name="id" value={video.id} />
+              <input type="hidden" name="hidden" value={video.hidden ? "false" : "true"} />
+              <button
+                type="submit"
+                className="rounded-lg border border-amber-500/50 bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-200 hover:bg-amber-500/20"
+              >
+                {video.hidden ? "Unhide" : "Hide"} video
+              </button>
+            </form>
+            <form
+              action={deleteVideoAction}
+              className="inline"
+              onSubmit={(e) => {
+                if (!confirm("Permanently remove this video from the site?")) e.preventDefault();
+              }}
+            >
+              <input type="hidden" name="id" value={video.id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-red-500/60 bg-red-500/10 px-3 py-1.5 text-[11px] font-medium text-red-200 hover:bg-red-500/20"
+              >
+                Remove video
+              </button>
+            </form>
+          </div>
+          <form
+            key={video.id}
+            action={updateVideoAction}
+            className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4"
+          >
+            <input type="hidden" name="videoId" value={video.id} />
           <div className="space-y-1">
             <label className="text-xs text-neutral-200">Title</label>
             <input
@@ -168,7 +201,7 @@ export function EditVideoForm({
                       thumbnailInputRef.current.value = first;
                     }
                   }}
-                  className="rounded-full bg-accent-pink/20 px-3 py-1.5 text-[11px] font-medium text-accent-pink hover:bg-accent-pink/30"
+                  className="rounded-lg bg-pink-400/25 px-3 py-1.5 text-[11px] font-medium text-pink-200 hover:bg-pink-400/40"
                 >
                   Auto set from first scene photo
                 </button>
@@ -268,7 +301,8 @@ export function EditVideoForm({
           <button type="submit" className="btn-gradient w-full justify-center text-sm">
             Save changes
           </button>
-        </form>
+          </form>
+        </>
       )}
     </div>
   );

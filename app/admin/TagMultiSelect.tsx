@@ -32,12 +32,12 @@ export function TagMultiSelect({ name, label, items, selectedIds = [] }: Props) 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search…"
-          className="w-32 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[11px] outline-none ring-accent-pink/30 focus:ring-2"
+          className="w-32 rounded-lg border border-white/10 bg-black/60 px-2 py-1 text-[11px] outline-none ring-pink-400/30 focus:ring-2"
         />
       </div>
       <div className="mt-1 flex max-h-24 flex-wrap gap-2 overflow-y-auto text-[11px]">
         {filtered.map((item) => (
-          <label key={item.id} className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-1">
+          <label key={item.id} className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2 py-1">
             <input
               type="checkbox"
               name={name}

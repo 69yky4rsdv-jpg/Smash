@@ -27,6 +27,7 @@ import {
 } from "@/lib/admin";
 import { fetchAllBunnyVideos, buildBunnyHlsUrl, buildBunnyThumbnailUrl } from "@/lib/bunny";
 import { parseTxtMetadata, applyTxtMetadataToVideos } from "@/lib/import-txt";
+import { generateTitlesForVideos } from "@/lib/mass-title-generator";
 import { importPhotoSetsFromBunny } from "@/lib/import-photosets";
 import { listBunnyStorageDir } from "@/lib/bunny-storage";
 import { getBunnyStreamConfig, isBunnyStreamEnabled } from "@/lib/bunny-config";
@@ -39,6 +40,7 @@ import { CreateCategoryForm } from "./CreateCategoryForm";
 import { CreateModelForm } from "./CreateModelForm";
 import { BunnyImportForm } from "./BunnyImportForm";
 import { TxtMetadataForm } from "./TxtMetadataForm";
+import { MassTitleGeneratorForm } from "./MassTitleGeneratorForm";
 import { AutoGenderButton } from "./AutoGenderButton";
 import { ImportPhotoSetsForm } from "./ImportPhotoSetsForm";
 
@@ -381,6 +383,33 @@ async function applyTxtMetadataAction(
   }
 }
 
+async function massTitleGeneratorAction(
+  _prev: { updated?: number; skipped?: number; error?: string; errors?: string[]; debug?: unknown[] } | null,
+  formData: FormData
+) {
+  "use server";
+  const videoIds = formData.getAll("videoIds").map(String).filter(Boolean);
+  const txtContent = String(formData.get("txtContent") ?? "").trim();
+  if (videoIds.length === 0) return { error: "Select at least one video." };
+  if (!txtContent) return { error: "Paste TXT content (Name | Performer | Artists | ...) to match videos and performer names." };
+  try {
+    const result = await generateTitlesForVideos(videoIds, txtContent);
+    revalidatePath("/");
+    revalidatePath("/videos");
+    revalidatePath("/videos/trending");
+    revalidatePath("/admin");
+    return {
+      updated: result.updated,
+      skipped: result.skipped,
+      errors: result.errors.length > 0 ? result.errors : undefined,
+      debug: result.debug
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { error: message };
+  }
+}
+
 async function clearAllVideoCategoriesAction() {
   "use server";
   const videos = getVideos(true);
@@ -448,22 +477,22 @@ export default async function AdminPage() {
                 Manage videos, models, categories, imports, and user subscriptions.
               </p>
               <nav className="flex flex-wrap gap-2 pt-2" aria-label="Admin sections">
-                <a href="#settings" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <a href="#settings" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Settings
                 </a>
-                <a href="#videos" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <a href="#videos" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Videos
                 </a>
-                <a href="#models" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <a href="#models" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Models
                 </a>
-                <a href="#categories" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <a href="#categories" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Categories
                 </a>
-                <a href="#import" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <a href="#import" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Import
                 </a>
-                <a href="#users" className="rounded-full bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <a href="#users" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Users
                 </a>
               </nav>
@@ -618,6 +647,8 @@ export default async function AdminPage() {
                     categories={categories}
                     models={models}
                     updateVideoAction={updateVideoAction}
+                    hideVideoAction={hideVideoAction}
+                    deleteVideoAction={deleteVideoAction}
                     videoPhotoMap={videoPhotoMap}
                   />
                 </div>
@@ -755,6 +786,7 @@ export default async function AdminPage() {
                     models={models}
                     modelPhotoMap={modelPhotoMap}
                     updateModelAction={updateModelAction}
+                    deleteModelAction={deleteModelAction}
                   />
                 </div>
 
@@ -811,7 +843,7 @@ export default async function AdminPage() {
                         </option>
                       ))}
                     </select>
-                    <button className="w-full rounded-full border border-red-500/60 bg-red-500/10 px-4 py-1.5 text-[11px] font-semibold text-red-200 hover:bg-red-500/20">
+                    <button className="w-full rounded-lg border border-red-500/60 bg-red-500/10 px-4 py-1.5 text-[11px] font-semibold text-red-200 hover:bg-red-500/20">
                       Delete model
                     </button>
                   </form>
@@ -829,7 +861,7 @@ export default async function AdminPage() {
                 {categories.map((cat) => (
                   <span
                     key={cat.id}
-                    className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"
+                    className="rounded-lg bg-white/5 px-3 py-1 text-xs text-neutral-100"
                   >
                     {cat.name}
                   </span>
@@ -846,7 +878,7 @@ export default async function AdminPage() {
                 <form action={clearAllVideoCategoriesAction} className="mt-1">
                   <button
                     type="submit"
-                    className="rounded-full border border-red-500/70 bg-red-500/20 px-4 py-1.5 text-[11px] font-semibold text-red-100 hover:bg-red-500/30"
+                    className="rounded-lg border border-red-500/70 bg-red-500/20 px-4 py-1.5 text-[11px] font-semibold text-red-100 hover:bg-red-500/30"
                   >
                     Remove all categories from all videos
                   </button>
@@ -880,7 +912,7 @@ export default async function AdminPage() {
                   </div>
                   <button
                     type="submit"
-                    className="rounded-full border border-red-400/70 bg-red-500/30 px-4 py-1.5 text-[11px] font-semibold text-red-50 hover:bg-red-500/50"
+                    className="rounded-lg border border-red-400/70 bg-red-500/30 px-4 py-1.5 text-[11px] font-semibold text-red-50 hover:bg-red-500/50"
                   >
                     Delete selected categories (max 30)
                   </button>
@@ -905,6 +937,13 @@ export default async function AdminPage() {
               <div className="pt-6 border-t border-white/10 space-y-4">
                 <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">2. Apply TXT metadata (performers & categories)</h3>
                 <TxtMetadataForm action={applyTxtMetadataAction} />
+              </div>
+              <div className="pt-6 border-t border-white/10 space-y-4">
+                <h3 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">3. Mass title generator</h3>
+                <p className="text-[11px] text-neutral-500">
+                  Select videos, paste the same TXT table (Name | Type | Performer | Artists | Categories). We match by video name and performer names, then search for title suggestions (DuckDuckGo by default; optional <code className="rounded bg-white/10 px-1">SERPAPI_KEY</code> for Google) and set the best one. No API key required.
+                </p>
+                <MassTitleGeneratorForm videos={videos} action={massTitleGeneratorAction} />
               </div>
             </section>
 

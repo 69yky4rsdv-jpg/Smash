@@ -110,7 +110,7 @@ export default async function ModelDetailPage({ params }: Props) {
                 <h1 className="text-3xl font-semibold tracking-tight">{model.stageName}</h1>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
                   {model.gender && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-neutral-300">
+                    <span className="rounded-lg bg-white/10 px-2 py-0.5 text-neutral-300">
                       {model.gender === "female" ? "Female" : "Male"} performer
                     </span>
                   )}

@@ -16,7 +16,7 @@ a {
 }
 
 .btn-gradient {
-  @apply inline-flex items-center justify-center rounded-full bg-gradient-pink px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:scale-[1.02] hover:shadow-pink-500/60;
+  @apply inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-pink-400 via-accent-pinkSoft to-pink-300 px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-pink-400/25 transition hover:scale-[1.02] hover:shadow-pink-400/50;
 }
 
 .card-surface {

@@ -43,7 +43,7 @@ export function AgeGate({ children }: { children: ReactNode }) {
           </button>
           <button
             onClick={exit}
-            className="w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-neutral-200 transition hover:bg-white/10"
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-neutral-200 transition hover:bg-white/10"
           >
             I am under 18
           </button>

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { AgeGate } from "../../(site)/AgeGate";
-import { ScrollingTitle } from "../../(site)/ScrollingTitle";
 import { getCategories, getModels, getVideos, getVideoPhotoUrls, updateVideo } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
 import { VideoPlayer } from "../VideoPlayer";
@@ -69,8 +68,8 @@ export default async function VideoDetailPage({ params }: Props) {
             <p className="text-xs text-accent-pinkSoft uppercase tracking-[0.18em]">
               Scene
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-              <ScrollingTitle title={video.title} animateOnHover={false} />
+            <h1 className="max-w-full text-3xl font-semibold tracking-tight break-words md:text-4xl">
+              {video.title}
             </h1>
             <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-neutral-400">
               <p>
@@ -80,7 +79,7 @@ export default async function VideoDetailPage({ params }: Props) {
               <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href={`/videos/${video.id}/photos`}
-                  className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] text-neutral-300 transition hover:bg-white/10 hover:text-neutral-100"
+                  className="inline-flex items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-[11px] text-neutral-300 transition hover:bg-white/10 hover:text-neutral-100"
                 >
                   Photos
                 </Link>
@@ -136,7 +135,7 @@ export default async function VideoDetailPage({ params }: Props) {
                       {videoCategories.map((cat) => (
                         <span
                           key={cat.id}
-                          className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100"
+                          className="rounded-lg bg-white/5 px-3 py-1 text-xs text-neutral-100"
                         >
                           {cat.name}
                         </span>
@@ -152,7 +151,7 @@ export default async function VideoDetailPage({ params }: Props) {
                         <Link
                           key={model.id}
                           href={`/models/${model.id}`}
-                          className="rounded-full bg-white/5 px-3 py-1 text-xs text-neutral-100 hover:bg-accent-pink/20 hover:text-accent-pinkSoft"
+                          className="rounded-lg bg-white/5 px-3 py-1 text-xs text-neutral-100 hover:bg-pink-400/20 hover:text-pink-200"
                         >
                           {model.stageName}
                         </Link>

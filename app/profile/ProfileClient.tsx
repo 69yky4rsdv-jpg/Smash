@@ -57,9 +57,9 @@ export function ProfileClient({ videos }: Props) {
         <button
           type="button"
           onClick={() => setTab("saved")}
-          className={`rounded-full px-3 py-1.5 ${
-            tab === "saved"
-              ? "bg-accent-pink text-white"
+className={`rounded-lg px-3 py-1.5 ${
+              tab === "saved"
+              ? "bg-pink-400 text-white"
               : "bg-white/5 text-neutral-200 hover:bg-white/10"
           }`}
         >
@@ -68,9 +68,9 @@ export function ProfileClient({ videos }: Props) {
         <button
           type="button"
           onClick={() => setTab("liked")}
-          className={`rounded-full px-3 py-1.5 ${
-            tab === "liked"
-              ? "bg-accent-pink text-white"
+className={`rounded-lg px-3 py-1.5 ${
+              tab === "liked"
+              ? "bg-pink-400 text-white"
               : "bg-white/5 text-neutral-200 hover:bg-white/10"
           }`}
         >
