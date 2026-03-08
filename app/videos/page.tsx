@@ -1,4 +1,3 @@
-import { AgeGate } from "../(site)/AgeGate";
 import { getVideos } from "@/lib/data";
 import Link from "next/link";
 import { VideosListClient } from "./VideosListClient";
@@ -10,8 +9,7 @@ export default async function AllVideosPage() {
   const videos = all.filter((v) => v.videoUrl && v.thumbnailUrl);
 
   return (
-    <AgeGate>
-      <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
+    <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
         <header className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">All videos</h1>
           <p className="text-sm text-neutral-300">
@@ -35,7 +33,6 @@ export default async function AllVideosPage() {
           </Link>
         </section>
       </div>
-    </AgeGate>
   );
 }
 

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { ReactNode } from "react";
 import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettingsProvider } from "./(site)/SiteSettingsProvider";
 import SiteShell from "./(site)/Shell";
+import { AgeGate } from "./(site)/AgeGate";
 
 export const metadata: Metadata = {
   title: "SmashPov — Premium Porn Site",
@@ -12,12 +14,14 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const site = getSiteSettings();
+  const cookieStore = await cookies();
+  const agePassed = cookieStore.get("vs_age")?.value === "1";
   return (
     <html lang="en" className="bg-background">
       <body className="min-h-screen bg-gradient-to-b from-black via-background to-black text-foreground antialiased">
         <SiteSettingsProvider siteName={site.siteName} logoUrl={site.logoUrl}>
           <SiteShell>
-            {children}
+            <AgeGate initialPassed={agePassed}>{children}</AgeGate>
           </SiteShell>
         </SiteSettingsProvider>
       </body>

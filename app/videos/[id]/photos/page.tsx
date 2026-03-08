@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AgeGate } from "../../../(site)/AgeGate";
 import { GalleryWithLightbox } from "../../../(site)/GalleryWithLightbox";
 import { getVideos, getVideoPhotoUrls } from "@/lib/data";
 import { getSession } from "@/lib/auth";
@@ -26,8 +25,7 @@ export default async function VideoPhotosPage({ params }: Props) {
   const photoUrls = getVideoPhotoUrls(video.id);
 
   return (
-    <AgeGate>
-        <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
+    <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
             <header className="space-y-2">
               <Link
                 href={`/videos/${video.id}`}
@@ -57,7 +55,6 @@ export default async function VideoPhotosPage({ params }: Props) {
               </section>
             )}
           </div>
-    </AgeGate>
   );
 }
 

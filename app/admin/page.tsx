@@ -1,4 +1,3 @@
-import { AgeGate } from "../(site)/AgeGate";
 import { redirect } from "next/navigation";
 import {
   addVideoPhotos,
@@ -469,8 +468,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <AgeGate>
-      <div className="mx-auto max-w-6xl px-4 py-8 space-y-12">
+    <div className="mx-auto max-w-6xl px-4 py-8 space-y-12">
             <header className="space-y-4">
               <h1 className="text-3xl font-semibold tracking-tight">Admin dashboard</h1>
               <p className="text-sm text-neutral-400 max-w-xl">
@@ -1018,7 +1016,6 @@ export default async function AdminPage() {
               </div>
             </section>
           </div>
-    </AgeGate>
   );
 }
 

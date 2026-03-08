@@ -1,6 +1,5 @@
 "use client";
 
-import { AgeGate } from "../../(site)/AgeGate";
 import { FormEvent, useState } from "react";
 import { registerAction } from "../actions";
 
@@ -32,8 +31,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <AgeGate>
-      <div className="mx-auto flex max-w-md flex-col px-4 py-10">
+    <div className="mx-auto flex max-w-md flex-col px-4 py-10">
         <h1 className="mb-2 text-2xl font-semibold tracking-tight">Create account</h1>
         <p className="mb-6 text-sm text-neutral-300">
           Create a free account, then pick a membership plan.
@@ -76,7 +74,6 @@ export default function RegisterPage() {
           </button>
         </form>
       </div>
-    </AgeGate>
   );
 }
 

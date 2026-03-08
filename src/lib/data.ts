@@ -1,6 +1,15 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { join } from "path";
+import { join, resolve } from "path";
 import { Category, Model, SubscriptionPlan, User, Video } from "./types";
+
+/** Data directory: DATA_DIR env, or project root /data. Ensures we use the real data files. */
+export function getDataDir(): string {
+  const env = process.env.DATA_DIR;
+  if (env && env.trim()) {
+    return resolve(process.cwd(), env.trim());
+  }
+  return join(process.cwd(), "data");
+}
 
 export const subscriptionPlans: SubscriptionPlan[] = [
   {
@@ -43,7 +52,7 @@ const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 function getCategoriesPath(): string {
-  return join(process.cwd(), "data", "categories.json");
+  return join(getDataDir(), "categories.json");
 }
 
 export function getCategories(): Category[] {
@@ -60,7 +69,7 @@ export function getCategories(): Category[] {
 
 export function saveCategories(categoriesList: Category[]): void {
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getCategoriesPath(), JSON.stringify(categoriesList, null, 2), "utf-8");
   } catch (e) {
@@ -87,7 +96,7 @@ const DEFAULT_MODELS: Model[] = [
 ];
 
 function getModelsPath(): string {
-  return join(process.cwd(), "data", "models.json");
+  return join(getDataDir(), "models.json");
 }
 
 export function getModels(): Model[] {
@@ -104,7 +113,7 @@ export function getModels(): Model[] {
 
 export function saveModels(modelsList: Model[]): void {
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getModelsPath(), JSON.stringify(modelsList, null, 2), "utf-8");
   } catch (e) {
@@ -149,20 +158,28 @@ const DEFAULT_VIDEOS: Video[] = [
 ];
 
 function getVideosPath(): string {
-  return join(process.cwd(), "data", "videos.json");
+  return join(getDataDir(), "videos.json");
 }
 
 /** Reads videos from disk. Set includeHidden=true (e.g. in admin) to include hidden videos. */
 export function getVideos(includeHidden = false): Video[] {
   try {
     const path = getVideosPath();
-    if (!existsSync(path)) return [...DEFAULT_VIDEOS];
+    if (!existsSync(path)) {
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[data] videos.json not found at", path, "- using default videos. Set DATA_DIR if your data folder is elsewhere.");
+      }
+      return [...DEFAULT_VIDEOS];
+    }
     const raw = readFileSync(path, "utf-8");
     const data = JSON.parse(raw) as Video[];
     const list = Array.isArray(data) ? data : [...DEFAULT_VIDEOS];
     if (includeHidden) return list;
     return list.filter((v) => !v.hidden);
-  } catch {
+  } catch (e) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[data] Failed to read videos.json:", e);
+    }
     return [...DEFAULT_VIDEOS];
   }
 }
@@ -172,7 +189,7 @@ export function appendVideo(video: Video): void {
   const list = getVideos(true);
   list.push(video);
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getVideosPath(), JSON.stringify(list, null, 2), "utf-8");
   } catch (e) {
@@ -183,7 +200,7 @@ export function appendVideo(video: Video): void {
 /** Saves the full videos array (e.g. after removing a model from some). */
 export function saveVideos(videosList: Video[]): void {
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getVideosPath(), JSON.stringify(videosList, null, 2), "utf-8");
   } catch (e) {
@@ -232,7 +249,7 @@ export function updateVideo(
 
 /** Video photo galleries: videoId -> array of image URLs */
 function getVideoPhotosPath(): string {
-  return join(process.cwd(), "data", "video-photos.json");
+  return join(getDataDir(), "video-photos.json");
 }
 
 function readVideoPhotosMap(): Record<string, string[]> {
@@ -258,7 +275,7 @@ export function setVideoPhotos(videoId: string, urls: string[]): void {
   const map = readVideoPhotosMap();
   map[videoId] = urls;
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getVideoPhotosPath(), JSON.stringify(map, null, 2), "utf-8");
   } catch (e) {
@@ -295,7 +312,7 @@ const DEFAULT_USERS: User[] = [
 ];
 
 function getUsersPath(): string {
-  return join(process.cwd(), "data", "users.json");
+  return join(getDataDir(), "users.json");
 }
 
 export function getUsers(): User[] {
@@ -316,7 +333,7 @@ export function getUsers(): User[] {
 
 export function saveUsers(usersList: User[]): void {
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getUsersPath(), JSON.stringify(usersList, null, 2), "utf-8");
   } catch (e) {

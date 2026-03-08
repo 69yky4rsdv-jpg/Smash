@@ -1,4 +1,3 @@
-import { AgeGate } from "../(site)/AgeGate";
 import { subscriptionPlans } from "@/lib/data";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
@@ -26,8 +25,7 @@ async function updatePlanAction(formData: FormData) {
 
 export default function PricingPage() {
   return (
-    <AgeGate>
-      <div className="mx-auto max-w-4xl px-4 py-10 space-y-8">
+    <div className="mx-auto max-w-4xl px-4 py-10 space-y-8">
           <header className="text-center space-y-3">
             <h1 className="text-3xl font-semibold tracking-tight">Choose your membership</h1>
             <p className="text-sm text-neutral-300">
@@ -75,7 +73,6 @@ export default function PricingPage() {
 
           <PricingAdminControls plans={subscriptionPlans} updatePlanAction={updatePlanAction} />
         </div>
-    </AgeGate>
   );
 }
 

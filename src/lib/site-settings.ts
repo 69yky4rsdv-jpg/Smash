@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
+import { getDataDir } from "./data";
 
 export type SiteSettings = {
   siteName: string;
@@ -21,7 +22,7 @@ const DEFAULT: SiteSettings = {
 };
 
 function getFilePath(): string {
-  return join(process.cwd(), "data", "site.json");
+  return join(getDataDir(), "site.json");
 }
 
 export function getSiteSettings(): SiteSettings {
@@ -54,7 +55,7 @@ export function setSiteSettings(updates: Partial<SiteSettings>): SiteSettings {
     hideMalePerformersOnModelsPage: updates.hideMalePerformersOnModelsPage !== undefined ? updates.hideMalePerformersOnModelsPage : current.hideMalePerformersOnModelsPage
   };
   try {
-    const dir = join(process.cwd(), "data");
+    const dir = getDataDir();
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(getFilePath(), JSON.stringify(next, null, 2), "utf-8");
   } catch (e) {

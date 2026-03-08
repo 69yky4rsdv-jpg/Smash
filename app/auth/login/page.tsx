@@ -1,6 +1,5 @@
 "use client";
 
-import { AgeGate } from "../../(site)/AgeGate";
 import { FormEvent, useState } from "react";
 import { loginAction } from "../actions";
 
@@ -32,8 +31,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AgeGate>
-      <div className="mx-auto flex max-w-md flex-col px-4 py-10">
+    <div className="mx-auto flex max-w-md flex-col px-4 py-10">
         <h1 className="mb-2 text-2xl font-semibold tracking-tight">Login</h1>
         <p className="mb-6 text-sm text-neutral-300">
           Sign in to access members-only scenes.
@@ -75,7 +73,6 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
-    </AgeGate>
   );
 }
 

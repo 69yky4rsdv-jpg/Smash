@@ -1,4 +1,3 @@
-import { AgeGate } from "../(site)/AgeGate";
 import { getCategories, getVideos } from "@/lib/data";
 import { CategoriesGate } from "./CategoriesGate";
 
@@ -6,8 +5,7 @@ export default async function CategoriesPage() {
   const videos = getVideos();
 
   return (
-    <AgeGate>
-      <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
+    <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
         <header className="space-y-2">
           <h1 className="text-3xl font-semibold tracking-tight">Categories</h1>
           <p className="text-sm text-neutral-300">
@@ -19,6 +17,5 @@ export default async function CategoriesPage() {
           videos={videos}
         />
       </div>
-    </AgeGate>
   );
 }

@@ -1,9 +1,6 @@
-import { AgeGate } from "../(site)/AgeGate";
-
 export default function RecordKeeping2257Page() {
   return (
-    <AgeGate>
-      <div className="mx-auto max-w-3xl px-4 py-10 space-y-4 text-sm text-neutral-200">
+    <div className="mx-auto max-w-3xl px-4 py-10 space-y-4 text-sm text-neutral-200">
           <h1 className="text-2xl font-semibold tracking-tight">18 U.S.C. § 2257 Compliance</h1>
           <p className="text-xs text-neutral-400">
             18 U.S.C. § 2257 Record-Keeping Requirements Compliance Statement
@@ -25,7 +22,6 @@ export default function RecordKeeping2257Page() {
             </p>
           </div>
         </div>
-    </AgeGate>
   );
 }
 

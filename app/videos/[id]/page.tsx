@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { AgeGate } from "../../(site)/AgeGate";
 import { getCategories, getModels, getVideos, getVideoPhotoUrls, updateVideo } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
 import { VideoPlayer } from "../VideoPlayer";
@@ -56,8 +55,7 @@ export default async function VideoDetailPage({ params }: Props) {
     .slice(0, 5);
 
   return (
-    <AgeGate>
-        <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
+    <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
           <header className="space-y-3">
             <Link
               href="/videos"
@@ -202,7 +200,6 @@ export default async function VideoDetailPage({ params }: Props) {
             </aside>
           </section>
         </div>
-    </AgeGate>
   );
 }
 

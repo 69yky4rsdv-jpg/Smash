@@ -1,23 +1,24 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const STORAGE_KEY = "vs_age_confirmed";
+const COOKIE_NAME = "vs_age";
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
 
-export function AgeGate({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(true);
-
-  useEffect(() => {
-    const value =
-      typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-    if (value === "true") {
-      setOpen(false);
-    }
-  }, []);
+export function AgeGate({
+  children,
+  initialPassed
+}: {
+  children: ReactNode;
+  initialPassed?: boolean;
+}) {
+  const [open, setOpen] = useState(!initialPassed);
 
   const confirm = () => {
     window.localStorage.setItem(STORAGE_KEY, "true");
+    document.cookie = `${COOKIE_NAME}=1; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
     setOpen(false);
   };
 
