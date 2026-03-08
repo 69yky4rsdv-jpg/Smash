@@ -36,7 +36,7 @@ export function VideosListClient({ videos }: Props) {
           className="w-full max-w-xs rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 sm:max-w-sm"
         />
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((video) => (
           <VideoCardWithPreview key={video.id} video={video} />
         ))}

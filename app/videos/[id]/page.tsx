@@ -55,7 +55,7 @@ export default async function VideoDetailPage({ params }: Props) {
     .slice(0, 5);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
+    <div className="mx-auto w-full max-w-6xl px-3 py-6 min-w-0 sm:px-4 sm:py-10 space-y-6 sm:space-y-8">
           <header className="space-y-3">
             <Link
               href="/videos"
@@ -86,14 +86,15 @@ export default async function VideoDetailPage({ params }: Props) {
             </div>
           </header>
 
-          <section className="grid gap-8 md:grid-cols-[7fr,4fr] lg:grid-cols-[8fr,4fr]">
-            <div className="space-y-4">
-              <div className="aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/40 shadow-[0_24px_65px_rgba(0,0,0,0.9)]">
+          <section className="grid gap-6 md:grid-cols-[7fr,4fr] lg:grid-cols-[8fr,4fr] md:gap-8">
+            <div className="min-w-0 space-y-4">
+              <div className="aspect-video w-full max-w-full overflow-hidden rounded-xl bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/40 shadow-[0_24px_65px_rgba(0,0,0,0.9)] sm:rounded-2xl">
                 {video.videoUrl ? (
                   video.videoUrl.includes("iframe.mediadelivery.net") ? (
                     <iframe
                       src={video.videoUrl}
-                      className="h-full w-full"
+                      className="h-full w-full max-h-full max-w-full object-contain"
+                      style={{ maxWidth: "100%", maxHeight: "100%" }}
                       allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
@@ -101,7 +102,7 @@ export default async function VideoDetailPage({ params }: Props) {
                     <VideoPlayer
                       src={video.videoUrl}
                       poster={video.thumbnailUrl}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full max-h-full max-w-full object-contain"
                     />
                   )
                 ) : video.thumbnailUrl ? (

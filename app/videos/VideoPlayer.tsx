@@ -42,6 +42,7 @@ export function VideoPlayer({ src, poster, className }: Props) {
       controls
       playsInline
       className={className}
+      style={{ maxWidth: "100%", maxHeight: "100%" }}
     />
   );
 }

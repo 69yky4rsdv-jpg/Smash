@@ -147,11 +147,11 @@ export function VideoCardWithPreview({
   return (
     <Link
       href={`/videos/${video.id}`}
-      className="group block"
+      className="group block min-w-0"
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
-      <div className={`relative ${thumbClassName}`}>
+      <div className={`relative min-w-0 overflow-hidden ${thumbClassName}`}>
         {video.thumbnailUrl ? (
           <img
             src={video.thumbnailUrl}
