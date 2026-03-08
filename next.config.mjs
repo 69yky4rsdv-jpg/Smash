@@ -1,4 +1,4 @@
-const FAVICON_CDN = "https://Pull-Video-Load.b-cdn.net/logo/SP.png";
+const FAVICON_CDN = "https://Pull-Video-Load.b-cdn.net/logo/SPLARGE.png";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,9 +7,10 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      // Serve favicon from our domain so tabs and Google get it everywhere
+      // Serve favicon from our domain so tabs and Google get it everywhere (larger asset for crisp tabs)
       { source: "/favicon.ico", destination: FAVICON_CDN },
       { source: "/icon.png", destination: FAVICON_CDN },
+      { source: "/apple-touch-icon.png", destination: FAVICON_CDN },
     ];
   },
 };

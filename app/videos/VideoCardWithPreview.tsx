@@ -45,6 +45,7 @@ export function VideoCardWithPreview({
   const timeupdateHandlerRef = useRef<(() => void) | null>(null);
   const [videoReady, setVideoReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const showVideoPreview = isPreviewableVideoUrl(video.videoUrl);
   const useHls = showVideoPreview && isHlsUrl(video.videoUrl);
 
@@ -63,13 +64,19 @@ export function VideoCardWithPreview({
 
   const onEnter = useCallback(() => {
     hoveringRef.current = true;
+    setIsHovering(true);
     const el = videoRef.current;
     if (!el || !showVideoPreview) return;
 
     if (useHls) {
       if (Hls.isSupported()) {
         if (hlsRef.current) return;
-        const hls = new Hls({ startLevel: -1 });
+        const hls = new Hls({
+          startLevel: -1,
+          maxBufferLength: 8,
+          maxMaxBufferLength: 20,
+          maxBufferSize: 10 * 1000 * 1000,
+        });
         hlsRef.current = hls;
         hls.loadSource(video.videoUrl);
         hls.attachMedia(el);
@@ -86,6 +93,7 @@ export function VideoCardWithPreview({
 
   const onLeave = useCallback(() => {
     hoveringRef.current = false;
+    setIsHovering(false);
     setVideoReady(false);
     setIsPlaying(false);
     clearTimeupdate();
@@ -142,7 +150,49 @@ export function VideoCardWithPreview({
     };
   }, [clearTimeupdate]);
 
+  // Auto-play preview as soon as it's ready on hover (instant, no delay)
+  useEffect(() => {
+    if (!videoReady || !isHovering || isPlaying) return;
+    const el = videoRef.current;
+    if (!el || !showVideoPreview) return;
+    clearTimeupdate();
+    const d = el.duration;
+    let start = 0;
+    if (Number.isFinite(d) && d > 0) {
+      start = Math.max(0, d / 2 - PREVIEW_DURATION_SEC / 2);
+      el.currentTime = start;
+    }
+    el.play().then(() => setIsPlaying(true)).catch(() => {});
+    const stopAfter = () => {
+      if (!el) return;
+      if (el.currentTime - start >= PREVIEW_DURATION_SEC) {
+        el.pause();
+        setIsPlaying(false);
+        clearTimeupdate();
+      }
+    };
+    timeupdateHandlerRef.current = stopAfter;
+    el.addEventListener("timeupdate", stopAfter);
+    return () => {
+      el.removeEventListener("timeupdate", stopAfter);
+      timeupdateHandlerRef.current = null;
+    };
+  }, [videoReady, isHovering, showVideoPreview, clearTimeupdate]);
+
   const showPlayOverlay = showVideoPreview && !isPlaying && videoReady;
+
+  const playIcon = (
+    <span
+      className={`pointer-events-none absolute inset-0 z-[11] flex items-center justify-center transition-opacity duration-200 ${showVideoPreview && videoReady && !isPlaying ? "opacity-100" : "opacity-0"}`}
+      aria-hidden
+    >
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 shadow-lg ring-2 ring-pink-300/50 backdrop-blur-sm sm:h-16 sm:w-16">
+        <svg className="ml-1 h-6 w-6 text-pink-200 sm:h-7 sm:w-7" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M8 5v14l11-7L8 5z" />
+        </svg>
+      </span>
+    </span>
+  );
 
   return (
     <Link
@@ -161,6 +211,7 @@ export function VideoCardWithPreview({
         ) : (
           <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
         )}
+        {playIcon}
         {showVideoPreview && (
           <>
             <video
@@ -172,7 +223,7 @@ export function VideoCardWithPreview({
               preload={useHls ? "none" : "auto"}
               onCanPlay={onVideoReady}
               onLoadedData={onVideoReady}
-              className={`absolute inset-0 z-10 h-full w-full object-cover transition-opacity duration-200 ${isPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+              className={`absolute inset-0 z-10 h-full w-full object-cover ${isPlaying || (isHovering && showVideoPreview) ? "opacity-100" : "opacity-0"}`}
             />
             <button
               type="button"
