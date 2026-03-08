@@ -9,7 +9,10 @@ import { AgeGate } from "./(site)/AgeGate";
 
 export const metadata: Metadata = {
   title: "SmashPov — Premium Porn Site",
-  description: "Subscription-based premium video platform with models, categories, and affiliates."
+  description: "Subscription-based premium video platform with models, categories, and affiliates.",
+  icons: {
+    icon: "https://Pull-Video-Load.b-cdn.net/logo/SP.png",
+  },
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

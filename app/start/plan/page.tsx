@@ -1,4 +1,5 @@
 import { subscriptionPlans } from "@/lib/data";
+import type { SubscriptionPlan } from "@/lib/types";
 import { getSiteSettings } from "@/lib/site-settings";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -27,7 +28,7 @@ export default async function StartPlanPage() {
       ...(o.billingLabel !== undefined && o.billingLabel !== "" && { billingLabel: o.billingLabel })
     };
   };
-  const plans = [weekly, monthly].filter(Boolean).map(applyOverrides) as typeof subscriptionPlans;
+  const plans = [weekly, monthly].filter((p): p is SubscriptionPlan => p != null).map(applyOverrides);
   const freeTrialStickerText = site.freeTrialStickerText ?? "Free 7 days";
 
   return (
