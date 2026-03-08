@@ -14,10 +14,10 @@ export default function HomePage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-2 sm:px-4 py-10 space-y-12">
+    <div className="mx-auto w-full max-w-7xl px-3 py-8 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-10 space-y-10 sm:space-y-12">
           {/* Hero banner image — 1/3 size */}
           <section className="overflow-hidden rounded-xl">
-            <div className="h-32 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 md:h-48">
+            <div className="h-28 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 sm:h-32 md:h-48">
               {site.heroBannerImageUrl ? (
                 <img
                   src={site.heroBannerImageUrl}
@@ -29,11 +29,11 @@ export default function HomePage() {
           </section>
 
           {/* Join now — conversion-focused CTA */}
-          <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent p-8 text-center md:p-10">
+          <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.08] to-transparent p-5 text-center sm:p-8 md:p-10">
             <p className="text-sm font-medium text-accent-pinkSoft md:text-base">
               Start watching in seconds
             </p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-white md:text-3xl">
+            <h2 className="mt-2 text-xl font-bold tracking-tight text-white sm:text-2xl md:text-3xl">
               Unlimited access to the full library
             </h2>
             <JoinNowButton />
@@ -79,7 +79,7 @@ export default function HomePage() {
                   <p className="mt-1 text-[11px] text-neutral-400">{plan.billingLabel}</p>
                   <Link
                     href={plan.checkoutUrl ?? "/auth/register"}
-                    className="btn-gradient mt-4 w-full justify-center text-xs py-2"
+                    className="btn-gradient mt-4 flex min-h-[44px] w-full items-center justify-center py-2.5 text-xs"
                     {...(plan.checkoutUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   >
                     Choose plan

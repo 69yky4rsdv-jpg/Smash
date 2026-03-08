@@ -26,12 +26,12 @@ export default function SiteShell({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-white/5 bg-black/60 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
+      <header className="border-b border-white/5 bg-black/60 backdrop-blur-xl pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-0 sm:px-4 sm:py-4">
+          <div className="flex min-h-[44px] items-center gap-2">
             <Link
               href={isLoggedIn ? "/profile" : "/"}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-pink-400/30 to-pink-500/30 text-pink-200 transition hover:from-pink-400/50 hover:to-pink-500/50 hover:text-pink-100"
+              className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-pink-400/30 to-pink-500/30 text-pink-200 transition hover:from-pink-400/50 hover:to-pink-500/50 hover:text-pink-100"
               aria-label={isLoggedIn ? "Profile" : "Home"}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -39,41 +39,41 @@ export default function SiteShell({
                 <path d="M4 20v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2" />
               </svg>
             </Link>
-            <Link href="/" className="text-sm font-semibold uppercase tracking-[0.25em] text-neutral-200">
+            <Link href="/" className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-200 sm:tracking-[0.25em]">
               <span className="bg-gradient-to-r from-accent-pink via-accent-pinkSoft to-pink-300 bg-clip-text text-transparent drop-shadow-sm">
                 {siteName}
               </span>
             </Link>
           </div>
-          <nav className="flex items-center gap-1 text-sm sm:gap-2">
+          <nav className="flex flex-wrap items-center gap-1 text-sm sm:gap-2">
             <Link
               href="/pricing"
-              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-3 py-2.5 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Pricing
             </Link>
             <Link
               href="/models"
-              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-3 py-2.5 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Models
             </Link>
             <Link
               href="/categories"
-              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-3 py-2.5 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Categories
             </Link>
             <Link
               href="/videos"
-              className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-3 py-2.5 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
             >
               Videos
             </Link>
             {isAdmin && (
               <Link
                 href="/admin"
-                className="rounded-lg px-3 py-2 font-medium uppercase tracking-wider text-pink-300 transition hover:bg-pink-500/20 hover:text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-3 py-2.5 font-medium uppercase tracking-wider text-pink-300 transition hover:bg-pink-500/20 hover:text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.3)]"
               >
                 Admin
               </Link>
@@ -81,21 +81,21 @@ export default function SiteShell({
             {isLoggedIn ? (
               <Link
                 href="/auth/logout"
-                className="btn-gradient ml-2 text-xs px-4 py-1.5"
+                className="btn-gradient ml-1 min-h-[44px] flex items-center px-4 py-2.5 text-xs sm:ml-2"
               >
                 Logout
               </Link>
             ) : (
-              <div className="ml-2 flex items-center gap-2">
+              <div className="ml-1 flex items-center gap-2 sm:ml-2">
                 <Link
                   href="/auth/login"
-                  className="rounded-lg border border-white/30 px-4 py-1.5 text-xs font-medium text-neutral-100 hover:bg-white/10"
+                  className="min-h-[44px] flex items-center rounded-lg border border-white/30 px-4 py-2.5 text-xs font-medium text-neutral-100 hover:bg-white/10"
                 >
                   Login
                 </Link>
                 <Link
                   href="/auth/register"
-                  className="btn-gradient text-xs px-4 py-1.5"
+                  className="btn-gradient flex min-h-[44px] items-center px-4 py-2.5 text-xs"
                 >
                   Join
                 </Link>
@@ -107,7 +107,7 @@ export default function SiteShell({
       <main className="flex-1 bg-gradient-to-b from-black via-background to-black">
         {children}
       </main>
-      <footer className="border-t border-white/5 bg-black/80">
+      <footer className="border-t border-white/5 bg-black/80 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-6 text-xs text-neutral-500">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p>© {new Date().getFullYear()} {siteName}. All rights reserved.</p>

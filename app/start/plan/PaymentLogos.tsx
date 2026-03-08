@@ -1,6 +1,6 @@
 export function PaymentLogos() {
   return (
-    <div className="mt-6 flex flex-wrap justify-center gap-8">
+    <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-8">
       {/* Credit cards */}
       <div className="flex flex-col items-center gap-1.5" aria-hidden>
         <div className="flex h-16 w-16 items-center justify-center rounded-xl border-2 border-pink-500/50 bg-white/5 p-2.5 transition hover:scale-105 hover:border-pink-400 hover:bg-white/10 hover:shadow-md hover:shadow-pink-500/20">

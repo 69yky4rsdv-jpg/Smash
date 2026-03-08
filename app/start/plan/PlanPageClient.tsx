@@ -70,7 +70,7 @@ export function PlanPageClient({ pendingEmail }: Props) {
         </div>
       )}
       <div
-        className="limited-time-btn flex w-full cursor-default items-center justify-center rounded-full bg-pink-500 px-6 py-4 text-base font-bold uppercase tracking-wider text-white shadow-lg shadow-pink-500/25"
+        className="limited-time-btn flex w-full min-h-[48px] cursor-default items-center justify-center rounded-full bg-pink-500 px-6 py-4 text-base font-bold uppercase tracking-wider text-white shadow-lg shadow-pink-500/25"
         aria-hidden
       >
         Limited time

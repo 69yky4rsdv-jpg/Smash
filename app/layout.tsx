@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { ReactNode } from "react";
@@ -13,6 +13,13 @@ export const metadata: Metadata = {
   icons: {
     icon: "https://Pull-Video-Load.b-cdn.net/logo/SP.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

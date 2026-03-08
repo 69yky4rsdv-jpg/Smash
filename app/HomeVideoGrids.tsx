@@ -14,15 +14,15 @@ export function HomeVideoGrids({ latest, trending }: Props) {
     <>
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Featured</h2>
+          <h2 className="text-lg font-semibold sm:text-xl">Featured</h2>
           <Link
             href="/videos"
-            className="text-xs text-accent-pinkSoft hover:text-accent-pink"
+            className="min-h-[44px] min-w-[44px] flex items-center text-xs text-accent-pinkSoft hover:text-accent-pink"
           >
             View all
           </Link>
         </div>
-        <div className="grid gap-10 sm:grid-cols-2 xl:grid-cols-2">
+        <div className="grid gap-6 sm:gap-10 sm:grid-cols-2 xl:grid-cols-2">
           {latest.map((video) => (
             <VideoCardWithPreview
               key={video.id}
@@ -37,15 +37,15 @@ export function HomeVideoGrids({ latest, trending }: Props) {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Trending videos</h2>
+          <h2 className="text-lg font-semibold sm:text-xl">Trending videos</h2>
           <Link
             href="/videos/trending"
-            className="text-xs text-accent-pinkSoft hover:text-accent-pink"
+            className="min-h-[44px] min-w-[44px] flex items-center text-xs text-accent-pinkSoft hover:text-accent-pink"
           >
             View all
           </Link>
         </div>
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+        <div className="grid gap-6 sm:gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {trending.map((video) => (
             <VideoCardWithPreview
               key={video.id}

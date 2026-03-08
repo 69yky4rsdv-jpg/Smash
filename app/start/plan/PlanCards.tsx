@@ -43,7 +43,7 @@ export function PlanCards({ plans, freeTrialStickerText = "Free 7 days" }: Props
             </div>
           </div>
         );
-        const cardClass = `block cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ease-out ${
+        const cardClass = `block min-h-[48px] cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ease-out active:scale-[0.99] ${
           index === 1
             ? "border-pink-500/50 bg-pink-500/20 hover:scale-[1.02] hover:border-pink-400 hover:bg-pink-500/30 hover:shadow-lg hover:shadow-pink-500/25"
             : "border-pink-500/40 bg-pink-500/10 hover:scale-[1.02] hover:border-pink-400 hover:bg-pink-500/20 hover:shadow-lg hover:shadow-pink-500/20"

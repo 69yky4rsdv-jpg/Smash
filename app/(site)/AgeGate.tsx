@@ -29,22 +29,22 @@ export function AgeGate({
   if (!open) return <>{children}</>;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="card-surface w-full max-w-md p-8 text-center">
-        <h1 className="mb-4 text-3xl font-bold tracking-tight">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+      <div className="card-surface w-full max-w-md p-6 text-center sm:p-8">
+        <h1 className="mb-3 text-2xl font-bold tracking-tight sm:mb-4 sm:text-3xl">
           Adult Content <span className="text-accent-pink">18+</span>
         </h1>
-        <p className="mb-6 text-sm text-neutral-300">
+        <p className="mb-5 text-sm text-neutral-300 sm:mb-6">
           This site hosts explicit adult material. You must be at least 18 years old (or the age of
           majority in your jurisdiction) to continue.
         </p>
         <div className="flex flex-col gap-3">
-          <button onClick={confirm} className="btn-gradient w-full">
+          <button onClick={confirm} className="btn-gradient min-h-[48px] w-full">
             I am 18 or older
           </button>
           <button
             onClick={exit}
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-neutral-200 transition hover:bg-white/10"
+            className="min-h-[48px] w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-neutral-200 transition hover:bg-white/10"
           >
             I am under 18
           </button>

@@ -71,19 +71,19 @@ export function GridPageClient({
   return (
     <div className="min-h-screen w-full bg-black">
       {/* Header: site name centered, Join Now on the right */}
-      <header className="border-b border-white/10 bg-black">
-        <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center gap-4 px-4 py-3">
-          <div />
+      <header className="border-b border-white/10 bg-black pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+        <div className="mx-auto grid max-w-[1600px] grid-cols-3 items-center gap-2 px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3">
+          <div className="min-w-0" />
           <Link
             href="/start"
-            className="text-center text-2xl font-bold uppercase tracking-[0.25em] text-neutral-100 hover:text-white sm:text-3xl"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-center text-lg font-bold uppercase tracking-[0.2em] text-neutral-100 hover:text-white sm:text-2xl sm:tracking-[0.25em] md:text-3xl"
           >
             {siteName}
           </Link>
-          <div className="flex justify-end">
+          <div className="flex min-h-[44px] items-center justify-end">
             <Link
               href="/start"
-              className="rounded-lg bg-green-500 px-5 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-green-400 hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-black"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg bg-green-500 px-4 py-2.5 text-sm font-bold uppercase tracking-wider text-white transition hover:bg-green-400 hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-black sm:px-5"
             >
               Join Now
             </Link>
@@ -92,47 +92,47 @@ export function GridPageClient({
       </header>
 
       {isAdmin && (
-        <div className="fixed top-14 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-white/20 bg-black/90 px-4 py-2 text-sm shadow-xl">
+        <div className="fixed top-14 left-2 right-2 z-50 flex flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-sm shadow-xl sm:left-1/2 sm:right-auto sm:w-auto sm:-translate-x-1/2">
           {!selecting ? (
             <>
               <button
                 type="button"
                 onClick={() => setSelecting(true)}
-                className="rounded bg-white/15 px-3 py-1.5 font-medium text-white hover:bg-white/25"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/15 px-3 py-2 font-medium text-white hover:bg-white/25"
               >
                 Select photos
               </button>
               <button
                 type="button"
                 onClick={() => setShowAddPhotos((v) => !v)}
-                className="rounded bg-white/15 px-3 py-1.5 font-medium text-white hover:bg-white/25"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/15 px-3 py-2 font-medium text-white hover:bg-white/25"
               >
                 Add photos
               </button>
             </>
           ) : (
             <>
-              <span className="text-xs text-neutral-400">
+              <span className="flex min-h-[44px] items-center text-xs text-neutral-400">
                 {checked.size}/{maxPhotos}
               </span>
               <button
                 type="button"
                 onClick={selectAll}
-                className="rounded bg-white/10 px-2 py-1 text-xs text-neutral-200 hover:bg-white/20"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-200 hover:bg-white/20"
               >
                 All
               </button>
               <button
                 type="button"
                 onClick={clearAll}
-                className="rounded bg-white/10 px-2 py-1 text-xs text-neutral-200 hover:bg-white/20"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-200 hover:bg-white/20"
               >
                 None
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                className="rounded bg-accent-pink/80 px-3 py-1.5 font-medium text-white hover:bg-accent-pink"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-accent-pink/80 px-3 py-2 font-medium text-white hover:bg-accent-pink"
               >
                 Save selection
               </button>
@@ -142,7 +142,7 @@ export function GridPageClient({
                   setSelecting(false);
                   setChecked(new Set(selectedIds));
                 }}
-                className="rounded bg-white/10 px-2 py-1 text-xs text-neutral-300 hover:bg-white/20"
+                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-300 hover:bg-white/20"
               >
                 Cancel
               </button>
@@ -153,7 +153,7 @@ export function GridPageClient({
 
       {/* Add photos form (admin) */}
       {isAdmin && showAddPhotos && (
-        <div className="fixed left-1/2 top-28 z-50 w-full max-w-md -translate-x-1/2 rounded-lg border border-white/20 bg-black/95 p-4 shadow-xl">
+        <div className="fixed left-2 right-2 top-28 z-50 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-lg border border-white/20 bg-black/95 p-4 shadow-xl sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2">
           <h3 className="mb-2 text-sm font-semibold text-white">Add photos by URL</h3>
           <p className="mb-3 text-xs text-neutral-400">
             Paste image URLs, one per line or comma-separated. New photos are added to the grid and selected.
@@ -184,7 +184,7 @@ export function GridPageClient({
         </div>
       )}
 
-      <div className={`mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4 sm:py-5 ${isAdmin ? "pt-20" : ""}`}>
+      <div className={`mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4 sm:py-5 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] ${isAdmin ? "pt-20" : ""}`}>
         {/* Masonry-style columns: photos keep natural aspect (vertical + horizontal) */}
         <div
           className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5"
@@ -199,7 +199,7 @@ export function GridPageClient({
               >
                 {selecting && isAdmin && (
                   <label
-                    className={`absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded border-2 border-white bg-black/70 shadow-lg ${
+                    className={`absolute left-2 top-2 z-10 flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded border-2 border-white bg-black/70 shadow-lg ${
                       !checked.has(photo.id) && checked.size >= maxPhotos
                         ? "cursor-not-allowed opacity-60"
                         : "cursor-pointer"
@@ -257,11 +257,11 @@ export function GridPageClient({
       </div>
 
       {/* Footer with Unlock now */}
-      <footer className="border-t border-white/10 bg-black/60 py-8">
+      <footer className="border-t border-white/10 bg-black/60 py-6 pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:py-8">
         <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-center gap-4 px-4">
           <Link
             href="/start"
-            className="inline-flex items-center justify-center rounded-lg bg-green-500 px-8 py-4 text-base font-bold uppercase tracking-wider text-white transition hover:bg-green-400 hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-black"
+            className="min-h-[48px] inline-flex min-w-[200px] items-center justify-center rounded-lg bg-green-500 px-8 py-4 text-base font-bold uppercase tracking-wider text-white transition hover:bg-green-400 hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-black"
           >
             Unlock now
           </Link>

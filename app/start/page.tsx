@@ -47,25 +47,25 @@ export default async function StartPage() {
   return (
     <div className="min-h-screen w-full bg-black text-white">
       {/* Top header block */}
-      <header className="relative z-10 px-4 pt-8 pb-6 text-center">
+      <header className="relative z-10 px-4 pt-6 pb-4 text-center pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:pt-8 sm:pb-6">
         <Link
           href="/start"
           className="inline-block focus:outline-none focus:ring-2 focus:ring-pink-400/50 rounded"
         >
-          <h1 className="text-4xl font-bold uppercase tracking-[0.25em] text-white drop-shadow-lg md:text-5xl">
+          <h1 className="text-2xl font-bold uppercase tracking-[0.2em] text-white drop-shadow-lg sm:text-4xl sm:tracking-[0.25em] md:text-5xl">
             {site.siteName}
           </h1>
         </Link>
-        <p className="mt-3 text-sm font-medium uppercase tracking-[0.2em] text-white/95">
+        <p className="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-white/95 sm:mt-3 sm:text-sm">
           Discover new releases
         </p>
-        <p className="mt-1 text-sm font-medium uppercase tracking-[0.2em] text-white/95">
+        <p className="mt-1 text-xs font-medium uppercase tracking-[0.2em] text-white/95 sm:text-sm">
           Sign up today!
         </p>
       </header>
 
       {/* Main: two vertical hero images + center form */}
-      <div className="relative flex min-h-[60vh] w-full flex-col lg:flex-row">
+      <div className="relative flex min-h-[50vh] w-full flex-col lg:min-h-[60vh] lg:flex-row">
         {/* Left vertical hero */}
         <div className="relative hidden w-full flex-shrink-0 lg:block lg:max-w-[28%]">
           <div className="sticky top-0 h-[70vh] w-full">
@@ -82,8 +82,8 @@ export default async function StartPage() {
         </div>
 
         {/* Center: email signup form */}
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-10 lg:py-16">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-black/60 px-6 py-8 shadow-2xl backdrop-blur-sm">
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 py-6 sm:py-10 lg:py-16">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-black/60 px-4 py-6 shadow-2xl backdrop-blur-sm sm:px-6 sm:py-8">
             <p className="text-sm font-semibold uppercase tracking-wider text-pink-400">
               Step 1 — Enter your email
             </p>
@@ -108,8 +108,8 @@ export default async function StartPage() {
       </div>
 
       {/* Bottom content grid */}
-      <section className="border-t border-white/10 bg-black/80 px-4 py-10">
-        <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="border-t border-white/10 bg-black/80 px-4 py-8 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:py-10">
+        <div className="mx-auto grid max-w-6xl gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {BOTTOM_ITEMS.map((item, i) => {
             const imageUrl = (bottomUrls[i]?.trim()) || item.imageUrl || null;
             return (
