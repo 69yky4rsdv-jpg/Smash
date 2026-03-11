@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { GridPhoto } from "@/lib/data";
 
 const DEFAULT_MAX_PHOTOS = 30;
+/** Columns in grid at large breakpoint; used for horizontal move step. */
+const GRID_COLUMNS = 4;
 
 type Props = {
   siteName: string;
@@ -93,6 +95,9 @@ export function GridPageClient({
       return next;
     });
   };
+
+  const movePhotoLeft = (index: number) => movePhoto(index, index - GRID_COLUMNS);
+  const movePhotoRight = (index: number) => movePhoto(index, index + GRID_COLUMNS);
 
   const handleAddPhotos = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -298,24 +303,46 @@ export function GridPageClient({
                 {!selecting && isAdmin && (
                   <div className="absolute right-2 top-2 z-10 flex flex-col items-end gap-1">
                     {reordering && (
-                      <div className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          onClick={() => movePhoto(index, index - 1)}
-                          className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black"
-                          aria-label="Move photo up"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => movePhoto(index, index + 1)}
-                          className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black"
-                          aria-label="Move photo down"
-                        >
-                          ↓
-                        </button>
-                      </div>
+                      <>
+                        <div className="flex gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => movePhotoLeft(index)}
+                            disabled={index < GRID_COLUMNS}
+                            className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed"
+                            aria-label="Move photo left"
+                          >
+                            ←
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => movePhotoRight(index)}
+                            disabled={index + GRID_COLUMNS >= displayPhotos.length}
+                            className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed"
+                            aria-label="Move photo right"
+                          >
+                            →
+                          </button>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => movePhoto(index, index - 1)}
+                            className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black"
+                            aria-label="Move photo up"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => movePhoto(index, index + 1)}
+                            className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black"
+                            aria-label="Move photo down"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                      </>
                     )}
                     <button
                       type="button"
