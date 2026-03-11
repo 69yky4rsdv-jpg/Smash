@@ -3,22 +3,47 @@
 import { useState } from "react";
 
 type Props = {
-  saveEmailAction: (formData: FormData) => Promise<void>;
+  saveEmailAction: (formData: FormData) => Promise<{ error?: string } | void>;
 };
 
 export function StartPageClient({ saveEmailAction }: Props) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     const form = e.currentTarget;
     const formData = new FormData(form);
-    await saveEmailAction(formData);
+    const rawEmail = String(formData.get("email") ?? "").trim();
+    // Stricter client-side email check before hitting the server:
+    // - Only typical email characters before @
+    // - Domain with at least one dot
+    // - TLD at least 2 letters
+    const strictEmailPattern = /^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!strictEmailPattern.test(rawEmail)) {
+      setLoading(false);
+      setError("Please enter a valid email address.");
+      return;
+    }
+    try {
+      const result = await saveEmailAction(formData);
+      if (result?.error) {
+        setError(result.error);
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <form onSubmit={onSubmit} className="mt-4 space-y-4">
+      {error && (
+        <p className="text-sm text-red-400" role="alert">
+          {error}
+        </p>
+      )}
       <div className="space-y-1">
         <label htmlFor="start-email" className="text-sm text-neutral-200">
           Email

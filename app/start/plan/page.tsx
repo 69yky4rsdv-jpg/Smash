@@ -58,7 +58,11 @@ export default async function StartPlanPage() {
 
         <PaymentLogos />
 
-        <PlanCards plans={plans} freeTrialStickerText={freeTrialStickerText} />
+        <PlanCards
+          plans={plans}
+          freeTrialStickerText={freeTrialStickerText}
+          pendingEmail={pendingEmail}
+        />
 
         <p className="mt-4 text-[11px] leading-relaxed text-neutral-500">
           *After free week access, you will be charged according to the plan until you cancel.

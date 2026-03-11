@@ -396,22 +396,29 @@ function getPendingSignupsPath(): string {
   return join(getDataDir(), "pending-signups.json");
 }
 
+export type PendingSignup = { email: string; createdAt: string };
+
+export function getPendingSignups(): PendingSignup[] {
+  const path = getPendingSignupsPath();
+  if (!existsSync(path)) return [];
+  try {
+    const raw = readFileSync(path, "utf-8");
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
 export function addPendingSignupEmail(email: string): void {
   const path = getPendingSignupsPath();
-  let list: { email: string; createdAt: string }[] = [];
-  if (existsSync(path)) {
-    try {
-      const raw = readFileSync(path, "utf-8");
-      list = JSON.parse(raw);
-      if (!Array.isArray(list)) list = [];
-    } catch {
-      list = [];
-    }
-  }
-  list.push({ email: email.trim().toLowerCase(), createdAt: new Date().toISOString() });
+  const dir = getDataDir();
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+  let list = getPendingSignups();
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return;
+  list.push({ email: normalized, createdAt: new Date().toISOString() });
   try {
-    const dir = getDataDir();
-    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     writeFileSync(path, JSON.stringify(list, null, 2), "utf-8");
   } catch (e) {
     console.error("Failed to write pending-signups.json:", e);

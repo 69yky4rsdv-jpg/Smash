@@ -8,6 +8,7 @@ import {
   getVideos,
   getUsers,
   getVideoPhotoUrls,
+  getPendingSignups,
   parsePhotoUrls,
   setVideoHidden,
   subscriptionPlans,
@@ -515,6 +516,7 @@ export default async function AdminPage() {
   const videos = getVideos(true);
   const models = getModels();
   const users = getUsers();
+  const pendingSignups = getPendingSignups();
   const categories = getCategories();
 
   const modelPhotoMap: Record<string, string[]> = {};
@@ -1227,7 +1229,24 @@ export default async function AdminPage() {
             <section id="users" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-amber-500/50">
               <div>
                 <h2 className="text-lg font-semibold text-neutral-100">Users & subscriptions</h2>
-                <p className="text-xs text-neutral-500 mt-0.5">Assign or clear plans. All registered users appear here.</p>
+                <p className="text-xs text-neutral-500 mt-0.5">Assign or clear plans. All registered users appear here. Emails from the start page appear under Pending signups until they register.</p>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-amber-500/5 p-4 space-y-2">
+                <p className="text-sm font-semibold text-neutral-200">Pending signups (from start page)</p>
+                <p className="text-[11px] text-neutral-400">Emails captured when someone enters their email on /start. They become full users after completing registration.</p>
+                <div className="max-h-32 space-y-1 overflow-y-auto text-xs">
+                  {pendingSignups.length === 0 ? (
+                    <p className="text-neutral-500 italic">No pending signups yet.</p>
+                  ) : (
+                    pendingSignups.map((entry, i) => (
+                      <div key={`${entry.email}-${i}`} className="flex justify-between gap-2 rounded bg-white/5 px-2 py-1.5">
+                        <span className="truncate text-neutral-200">{entry.email}</span>
+                        <span className="text-[10px] text-neutral-500 shrink-0">{new Date(entry.createdAt).toLocaleString()}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
               <form action={setSubscriptionAction} className="space-y-3 text-sm">
                 <div className="grid gap-3 sm:grid-cols-[2fr,2fr,auto]">
