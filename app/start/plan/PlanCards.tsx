@@ -13,6 +13,8 @@ export function PlanCards({ plans, freeTrialStickerText = "Free 7 days" }: Props
   return (
     <div className="mt-8 space-y-4">
       {plans.map((plan, index) => {
+        const priceText = `$${plan.pricePerMonth.toFixed(2)}`;
+        const periodText = plan.id === "weekly" ? "1st week" : "first month";
         const content = (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -30,9 +32,9 @@ export function PlanCards({ plans, freeTrialStickerText = "Free 7 days" }: Props
             </div>
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-white">
-                {plan.id === "weekly" ? "$0.00" : `$${plan.pricePerMonth.toFixed(2)}`}
+                {priceText}
                 <span className="ml-1 text-xs font-normal text-neutral-400">
-                  / {plan.id === "weekly" ? "1st week" : "first month"}
+                  / {periodText}
                 </span>
               </span>
               <span className="flex h-8 w-8 items-center justify-center rounded bg-black/50 text-pink-400">

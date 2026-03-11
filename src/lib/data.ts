@@ -356,16 +356,28 @@ export function getGridPhotos(): GridPhoto[] {
   return out;
 }
 
+/** Remove a custom grid photo entirely (from customPhotos and photoIds). Video-based photos are left intact. */
+export function removeGridPhoto(photoId: string): void {
+  const data = readGridPhotosFile();
+  const custom = Array.isArray(data.customPhotos) ? data.customPhotos : [];
+  const photoIds = Array.isArray(data.photoIds) ? data.photoIds : [];
+  const nextCustom = custom.filter((cp) => cp?.id !== photoId);
+  const nextPhotoIds = photoIds.filter((id) => id !== photoId);
+  writeGridPhotosFile({
+    ...data,
+    customPhotos: nextCustom,
+    photoIds: nextPhotoIds
+  });
+}
+
 /** Add custom photo URLs to the grid (and to selected ids). Ids are generated as custom-0, custom-1, ... Max 30 photos total. */
 export function addGridCustomPhotos(urls: string[]): void {
   const data = readGridPhotosFile();
   const custom = Array.isArray(data.customPhotos) ? data.customPhotos : [];
   const photoIds = Array.isArray(data.photoIds) ? data.photoIds : [];
   const nextIndex = custom.length;
-  const normalized = urls.map((u) => u.trim()).filter(Boolean);
-  const fullUrls = normalized.map((u) =>
-    u.startsWith("http://") || u.startsWith("https://") ? u : `https://Pull-Video-Load.b-${u}`
-  );
+  // URLs coming in here are already normalized by parsePhotoUrls; just trim and keep as-is.
+  const fullUrls = urls.map((u) => u.trim()).filter(Boolean);
   const room = Math.max(0, MAX_GRID_PHOTOS - photoIds.length);
   const toAdd = fullUrls.slice(0, room);
   const newCustom = toAdd.map((url, i) => ({
@@ -410,7 +422,9 @@ export function addPendingSignupEmail(email: string): void {
 export function parsePhotoUrls(paste: string): string[] {
   const raw = paste.split(/[\n,]+/).map((u) => u.trim()).filter(Boolean);
   return raw.map((u) =>
-    u.startsWith("http://") || u.startsWith("https://") ? u : `https://Pull-Video-Load.b-${u}`
+    u.startsWith("http://") || u.startsWith("https://")
+      ? u
+      : `https://Pull-Video-Load.b-cdn.net${u.startsWith("/") ? "" : "/"}${u}`
   );
 }
 

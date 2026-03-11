@@ -14,6 +14,7 @@ type Props = {
   saveAction: (formData: FormData) => Promise<void>;
   addPhotosAction: (formData: FormData) => Promise<void>;
   maxPhotos?: number;
+  removePhotoAction: (formData: FormData) => Promise<void>;
 };
 
 export function GridPageClient({
@@ -23,13 +24,18 @@ export function GridPageClient({
   isAdmin,
   saveAction,
   addPhotosAction,
+   removePhotoAction,
   maxPhotos = DEFAULT_MAX_PHOTOS,
 }: Props) {
   const [selecting, setSelecting] = useState(false);
   const [showAddPhotos, setShowAddPhotos] = useState(false);
   const [checked, setChecked] = useState<Set<string>>(() => new Set(selectedIds));
+  const [order, setOrder] = useState<string[]>(() => selectedIds);
+  const [reordering, setReordering] = useState(false);
 
-  const selectedPhotos = allPhotos.filter((p) => selectedIds.includes(p.id));
+  const selectedPhotos = order
+    .map((id) => allPhotos.find((p) => p.id === id))
+    .filter((p): p is GridPhoto => p != null);
   const displayPhotos = selecting ? allPhotos : selectedPhotos;
 
   const toggle = (id: string) => {
@@ -39,21 +45,52 @@ export function GridPageClient({
         next.delete(id);
       } else if (next.size < maxPhotos) {
         next.add(id);
+        // Newly checked photos go to the end of the order.
+        setOrder((prevOrder) => (prevOrder.includes(id) ? prevOrder : [...prevOrder, id]));
       }
       return next;
     });
+    // When unchecking, also drop from order.
+    setOrder((prevOrder) => prevOrder.filter((x) => x !== id));
   };
 
-  const selectAll = () =>
-    setChecked(new Set(allPhotos.slice(0, maxPhotos).map((p) => p.id)));
-  const clearAll = () => setChecked(new Set());
+  const selectAll = () => {
+    const ids = allPhotos.slice(0, maxPhotos).map((p) => p.id);
+    setChecked(new Set(ids));
+    setOrder(ids);
+  };
+  const clearAll = () => {
+    setChecked(new Set());
+    setOrder([]);
+  };
 
   const handleSave = () => {
     const formData = new FormData();
-    checked.forEach((id) => formData.append("photoIds", id));
+    const orderedIds = order.filter((id) => checked.has(id)).slice(0, maxPhotos);
+    orderedIds.forEach((id) => formData.append("photoIds", id));
     saveAction(formData).then(() => {
       setSelecting(false);
+      setReordering(false);
       window.location.reload();
+    });
+  };
+
+  const handleSaveOrder = () => {
+    const formData = new FormData();
+    order.slice(0, maxPhotos).forEach((id) => formData.append("photoIds", id));
+    saveAction(formData).then(() => {
+      setReordering(false);
+      window.location.reload();
+    });
+  };
+
+  const movePhoto = (fromIndex: number, toIndex: number) => {
+    setOrder((prev) => {
+      if (toIndex < 0 || toIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, item);
+      return next;
     });
   };
 
@@ -68,6 +105,14 @@ export function GridPageClient({
     });
   };
 
+  const handleRemovePhoto = (id: string) => {
+    const formData = new FormData();
+    formData.append("photoId", id);
+    removePhotoAction(formData).then(() => {
+      window.location.reload();
+    });
+  };
+
   return (
     <div className="min-h-screen w-full bg-black">
       {/* Header: site name centered, Join Now on the right */}
@@ -76,7 +121,8 @@ export function GridPageClient({
           <div className="min-w-0" />
           <Link
             href="/start"
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-center text-lg font-bold uppercase tracking-[0.2em] text-neutral-100 hover:text-white sm:text-2xl sm:tracking-[0.25em] md:text-3xl"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-center text-lg font-bold uppercase tracking-[0.2em] text-pink-200 hover:text-pink-100 sm:text-2xl sm:tracking-[0.25em] md:text-3xl"
+            style={{ fontFamily: '"Zing Rust", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
           >
             {siteName}
           </Link>
@@ -97,7 +143,10 @@ export function GridPageClient({
             <>
               <button
                 type="button"
-                onClick={() => setSelecting(true)}
+                onClick={() => {
+                  setReordering(false);
+                  setSelecting(true);
+                }}
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/15 px-3 py-2 font-medium text-white hover:bg-white/25"
               >
                 Select photos
@@ -109,6 +158,27 @@ export function GridPageClient({
               >
                 Add photos
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelecting(false);
+                  setReordering((v) => !v);
+                }}
+                className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded px-3 py-2 font-medium ${
+                  reordering ? "bg-accent-pink/80 text-white hover:bg-accent-pink" : "bg-white/15 text-white hover:bg-white/25"
+                }`}
+              >
+                {reordering ? "Reordering…" : "Reorder"}
+              </button>
+              {reordering && (
+                <button
+                  type="button"
+                  onClick={handleSaveOrder}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-accent-pink/80 px-3 py-2 font-medium text-white hover:bg-accent-pink"
+                >
+                  Save order
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -141,6 +211,7 @@ export function GridPageClient({
                 onClick={() => {
                   setSelecting(false);
                   setChecked(new Set(selectedIds));
+                  setOrder(selectedIds);
                 }}
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-300 hover:bg-white/20"
               >
@@ -185,7 +256,7 @@ export function GridPageClient({
       )}
 
       <div className={`mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-4 sm:py-5 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] ${isAdmin ? "pt-20" : ""}`}>
-        {/* Masonry-style columns: photos keep natural aspect (vertical + horizontal) */}
+        {/* Masonry-style columns: make tiles consistent size across orientations */}
         <div
           className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5"
           style={{ columnFill: "balance" }}
@@ -224,32 +295,69 @@ export function GridPageClient({
                     )}
                   </label>
                 )}
-              {selecting ? (
-                <div className="block overflow-hidden rounded-lg bg-neutral-900">
-                  <img
-                    src={photo.url}
-                    alt=""
-                    loading={isAboveFold ? "eager" : "lazy"}
-                    decoding="async"
-                    {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
-                    className="block w-full h-auto object-contain transition-transform group-hover:scale-[1.02]"
-                  />
-                </div>
-              ) : (
-                <Link
-                  href="/start"
-                  className="block overflow-hidden rounded-lg bg-neutral-900"
-                >
-                  <img
-                    src={photo.url}
-                    alt=""
-                    loading={isAboveFold ? "eager" : "lazy"}
-                    decoding="async"
-                    {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
-                    className="block w-full h-auto object-contain transition-transform group-hover:scale-[1.02]"
-                  />
-                </Link>
-              )}
+                {!selecting && isAdmin && (
+                  <div className="absolute right-2 top-2 z-10 flex flex-col items-end gap-1">
+                    {reordering && (
+                      <div className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => movePhoto(index, index - 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black"
+                          aria-label="Move photo up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => movePhoto(index, index + 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded bg-black/70 text-xs text-white hover:bg-black"
+                          aria-label="Move photo down"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhoto(photo.id)}
+                      className="flex h-7 items-center justify-center rounded bg-red-600/80 px-2 text-[10px] font-semibold uppercase tracking-wide text-white shadow hover:bg-red-500"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {selecting ? (
+                  <div className="block overflow-hidden rounded-lg bg-neutral-900">
+                    <img
+                      src={photo.url}
+                      alt=""
+                      loading={isAboveFold ? "eager" : "lazy"}
+                      decoding="async"
+                      {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                      className="block w-full h-auto object-contain max-h-[480px] transition-transform group-hover:scale-[1.02]"
+                    />
+                  </div>
+                ) : (
+                  <Link
+                    href="/start"
+                    className="block overflow-hidden rounded-lg bg-neutral-900"
+                  >
+                    <img
+                      src={photo.url}
+                      alt=""
+                      loading={isAboveFold ? "eager" : "lazy"}
+                      decoding="async"
+                      {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                      className="block w-full h-auto object-contain max-h-[480px] transition-transform group-hover:scale-[1.02]"
+                    />
+                  </Link>
+                )}
               </div>
             );
           })}

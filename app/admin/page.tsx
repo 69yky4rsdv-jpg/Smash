@@ -25,7 +25,7 @@ import {
   toggleModelActive,
   updateModel
 } from "@/lib/admin";
-import { fetchAllBunnyVideos, buildBunnyHlsUrl, buildBunnyThumbnailUrl } from "@/lib/bunny";
+import { fetchAllBunnyVideos, buildBunnyHlsUrl, buildBunnyThumbnailUrl, setBunnyLibraryWatermarkFromUrl } from "@/lib/bunny";
 import { parseTxtMetadata, applyTxtMetadataToVideos } from "@/lib/import-txt";
 import { generateTitlesForVideos } from "@/lib/mass-title-generator";
 import { importPhotoSetsFromBunny } from "@/lib/import-photosets";
@@ -190,6 +190,21 @@ async function updateSiteBrandingAction(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/models");
+}
+
+async function applyBunnyWatermarkAction(formData: FormData) {
+  "use server";
+  const config = getBunnyStreamConfig();
+  if (!config) return;
+  const watermarkUrlRaw = String(formData.get("watermarkUrl") ?? "").trim();
+  const site = getSiteSettings();
+  const imageUrl = watermarkUrlRaw || site.logoUrl;
+  if (!imageUrl) return;
+  await setBunnyLibraryWatermarkFromUrl(
+    config.libraryId,
+    config.streamAccessKey,
+    imageUrl
+  );
 }
 
 async function updateStartPageImagesAction(formData: FormData) {
@@ -563,11 +578,13 @@ export default async function AdminPage() {
             </header>
 
             {/* Site branding */}
-            <section id="settings" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-amber-500/50">
-              <h2 className="text-lg font-semibold text-neutral-100">Site settings</h2>
-              <p className="text-[11px] text-neutral-400">
-                Change the site name and logo shown in the header and footer. Logo URL can be a path (e.g. /logo.png) or full URL.
-              </p>
+            <section id="settings" className="scroll-mt-24 card-surface p-6 space-y-6 border-l-4 border-l-amber-500/50">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold text-neutral-100">Site settings</h2>
+                <p className="text-[11px] text-neutral-400">
+                  Change the site name and logo shown in the header and footer. Logo URL can be a path (e.g. /logo.png) or full URL.
+                </p>
+              </div>
               <form action={updateSiteBrandingAction} className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
                   <label className="text-neutral-200 text-sm" htmlFor="siteName">
@@ -626,6 +643,37 @@ export default async function AdminPage() {
                   Save branding
                 </button>
               </form>
+              <div className="mt-4 rounded-lg border border-white/10 bg-black/40 p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-neutral-100">Bunny Stream watermark</h3>
+                <p className="text-[11px] text-neutral-400">
+                  Apply a logo watermark to your Bunny Stream video library using the Bunny API. The image must be a publicly accessible PNG (recommended) or JPG.
+                </p>
+                <form action={applyBunnyWatermarkAction} className="space-y-2 text-sm">
+                  <div className="space-y-1">
+                    <label className="text-neutral-200 text-sm" htmlFor="watermarkUrl">
+                      Watermark image URL
+                    </label>
+                    <input
+                      id="watermarkUrl"
+                      name="watermarkUrl"
+                      defaultValue={site.logoUrl ?? ""}
+                      placeholder="https://.../logo.png"
+                      className="w-full max-w-md rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+                    />
+                  </div>
+                  <p className="text-[11px] text-neutral-500">
+                    Uses your Bunny Stream API keys (BUNNY_LIBRARY_ID, BUNNY_STREAM_ACCESS_KEY) to call
+                    <code className="ml-1 rounded bg-white/10 px-1 text-[10px]">PUT /videolibrary/&lt;id&gt;/watermark</code>.
+                    Position and size can be tuned in the Bunny dashboard.
+                  </p>
+                  <button
+                    type="submit"
+                    className="btn-gradient inline-flex justify-center px-4 py-2 text-xs"
+                  >
+                    Apply watermark to Bunny library
+                  </button>
+                </form>
+              </div>
             </section>
 
             {/* Start page images */}

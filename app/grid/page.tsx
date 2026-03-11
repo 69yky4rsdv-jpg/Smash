@@ -4,6 +4,7 @@ import {
   getGridPhotoIds,
   getGridPhotos,
   parsePhotoUrls,
+  removeGridPhoto,
   setGridPhotoIds,
 } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -30,6 +31,14 @@ async function addGridPhotosAction(formData: FormData) {
   }
 }
 
+async function removeGridPhotoAction(formData: FormData) {
+  "use server";
+  const id = String(formData.get("photoId") ?? "").trim();
+  if (!id) return;
+  removeGridPhoto(id);
+  revalidatePath("/grid");
+}
+
 export default async function GridPage() {
   const { isAdmin } = await getSession();
   const site = getSiteSettings();
@@ -42,7 +51,10 @@ export default async function GridPage() {
       ? savedIds
       : allPhotos.filter((p) => p.id === p.videoId).map((p) => p.id);
   const selectedIds = (savedIds.length > 0 ? savedIds : defaultIds).slice(0, MAX_GRID_PHOTOS);
-  const displayedPhotos = allPhotos.filter((p) => selectedIds.includes(p.id));
+  // Preserve the saved order: map ids back to photos in id order.
+  const displayedPhotos = selectedIds
+    .map((id) => allPhotos.find((p) => p.id === id))
+    .filter((p): p is ReturnType<typeof getGridPhotos>[number] => p != null);
   const preloadUrls = displayedPhotos.slice(0, 6).map((p) => p.url);
 
   return (
@@ -57,6 +69,7 @@ export default async function GridPage() {
         isAdmin={isAdmin}
         saveAction={saveGridPhotoIdsAction}
         addPhotosAction={addGridPhotosAction}
+        removePhotoAction={removeGridPhotoAction}
         maxPhotos={MAX_GRID_PHOTOS}
       />
     </>

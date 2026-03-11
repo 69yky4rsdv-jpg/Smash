@@ -91,18 +91,27 @@ export default async function VideoDetailPage({ params }: Props) {
               <div className="aspect-video w-full max-w-full overflow-hidden rounded-xl bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/40 shadow-[0_24px_65px_rgba(0,0,0,0.9)] sm:rounded-2xl">
                 {video.videoUrl ? (
                   video.videoUrl.includes("iframe.mediadelivery.net") ? (
-                    <iframe
-                      src={video.videoUrl}
-                      className="h-full w-full max-h-full max-w-full object-contain"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                    <div className="relative h-full w-full">
+                      <iframe
+                        src={video.videoUrl}
+                        className="h-full w-full max-h-full max-w-full object-contain"
+                        style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                      <div className="pointer-events-none absolute left-2 -bottom-10 z-10">
+                        <img
+                          src="https://Pull-Video-Load.b-cdn.net/logo/BIg-SMASHPOV.COM-2.png"
+                          alt="SmashPov watermark"
+                          className="h-40 opacity-80 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)]"
+                        />
+                      </div>
+                    </div>
                   ) : (
                     <VideoPlayer
                       src={video.videoUrl}
                       poster={video.thumbnailUrl}
-                      className="h-full w-full max-h-full max-w-full object-contain"
+                      className="h-full w-full max-h-full max-w-full"
                     />
                   )
                 ) : video.thumbnailUrl ? (

@@ -8,7 +8,8 @@ export default function HomePage() {
   const site = getSiteSettings();
   const videos = getVideos();
   const featured = videos.filter((v) => v.categories?.includes("featured"));
-  const latest = (featured.length > 0 ? featured : videos).slice(0, 3);
+  // Show a larger set of featured/latest videos (up to 12) so the grid can fill out fully.
+  const latest = (featured.length > 0 ? featured : videos).slice(0, 12);
   const trending = videos.filter(
     (v) => v.isTrending || (v.categories && v.categories.includes("trending"))
   );
@@ -17,7 +18,7 @@ export default function HomePage() {
     <div className="mx-auto w-full max-w-7xl px-3 py-8 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-10 space-y-10 sm:space-y-12">
           {/* Hero banner image — 1/3 size */}
           <section className="overflow-hidden rounded-xl">
-            <div className="h-28 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 sm:h-32 md:h-48">
+            <div className="h-32 w-full overflow-hidden bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/20 sm:h-40 md:h-56">
               {site.heroBannerImageUrl ? (
                 <img
                   src={site.heroBannerImageUrl}

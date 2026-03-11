@@ -20,6 +20,7 @@ export type BunnyListResponse = {
 };
 
 const BASE = "https://video.bunnycdn.com";
+const API_BASE = "https://api.bunny.net";
 
 /**
  * Fetch one page of videos from a Bunny Stream library.
@@ -84,4 +85,44 @@ export function buildBunnyThumbnailUrl(
   if (!thumbnailFileName) return undefined;
   const host = thumbnailPullZoneHostname.replace(/\.b-cdn\.net$/i, "");
   return `https://${host}.b-cdn.net/${guid}/${thumbnailFileName}`;
+}
+const options = {
+  method: 'PUT',
+  headers: {AccessKey: '68af878b-e4f5-4b8e-88bf9200bce2-16a6-49ae'}
+};
+
+fetch('https://api.bunny.net/videolibrary/607809/watermark', options)
+  .then(res => res.json())
+  .then(res => console.log(res))
+  .catch(err => console.error(err));
+export async function setBunnyLibraryWatermarkFromUrl(
+  libraryId: string,
+  accessKey: string,
+  imageUrl: string
+): Promise<void> {
+  if (!libraryId || !accessKey || !imageUrl) return;
+
+  const imgRes = await fetch(imageUrl);
+  if (!imgRes.ok) {
+    throw new Error(`Failed to download watermark image: ${imgRes.status}`);
+  }
+  const contentType = imgRes.headers.get("content-type") ?? "image/png";
+  const buffer = Buffer.from(await imgRes.arrayBuffer());
+
+  const url = `${API_BASE}/videolibrary/${encodeURIComponent(
+    libraryId
+  )}/watermark`;
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      AccessKey: accessKey,
+      "Content-Type": contentType
+    },
+    body: buffer
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Bunny watermark API ${res.status}: ${text}`);
+  }
 }

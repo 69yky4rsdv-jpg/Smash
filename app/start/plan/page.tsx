@@ -34,7 +34,10 @@ export default async function StartPlanPage() {
   return (
     <div className="min-h-screen w-full bg-black text-white">
       <header className="relative z-10 px-4 pt-6 pb-4 text-center pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:pt-8">
-        <h1 className="text-2xl font-bold uppercase tracking-[0.2em] text-white drop-shadow-lg sm:text-4xl sm:tracking-[0.25em] md:text-5xl">
+        <h1
+          className="text-2xl font-bold uppercase tracking-[0.2em] text-pink-200 drop-shadow-lg sm:text-4xl sm:tracking-[0.25em] md:text-5xl"
+          style={{ fontFamily: '"Zing Rust", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+        >
           {site.siteName}
         </h1>
         <p className="mt-2 text-xs font-medium uppercase tracking-[0.2em] text-neutral-500 sm:mt-3 sm:text-sm">

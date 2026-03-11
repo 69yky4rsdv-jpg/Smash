@@ -34,16 +34,24 @@ export function VideoPlayer({ src, poster, className }: Props) {
   }, [src]);
 
   return (
-    <video
-      ref={videoRef}
-      // For non-HLS sources (e.g. MP4), let the browser handle src directly
-      src={src.endsWith(".m3u8") ? undefined : src}
-      poster={poster}
-      controls
-      playsInline
-      className={className}
-      style={{ maxWidth: "100%", maxHeight: "100%" }}
-    />
+    <div className={`relative ${className ?? ""}`} style={{ maxWidth: "100%", maxHeight: "100%" }}>
+      <video
+        ref={videoRef}
+        // For non-HLS sources (e.g. MP4), let the browser handle src directly
+        src={src.endsWith(".m3u8") ? undefined : src}
+        poster={poster}
+        controls
+        playsInline
+        className="h-full w-full object-contain"
+      />
+      <div className="pointer-events-none absolute left-2 -bottom-10 z-10">
+        <img
+          src="https://Pull-Video-Load.b-cdn.net/logo/BIg-SMASHPOV.COM-2.png"
+          alt="SmashPov watermark"
+          className="h-40 opacity-80 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)]"
+        />
+      </div>
+    </div>
   );
 }
 

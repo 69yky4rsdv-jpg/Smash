@@ -22,7 +22,7 @@ export function HomeVideoGrids({ latest, trending }: Props) {
             View all
           </Link>
         </div>
-        <div className="grid gap-6 sm:gap-10 sm:grid-cols-2 xl:grid-cols-2">
+        <div className="grid gap-6 sm:gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {latest.map((video) => (
             <VideoCardWithPreview
               key={video.id}

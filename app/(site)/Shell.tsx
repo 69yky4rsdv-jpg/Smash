@@ -31,7 +31,7 @@ export default function SiteShell({
           <div className="flex min-h-[44px] items-center gap-2">
             <Link
               href={isLoggedIn ? "/profile" : "/"}
-              className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-gradient-to-r from-pink-400/30 to-pink-500/30 text-pink-200 transition hover:from-pink-400/50 hover:to-pink-500/50 hover:text-pink-100"
+              className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-pink-300/20 text-pink-200 shadow-sm ring-1 ring-pink-300/40 transition hover:bg-pink-300/30 hover:text-pink-50 hover:ring-pink-200/80"
               aria-label={isLoggedIn ? "Profile" : "Home"}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -39,8 +39,15 @@ export default function SiteShell({
                 <path d="M4 20v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2" />
               </svg>
             </Link>
-            <Link href="/" className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-200 sm:tracking-[0.25em]">
-              <span className="bg-gradient-to-r from-accent-pink via-accent-pinkSoft to-pink-300 bg-clip-text text-transparent drop-shadow-sm">
+            <Link
+              href="/"
+              className="inline-flex items-center px-3 py-1 text-base font-bold uppercase tracking-[-0.03em] bg-black text-pink-200 border border-white sm:text-lg"
+              style={{ fontFamily: '"Zing Rust", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+            >
+              <span
+                className="inline-block"
+                style={{ transform: "scaleX(1.12)", transformOrigin: "center" }}
+              >
                 {siteName}
               </span>
             </Link>

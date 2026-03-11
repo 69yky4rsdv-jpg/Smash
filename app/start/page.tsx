@@ -52,7 +52,10 @@ export default async function StartPage() {
           href="/start"
           className="inline-block focus:outline-none focus:ring-2 focus:ring-pink-400/50 rounded"
         >
-          <h1 className="text-2xl font-bold uppercase tracking-[0.2em] text-white drop-shadow-lg sm:text-4xl sm:tracking-[0.25em] md:text-5xl">
+          <h1
+            className="text-2xl font-bold uppercase tracking-[0.2em] text-pink-200 drop-shadow-lg sm:text-4xl sm:tracking-[0.25em] md:text-5xl"
+            style={{ fontFamily: '"Zing Rust", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+          >
             {site.siteName}
           </h1>
         </Link>

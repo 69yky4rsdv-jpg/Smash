@@ -1,7 +1,21 @@
 {
   "siteName": "SmashPov",
+  "logoUrl": "https://Pull-Video-Load.b-cdn.net/logo/BIg-SMASHPOV.COM-2.png",
   "heroBannerLine1": "Join",
   "heroBannerLine2": "Nothing",
   "heroBannerImageUrl": "https://Pull-Video-Load.b-cdn.net/banner/rileybanner.gif",
-  "hideMalePerformersOnModelsPage": true
+  "hideMalePerformersOnModelsPage": true,
+  "freeTrialStickerText": "Free 7 days",
+  "planDisplayOverrides": {
+    "weekly": {
+      "name": "7 Day Trial",
+      "pricePerMonth": 5,
+      "billingLabel": "First week just $7.00"
+    },
+    "monthly": {
+      "name": "30 Day Membership",
+      "pricePerMonth": 33.99,
+      "billingLabel": "Billed monthly at $33.99"
+    }
+  }
 }

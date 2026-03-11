@@ -76,18 +76,9 @@
     "videoUrl": "https://vz-c0889f21-9e9.b-cdn.net/9dfc5ea8-9d29-440c-8df9-95a8e9d976d3/playlist.m3u8",
     "publishedAt": "2026-03-02T14:59:58.180Z",
     "categories": [
-      "0b647adf-92be-4446-b5d5-42cb977d980f",
-      "752b1630-0ce4-4356-a447-09aa8963b798",
-      "0017b6c5-cc49-4044-a7cd-1e58989572e5",
-      "5a751036-5abc-46e3-b4d7-fc2de65a038b",
-      "0b7dd7c3-4167-4e2d-b43c-62ed05822b01",
-      "c78d149e-b158-4312-a700-22545a181b11",
-      "ce8f96e1-b776-4129-8eab-282ec83882be"
+      "featured"
     ],
-    "models": [
-      "3f657077-0445-436c-93e4-0037e7125090",
-      "8c9ac89b-29a9-442e-bc0c-0536a491d529"
-    ],
+    "models": [],
     "isTrending": false
   },
   {
