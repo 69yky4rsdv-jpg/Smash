@@ -326,12 +326,24 @@ function writeGridPhotosFile(data: GridPhotosFile): void {
 
 export function getGridPhotoIds(): string[] {
   const data = readGridPhotosFile();
-  return Array.isArray(data.photoIds) ? data.photoIds : [];
+  const raw = Array.isArray(data.photoIds) ? data.photoIds : [];
+  const seen = new Set<string>();
+  return raw.filter((id) => {
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
 }
 
 export function setGridPhotoIds(photoIds: string[]): void {
   const data = readGridPhotosFile();
-  writeGridPhotosFile({ ...data, photoIds: photoIds.slice(0, MAX_GRID_PHOTOS) });
+  const seen = new Set<string>();
+  const deduped = photoIds.filter((id) => {
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+  writeGridPhotosFile({ ...data, photoIds: deduped.slice(0, MAX_GRID_PHOTOS) });
 }
 
 export type GridPhoto = { id: string; url: string; videoId: string };

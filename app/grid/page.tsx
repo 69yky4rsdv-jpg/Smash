@@ -13,13 +13,24 @@ import { GridPageClient } from "./GridPageClient";
 
 const MAX_GRID_PHOTOS = 30;
 
+/** Dedupe ids preserving first occurrence order (fixes duplicate photos in grid). */
+function dedupeIds(ids: string[]): string[] {
+  const seen = new Set<string>();
+  return ids.filter((id) => {
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
 // Always load fresh grid data so newly added photos show up (no static cache)
 export const dynamic = "force-dynamic";
 
 async function saveGridPhotoIdsAction(formData: FormData) {
   "use server";
-  const photoIds = formData.getAll("photoIds").map(String).filter(Boolean);
-  setGridPhotoIds(photoIds.slice(0, MAX_GRID_PHOTOS));
+  const raw = formData.getAll("photoIds").map(String).filter(Boolean);
+  const photoIds = [...new Set(raw)].slice(0, MAX_GRID_PHOTOS); // dedupe then cap (Set keeps insertion order)
+  setGridPhotoIds(photoIds);
   revalidatePath("/grid");
 }
 
@@ -48,9 +59,10 @@ export default async function GridPage() {
   const allPhotos = getGridPhotos();
   const savedIds = getGridPhotoIds();
 
-  // When nothing saved: show first N photos from all (video thumbnails, gallery, or custom). Otherwise use saved order.
+  // When nothing saved: show first N photos from all. Otherwise use saved order. Dedupe to prevent duplicate photos.
   const defaultIds = allPhotos.slice(0, MAX_GRID_PHOTOS).map((p) => p.id);
-  const selectedIds = (savedIds.length > 0 ? savedIds : defaultIds).slice(0, MAX_GRID_PHOTOS);
+  const rawIds = (savedIds.length > 0 ? savedIds : defaultIds).slice(0, MAX_GRID_PHOTOS);
+  const selectedIds = dedupeIds(rawIds);
   // Preserve the saved order: map ids back to photos in id order.
   const displayedPhotos = selectedIds
     .map((id) => allPhotos.find((p) => p.id === id))

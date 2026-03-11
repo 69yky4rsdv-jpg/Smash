@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { GridPhoto } from "@/lib/data";
 
 const DEFAULT_MAX_PHOTOS = 30;
 /** Columns in grid at large breakpoint; used for horizontal move step. */
 const GRID_COLUMNS = 4;
+
+/** Dedupe ids preserving first occurrence (prevents duplicate photos in grid). */
+function dedupeIds(ids: string[]): string[] {
+  const seen = new Set<string>();
+  return ids.filter((id) => {
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
 
 type Props = {
   siteName: string;
@@ -30,15 +40,26 @@ export function GridPageClient({
   maxPhotos = DEFAULT_MAX_PHOTOS,
 }: Props) {
   const [showAddPhotos, setShowAddPhotos] = useState(false);
-  const [order, setOrder] = useState<string[]>(() => selectedIds);
+  const [order, setOrder] = useState<string[]>(() => dedupeIds(selectedIds));
   const [reordering, setReordering] = useState(false);
   // Photos added in this session so they show immediately (no reload); merge with server allPhotos
   const [locallyAddedPhotos, setLocallyAddedPhotos] = useState<GridPhoto[]>([]);
 
-  const effectiveAllPhotos = [...allPhotos, ...locallyAddedPhotos];
-  const displayPhotos = order
-    .map((id) => effectiveAllPhotos.find((p) => p.id === id))
-    .filter((p): p is GridPhoto => p != null);
+  const effectiveAllPhotos = useMemo(
+    () => [...allPhotos, ...locallyAddedPhotos],
+    [allPhotos, locallyAddedPhotos]
+  );
+  const displayPhotos = useMemo(() => {
+    const seen = new Set<string>();
+    const dedupedOrder = order.filter((id) => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    return dedupedOrder
+      .map((id) => effectiveAllPhotos.find((p) => p.id === id))
+      .filter((p): p is GridPhoto => p != null);
+  }, [order, effectiveAllPhotos]);
 
   const handleSaveOrder = () => {
     const formData = new FormData();
@@ -73,8 +94,9 @@ export function GridPageClient({
         setLocallyAddedPhotos((prev) => [...prev, ...result.added]);
         const newIds = result.added.map((p) => p.id);
         setOrder((prev) => {
-          const next = [...prev, ...newIds];
-          // Auto-save the full order so no need to click Save order
+          const seen = new Set(prev);
+          const added = newIds.filter((id) => !seen.has(id));
+          const next = dedupeIds([...prev, ...added]);
           const saveData = new FormData();
           next.slice(0, maxPhotos).forEach((id) => saveData.append("photoIds", id));
           saveAction(saveData);
@@ -185,7 +207,7 @@ export function GridPageClient({
         {/* Masonry-style columns: make tiles consistent size across orientations */}
         <div
           className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5"
-          style={{ columnFill: "balance" }}
+          style={{ columnFill: "balance", contain: "layout" }}
         >
           {displayPhotos.map((photo, index) => {
             const isAboveFold = index < 8;
@@ -193,6 +215,7 @@ export function GridPageClient({
               <div
                 key={photo.id}
                 className="group relative mb-3 break-inside-avoid sm:mb-4 lg:mb-5"
+                style={index >= 8 ? { contentVisibility: "auto" as const } : undefined}
               >
                 {isAdmin && (
                   <div className="absolute right-2 top-2 z-10 flex flex-col items-end gap-1">
