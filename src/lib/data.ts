@@ -370,8 +370,8 @@ export function removeGridPhoto(photoId: string): void {
   });
 }
 
-/** Add custom photo URLs to the grid (and to selected ids). Ids are generated as custom-0, custom-1, ... Max 30 photos total. */
-export function addGridCustomPhotos(urls: string[]): void {
+/** Add custom photo URLs to the grid (and to selected ids). Ids are generated as custom-0, custom-1, ... Max 30 photos total. Returns the new photos so the client can show them immediately. */
+export function addGridCustomPhotos(urls: string[]): GridPhoto[] {
   const data = readGridPhotosFile();
   const custom = Array.isArray(data.customPhotos) ? data.customPhotos : [];
   const photoIds = Array.isArray(data.photoIds) ? data.photoIds : [];
@@ -389,6 +389,7 @@ export function addGridCustomPhotos(urls: string[]): void {
     photoIds: [...photoIds, ...newIds],
     customPhotos: [...custom, ...newCustom]
   });
+  return newCustom.map((c) => ({ id: c.id, url: c.url, videoId: "" }));
 }
 
 /** Pending signups (email collected on start page before account creation). */
@@ -410,6 +411,16 @@ export function getPendingSignups(): PendingSignup[] {
   }
 }
 
+/** True if email is already in pending signups or registered users (case-insensitive). */
+export function isEmailAlreadyUsed(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return false;
+  const pending = getPendingSignups();
+  if (pending.some((e) => e.email.toLowerCase() === normalized)) return true;
+  const users = getUsers();
+  return users.some((u) => u.email?.toLowerCase() === normalized);
+}
+
 export function addPendingSignupEmail(email: string): void {
   const path = getPendingSignupsPath();
   const dir = getDataDir();
@@ -417,6 +428,7 @@ export function addPendingSignupEmail(email: string): void {
   let list = getPendingSignups();
   const normalized = email.trim().toLowerCase();
   if (!normalized) return;
+  if (list.some((e) => e.email.toLowerCase() === normalized)) return; // skip duplicate
   list.push({ email: normalized, createdAt: new Date().toISOString() });
   try {
     writeFileSync(path, JSON.stringify(list, null, 2), "utf-8");

@@ -13,6 +13,9 @@ import { GridPageClient } from "./GridPageClient";
 
 const MAX_GRID_PHOTOS = 30;
 
+// Always load fresh grid data so newly added photos show up (no static cache)
+export const dynamic = "force-dynamic";
+
 async function saveGridPhotoIdsAction(formData: FormData) {
   "use server";
   const photoIds = formData.getAll("photoIds").map(String).filter(Boolean);
@@ -20,15 +23,15 @@ async function saveGridPhotoIdsAction(formData: FormData) {
   revalidatePath("/grid");
 }
 
-async function addGridPhotosAction(formData: FormData) {
+async function addGridPhotosAction(formData: FormData): Promise<{ added: { id: string; url: string; videoId: string }[] }> {
   "use server";
   const paste = String(formData.get("photoUrls") ?? "").trim();
-  if (!paste) return;
+  if (!paste) return { added: [] };
   const urls = parsePhotoUrls(paste);
-  if (urls.length) {
-    addGridCustomPhotos(urls);
-    revalidatePath("/grid");
-  }
+  if (urls.length === 0) return { added: [] };
+  const added = addGridCustomPhotos(urls);
+  revalidatePath("/grid");
+  return { added };
 }
 
 async function removeGridPhotoAction(formData: FormData) {
@@ -45,11 +48,8 @@ export default async function GridPage() {
   const allPhotos = getGridPhotos();
   const savedIds = getGridPhotoIds();
 
-  // Default: show one photo per video (thumbnail) when nothing saved yet. Cap at 30.
-  const defaultIds =
-    savedIds.length > 0
-      ? savedIds
-      : allPhotos.filter((p) => p.id === p.videoId).map((p) => p.id);
+  // When nothing saved: show first N photos from all (video thumbnails, gallery, or custom). Otherwise use saved order.
+  const defaultIds = allPhotos.slice(0, MAX_GRID_PHOTOS).map((p) => p.id);
   const selectedIds = (savedIds.length > 0 ? savedIds : defaultIds).slice(0, MAX_GRID_PHOTOS);
   // Preserve the saved order: map ids back to photos in id order.
   const displayedPhotos = selectedIds

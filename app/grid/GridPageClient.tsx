@@ -14,7 +14,7 @@ type Props = {
   selectedIds: string[];
   isAdmin: boolean;
   saveAction: (formData: FormData) => Promise<void>;
-  addPhotosAction: (formData: FormData) => Promise<void>;
+  addPhotosAction: (formData: FormData) => Promise<{ added: GridPhoto[] }>;
   maxPhotos?: number;
   removePhotoAction: (formData: FormData) => Promise<void>;
 };
@@ -29,53 +29,16 @@ export function GridPageClient({
    removePhotoAction,
   maxPhotos = DEFAULT_MAX_PHOTOS,
 }: Props) {
-  const [selecting, setSelecting] = useState(false);
   const [showAddPhotos, setShowAddPhotos] = useState(false);
-  const [checked, setChecked] = useState<Set<string>>(() => new Set(selectedIds));
   const [order, setOrder] = useState<string[]>(() => selectedIds);
   const [reordering, setReordering] = useState(false);
+  // Photos added in this session so they show immediately (no reload); merge with server allPhotos
+  const [locallyAddedPhotos, setLocallyAddedPhotos] = useState<GridPhoto[]>([]);
 
-  const selectedPhotos = order
-    .map((id) => allPhotos.find((p) => p.id === id))
+  const effectiveAllPhotos = [...allPhotos, ...locallyAddedPhotos];
+  const displayPhotos = order
+    .map((id) => effectiveAllPhotos.find((p) => p.id === id))
     .filter((p): p is GridPhoto => p != null);
-  const displayPhotos = selecting ? allPhotos : selectedPhotos;
-
-  const toggle = (id: string) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else if (next.size < maxPhotos) {
-        next.add(id);
-        // Newly checked photos go to the end of the order.
-        setOrder((prevOrder) => (prevOrder.includes(id) ? prevOrder : [...prevOrder, id]));
-      }
-      return next;
-    });
-    // When unchecking, also drop from order.
-    setOrder((prevOrder) => prevOrder.filter((x) => x !== id));
-  };
-
-  const selectAll = () => {
-    const ids = allPhotos.slice(0, maxPhotos).map((p) => p.id);
-    setChecked(new Set(ids));
-    setOrder(ids);
-  };
-  const clearAll = () => {
-    setChecked(new Set());
-    setOrder([]);
-  };
-
-  const handleSave = () => {
-    const formData = new FormData();
-    const orderedIds = order.filter((id) => checked.has(id)).slice(0, maxPhotos);
-    orderedIds.forEach((id) => formData.append("photoIds", id));
-    saveAction(formData).then(() => {
-      setSelecting(false);
-      setReordering(false);
-      window.location.reload();
-    });
-  };
 
   const handleSaveOrder = () => {
     const formData = new FormData();
@@ -103,10 +66,23 @@ export function GridPageClient({
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
-    addPhotosAction(formData).then(() => {
+    addPhotosAction(formData).then((result) => {
       form.reset();
       setShowAddPhotos(false);
-      window.location.reload();
+      if (result?.added?.length) {
+        setLocallyAddedPhotos((prev) => [...prev, ...result.added]);
+        const newIds = result.added.map((p) => p.id);
+        setOrder((prev) => {
+          const next = [...prev, ...newIds];
+          // Auto-save the full order so no need to click Save order
+          const saveData = new FormData();
+          next.slice(0, maxPhotos).forEach((id) => saveData.append("photoIds", id));
+          saveAction(saveData);
+          return next;
+        });
+      } else {
+        window.location.reload();
+      }
     });
   };
 
@@ -144,85 +120,30 @@ export function GridPageClient({
 
       {isAdmin && (
         <div className="fixed top-14 left-2 right-2 z-50 flex flex-wrap items-center justify-center gap-2 rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-sm shadow-xl sm:left-1/2 sm:right-auto sm:w-auto sm:-translate-x-1/2">
-          {!selecting ? (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setReordering(false);
-                  setSelecting(true);
-                }}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/15 px-3 py-2 font-medium text-white hover:bg-white/25"
-              >
-                Select photos
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddPhotos((v) => !v)}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/15 px-3 py-2 font-medium text-white hover:bg-white/25"
-              >
-                Add photos
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelecting(false);
-                  setReordering((v) => !v);
-                }}
-                className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded px-3 py-2 font-medium ${
-                  reordering ? "bg-accent-pink/80 text-white hover:bg-accent-pink" : "bg-white/15 text-white hover:bg-white/25"
-                }`}
-              >
-                {reordering ? "Reordering…" : "Reorder"}
-              </button>
-              {reordering && (
-                <button
-                  type="button"
-                  onClick={handleSaveOrder}
-                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-accent-pink/80 px-3 py-2 font-medium text-white hover:bg-accent-pink"
-                >
-                  Save order
-                </button>
-              )}
-            </>
-          ) : (
-            <>
-              <span className="flex min-h-[44px] items-center text-xs text-neutral-400">
-                {checked.size}/{maxPhotos}
-              </span>
-              <button
-                type="button"
-                onClick={selectAll}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-200 hover:bg-white/20"
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={clearAll}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-200 hover:bg-white/20"
-              >
-                None
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-accent-pink/80 px-3 py-2 font-medium text-white hover:bg-accent-pink"
-              >
-                Save selection
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelecting(false);
-                  setChecked(new Set(selectedIds));
-                  setOrder(selectedIds);
-                }}
-                className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/10 px-2 py-2 text-xs text-neutral-300 hover:bg-white/20"
-              >
-                Cancel
-              </button>
-            </>
+          <button
+            type="button"
+            onClick={() => setShowAddPhotos((v) => !v)}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-white/15 px-3 py-2 font-medium text-white hover:bg-white/25"
+          >
+            Add photos
+          </button>
+          <button
+            type="button"
+            onClick={() => setReordering((v) => !v)}
+            className={`min-h-[44px] min-w-[44px] flex items-center justify-center rounded px-3 py-2 font-medium ${
+              reordering ? "bg-accent-pink/80 text-white hover:bg-accent-pink" : "bg-white/15 text-white hover:bg-white/25"
+            }`}
+          >
+            {reordering ? "Reordering…" : "Reorder"}
+          </button>
+          {reordering && (
+            <button
+              type="button"
+              onClick={handleSaveOrder}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded bg-accent-pink/80 px-3 py-2 font-medium text-white hover:bg-accent-pink"
+            >
+              Save order
+            </button>
           )}
         </div>
       )}
@@ -232,7 +153,7 @@ export function GridPageClient({
         <div className="fixed left-2 right-2 top-28 z-50 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-lg border border-white/20 bg-black/95 p-4 shadow-xl sm:left-1/2 sm:right-auto sm:w-full sm:max-w-md sm:-translate-x-1/2">
           <h3 className="mb-2 text-sm font-semibold text-white">Add photos by URL</h3>
           <p className="mb-3 text-xs text-neutral-400">
-            Paste image URLs, one per line or comma-separated. New photos are added to the grid and selected.
+            Paste image URLs, one per line or comma-separated. New photos are added to the grid.
           </p>
           <form onSubmit={handleAddPhotos} className="space-y-2">
             <textarea
@@ -273,34 +194,7 @@ export function GridPageClient({
                 key={photo.id}
                 className="group relative mb-3 break-inside-avoid sm:mb-4 lg:mb-5"
               >
-                {selecting && isAdmin && (
-                  <label
-                    className={`absolute left-2 top-2 z-10 flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded border-2 border-white bg-black/70 shadow-lg ${
-                      !checked.has(photo.id) && checked.size >= maxPhotos
-                        ? "cursor-not-allowed opacity-60"
-                        : "cursor-pointer"
-                    }`}
-                    title={
-                      !checked.has(photo.id) && checked.size >= maxPhotos
-                        ? `Max ${maxPhotos} photos`
-                        : undefined
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked.has(photo.id)}
-                      onChange={() => toggle(photo.id)}
-                      disabled={!checked.has(photo.id) && checked.size >= maxPhotos}
-                      className="sr-only"
-                    />
-                    {checked.has(photo.id) ? (
-                      <span className="text-sm text-white" aria-hidden>✓</span>
-                    ) : (
-                      <span className="h-3 w-3 rounded bg-transparent" />
-                    )}
-                  </label>
-                )}
-                {!selecting && isAdmin && (
+                {isAdmin && (
                   <div className="absolute right-2 top-2 z-10 flex flex-col items-end gap-1">
                     {reordering && (
                       <>
@@ -353,38 +247,22 @@ export function GridPageClient({
                     </button>
                   </div>
                 )}
-                {selecting ? (
-                  <div className="block overflow-hidden rounded-lg bg-neutral-900">
-                    <img
-                      src={photo.url}
-                      alt=""
-                      loading={isAboveFold ? "eager" : "lazy"}
-                      decoding="async"
-                      {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                      className="block w-full h-auto object-contain max-h-[480px] transition-transform group-hover:scale-[1.02]"
-                    />
-                  </div>
-                ) : (
-                  <Link
-                    href="/start"
-                    className="block overflow-hidden rounded-lg bg-neutral-900"
-                  >
-                    <img
-                      src={photo.url}
-                      alt=""
-                      loading={isAboveFold ? "eager" : "lazy"}
-                      decoding="async"
-                      {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                      className="block w-full h-auto object-contain max-h-[480px] transition-transform group-hover:scale-[1.02]"
-                    />
-                  </Link>
-                )}
+                <Link
+                  href="/start"
+                  className="block overflow-hidden rounded-lg bg-neutral-900"
+                >
+                  <img
+                    src={photo.url}
+                    alt=""
+                    loading={isAboveFold ? "eager" : "lazy"}
+                    decoding="async"
+                    {...(isAboveFold ? { fetchPriority: "high" as const } : {})}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                    className="block w-full h-auto object-contain max-h-[480px] transition-transform group-hover:scale-[1.02]"
+                  />
+                </Link>
               </div>
             );
           })}

@@ -1,4 +1,4 @@
-import { addPendingSignupEmail } from "@/lib/data";
+import { addPendingSignupEmail, isEmailAlreadyUsed } from "@/lib/data";
 import { sendSignupConfirmationEmail } from "@/lib/send-email";
 import { getSiteSettings } from "@/lib/site-settings";
 import { cookies } from "next/headers";
@@ -27,6 +27,7 @@ async function saveStartEmailAction(formData: FormData): Promise<{ error?: strin
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Email is required." };
   if (!isValidEmail(email)) return { error: "Please enter a valid email address." };
+  if (isEmailAlreadyUsed(email)) return { error: "This email is already registered or has already signed up." };
   addPendingSignupEmail(email);
   revalidatePath("/admin");
   // Send confirmation email if Resend is configured (does not block redirect on failure)
