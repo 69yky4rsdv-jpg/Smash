@@ -19,7 +19,7 @@ export async function sendSignupConfirmationEmail(to: string): Promise<{ ok: boo
   const planUrl = `${baseUrl.replace(/\/$/, "")}/start/plan`;
 
   const resend = new Resend(resendApiKey);
-  const { data, error } = await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: `No Reply <${fromAddress}>`,
     to: [to],
     subject: `Confirm your email — ${siteName}`,
@@ -30,7 +30,6 @@ export async function sendSignupConfirmationEmail(to: string): Promise<{ ok: boo
       <p>If you didn't request this, you can ignore this email.</p>
       <p>— ${siteName}</p>
     `,
-    idempotencyKey: `signup-${to.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now()}`,
   });
 
   if (error) {
