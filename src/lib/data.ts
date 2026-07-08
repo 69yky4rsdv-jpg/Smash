@@ -161,6 +161,10 @@ function getVideosPath(): string {
   return join(getDataDir(), "videos.json");
 }
 
+function getStoreVideosPath(): string {
+  return join(getDataDir(), "store-videos.json");
+}
+
 /** Reads videos from disk. Set includeHidden=true (e.g. in admin) to include hidden videos. */
 export function getVideos(includeHidden = false): Video[] {
   try {
@@ -229,7 +233,15 @@ export function updateVideo(
   updates: Partial<
     Pick<
       Video,
-      "title" | "description" | "thumbnailUrl" | "videoUrl" | "categories" | "models" | "isTrending" | "publishedAt"
+      | "title"
+      | "description"
+      | "thumbnailUrl"
+      | "videoUrl"
+      | "previewUrl"
+      | "categories"
+      | "models"
+      | "isTrending"
+      | "publishedAt"
     >
   >
 ): void {
@@ -240,11 +252,62 @@ export function updateVideo(
   if (updates.description !== undefined) video.description = updates.description;
   if (updates.thumbnailUrl !== undefined) video.thumbnailUrl = updates.thumbnailUrl;
   if (updates.videoUrl !== undefined) video.videoUrl = updates.videoUrl;
+  if (updates.previewUrl !== undefined) video.previewUrl = updates.previewUrl;
   if (updates.categories !== undefined) video.categories = updates.categories;
   if (updates.models !== undefined) video.models = updates.models;
   if (updates.isTrending !== undefined) video.isTrending = updates.isTrending;
    if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   saveVideos(list);
+}
+
+/** Reads store videos from disk (separate from main videos). */
+export function getStoreVideos(): Video[] {
+  try {
+    const path = getStoreVideosPath();
+    if (!existsSync(path)) return [];
+    const raw = readFileSync(path, "utf-8");
+    const data = JSON.parse(raw) as Video[];
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveStoreVideos(videosList: Video[]): void {
+  try {
+    const dir = getDataDir();
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(getStoreVideosPath(), JSON.stringify(videosList, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed to write store-videos.json:", e);
+  }
+}
+
+export function appendStoreVideo(video: Video): void {
+  const list = getStoreVideos();
+  list.push(video);
+  saveStoreVideos(list);
+}
+
+export function updateStoreVideo(
+  id: string,
+  updates: Partial<Pick<Video, "title" | "description" | "thumbnailUrl" | "videoUrl" | "previewUrl" | "publishedAt">>
+): void {
+  const list = getStoreVideos();
+  const video = list.find((v) => v.id === id);
+  if (!video) return;
+  if (updates.title !== undefined) video.title = updates.title;
+  if (updates.description !== undefined) video.description = updates.description;
+  if (updates.thumbnailUrl !== undefined) video.thumbnailUrl = updates.thumbnailUrl;
+  if (updates.videoUrl !== undefined) video.videoUrl = updates.videoUrl;
+  if (updates.previewUrl !== undefined) video.previewUrl = updates.previewUrl;
+  if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
+  saveStoreVideos(list);
+}
+
+export function deleteStoreVideo(id: string): void {
+  const list = getStoreVideos().filter((v) => v.id !== id);
+  saveStoreVideos(list);
 }
 
 /** Video photo galleries: videoId -> array of image URLs */

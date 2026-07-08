@@ -77,6 +77,12 @@ export default function SiteShell({
             >
               Videos
             </Link>
+            <Link
+              href="/store"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg px-3 py-2.5 font-medium uppercase tracking-wider text-neutral-300 transition hover:bg-white/10 hover:text-pink-300 hover:shadow-[0_0_20px_rgba(251,207,232,0.25)]"
+            >
+              Store
+            </Link>
             {isAdmin && (
               <Link
                 href="/admin"

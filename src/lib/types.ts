@@ -32,6 +32,8 @@ export type Video = {
   description?: string;
   thumbnailUrl?: string;
   videoUrl: string;
+  /** Optional preview/trailer URL used on the store purchase page. */
+  previewUrl?: string;
   publishedAt: string;
   categories: string[];
   models: string[];
