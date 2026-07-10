@@ -1,13 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getStoreVideos, userHasPurchasedStoreVideo } from "@/lib/data";
+import { getStoreVideoPrice } from "@/lib/store-checkout";
 import { StoreSignupForm } from "../../StoreSignupForm";
-
-function getVideoStorePrice(videoId: string): number {
-  const hash = Array.from(videoId).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const tiers = [14.99, 17.99, 19.99, 22.99, 24.99, 27.99];
-  return tiers[hash % tiers.length]!;
-}
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -32,7 +27,7 @@ export default async function StoreSignupPage({ params }: Props) {
     redirect(checkoutUrl || `/store/${id}/checkout`);
   }
 
-  const price = `$${getVideoStorePrice(video.id).toFixed(2)}`;
+  const price = `$${getStoreVideoPrice(video).toFixed(2)}`;
 
   return (
     <StoreSignupForm

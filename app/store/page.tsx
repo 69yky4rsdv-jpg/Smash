@@ -14,15 +14,9 @@ import {
 } from "@/lib/data";
 import type { Video } from "@/lib/types";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
-import { getStorePurchaseSuccessUrl } from "@/lib/store-checkout";
+import { getStorePurchaseSuccessUrl, getStoreVideoPrice, parseStorePrice } from "@/lib/store-checkout";
 import { parseStorePreviewDuration, STORE_PREVIEW_DURATION_OPTIONS } from "@/lib/store-access";
 import { CopyableUrl } from "./CopyableUrl";
-
-function getVideoStorePrice(videoId: string): number {
-  const hash = Array.from(videoId).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const tiers = [14.99, 17.99, 19.99, 22.99, 24.99, 27.99];
-  return tiers[hash % tiers.length]!;
-}
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +43,7 @@ async function addVideoAction(formData: FormData) {
   const previewDurationSeconds = parseStorePreviewDuration(
     String(formData.get("previewDurationSeconds") ?? "30")
   );
+  const storePrice = parseStorePrice(String(formData.get("storePrice") ?? ""));
 
   if (!title || !videoUrl) return;
 
@@ -62,6 +57,7 @@ async function addVideoAction(formData: FormData) {
     previewUrl: previewUrl || undefined,
     purchaseCheckoutUrl: purchaseCheckoutUrl || undefined,
     previewDurationSeconds,
+    storePrice,
     publishedAt: now,
     categories: [],
     models: [],
@@ -87,6 +83,7 @@ async function updateStoreVideoAction(formData: FormData) {
   const previewDurationSeconds = parseStorePreviewDuration(
     String(formData.get("previewDurationSeconds") ?? "30")
   );
+  const storePrice = parseStorePrice(String(formData.get("storePrice") ?? ""));
 
   if (!videoUrl) return;
 
@@ -96,6 +93,7 @@ async function updateStoreVideoAction(formData: FormData) {
     previewUrl,
     purchaseCheckoutUrl,
     previewDurationSeconds,
+    storePrice,
   });
 
   revalidatePath("/store");
@@ -173,6 +171,17 @@ export default async function StorePage() {
                 <input
                   name="title"
                   required
+                  className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] text-neutral-400">Price (USD)</label>
+                <input
+                  name="storePrice"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="e.g. 19.99 — blank = auto"
                   className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
                 />
               </div>
@@ -292,6 +301,22 @@ export default async function StorePage() {
                     <form action={updateStoreVideoAction} className="grid gap-3 md:grid-cols-2">
                       <input type="hidden" name="id" value={video.id} />
                       <div className="space-y-1">
+                        <label className="text-[11px] text-neutral-400">Price (USD)</label>
+                        <input
+                          name="storePrice"
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          defaultValue={video.storePrice ?? ""}
+                          placeholder={`Auto: $${getStoreVideoPrice(video).toFixed(2)}`}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
+                        />
+                        <p className="text-[10px] text-neutral-500">
+                          Shown now: ${getStoreVideoPrice(video).toFixed(2)}
+                          {video.storePrice ? " (custom)" : " (auto)"}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
                         <label className="text-[11px] text-neutral-400">Thumbnail URL</label>
                         <input
                           name="thumbnailUrl"
@@ -368,7 +393,7 @@ export default async function StorePage() {
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {videos.map((video) => {
-          const price = getVideoStorePrice(video.id);
+          const price = getStoreVideoPrice(video);
           const performerNames = video.models
             .map((modelId) => modelById.get(modelId)?.stageName)
             .filter(Boolean) as string[];

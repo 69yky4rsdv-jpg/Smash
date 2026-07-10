@@ -301,6 +301,7 @@ export function updateStoreVideo(
       | "previewUrl"
       | "purchaseCheckoutUrl"
       | "previewDurationSeconds"
+      | "storePrice"
       | "publishedAt"
     >
   >
@@ -325,6 +326,12 @@ export function updateStoreVideo(
   if (updates.previewDurationSeconds !== undefined) {
     video.previewDurationSeconds =
       updates.previewDurationSeconds === 0 ? 0 : updates.previewDurationSeconds || undefined;
+  }
+  if (updates.storePrice !== undefined) {
+    video.storePrice =
+      typeof updates.storePrice === "number" && updates.storePrice > 0
+        ? updates.storePrice
+        : undefined;
   }
   if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   saveStoreVideos(list);

@@ -4,13 +4,8 @@ import { getSession } from "@/lib/auth";
 import { getModels, getStoreVideos, userHasPurchasedStoreVideo } from "@/lib/data";
 import { resolveStorePreviewPlayback } from "@/lib/store-access";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
+import { getStoreVideoPrice } from "@/lib/store-checkout";
 import { StorePreviewMedia } from "../StorePreviewMedia";
-
-function getVideoStorePrice(videoId: string): number {
-  const hash = Array.from(videoId).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const tiers = [14.99, 17.99, 19.99, 22.99, 24.99, 27.99];
-  return tiers[hash % tiers.length]!;
-}
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -32,7 +27,7 @@ export default async function StoreVideoPage({ params }: Props) {
     .map((modelId) => models.find((model) => model.id === modelId)?.stageName)
     .filter(Boolean) as string[];
   const { user, isAdmin } = await getSession();
-  const price = getVideoStorePrice(video.id);
+  const price = getStoreVideoPrice(video);
   const hasFullAccess = userHasPurchasedStoreVideo(user?.id, video.id, isAdmin);
   const playback = resolveStorePreviewPlayback(video, hasFullAccess);
 

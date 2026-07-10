@@ -38,6 +38,8 @@ export type Video = {
   purchaseCheckoutUrl?: string;
   /** Play only the first N seconds of the full video as store preview (mp4/m3u8). */
   previewDurationSeconds?: number;
+  /** One-time store purchase price in USD. Falls back to auto pricing when unset. */
+  storePrice?: number;
   publishedAt: string;
   categories: string[];
   models: string[];
