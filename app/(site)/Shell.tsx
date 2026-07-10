@@ -94,12 +94,12 @@ export default function SiteShell({
               </Link>
             )}
             {isLoggedIn ? (
-              <Link
+              <a
                 href="/auth/logout"
                 className="btn-gradient ml-1 min-h-[44px] flex items-center px-4 py-2.5 text-xs sm:ml-2"
               >
                 Logout
-              </Link>
+              </a>
             ) : (
               <div className="ml-1 flex items-center gap-2 sm:ml-2">
                 <Link

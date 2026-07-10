@@ -1,6 +1,7 @@
 import { subscriptionPlans } from "@/lib/data";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
 import { updateSubscriptionPlan } from "@/lib/admin";
 import { PricingAdminControls } from "./PricingAdminControls";
 
@@ -23,7 +24,9 @@ async function updatePlanAction(formData: FormData) {
   revalidatePath("/");
 }
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const { isAdmin } = await getSession();
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10 space-y-8">
           <header className="text-center space-y-3">
@@ -71,7 +74,11 @@ export default function PricingPage() {
             account dashboard.
           </p>
 
-          <PricingAdminControls plans={subscriptionPlans} updatePlanAction={updatePlanAction} />
+          <PricingAdminControls
+            plans={subscriptionPlans}
+            updatePlanAction={updatePlanAction}
+            isAdmin={isAdmin}
+          />
         </div>
   );
 }

@@ -12,8 +12,12 @@ function authCookieOptions() {
     maxAge: AUTH_COOKIE_MAX_AGE,
     sameSite: "lax" as const,
     secure: isProd,
-    httpOnly: false,
+    httpOnly: true,
   };
+}
+
+function clearCookieOptions() {
+  return { ...authCookieOptions(), maxAge: 0 };
 }
 
 /** Persist login across Stripe redirects and browser restarts. */
@@ -26,8 +30,9 @@ export async function setAuthSession(userId: string, role: string): Promise<void
 
 export async function clearAuthSession(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set("vs_userId", "", { path: "/", maxAge: 0 });
-  cookieStore.set("vs_role", "", { path: "/", maxAge: 0 });
+  const opts = clearCookieOptions();
+  cookieStore.set("vs_userId", "", opts);
+  cookieStore.set("vs_role", "", opts);
 }
 
 export function authenticate(email: string, password: string): User | null {
@@ -65,10 +70,13 @@ export type SessionInfo = {
 /** Read the current user from cookies and user storage. */
 export async function getSession(): Promise<SessionInfo> {
   const cookieStore = await cookies();
-  const userId = cookieStore.get("vs_userId")?.value ?? "";
+  const userId = cookieStore.get("vs_userId")?.value?.trim() ?? "";
+  const roleCookie = cookieStore.get("vs_role")?.value?.trim() ?? "";
+
   if (!userId) {
     return { user: null, isAdmin: false, hasSubscription: false };
   }
+
   const users = getUsers();
   let user = users.find((u) => u.id === userId) ?? null;
   if (!user && userId === "admin") {
@@ -80,7 +88,10 @@ export async function getSession(): Promise<SessionInfo> {
       subscriptionPlanId: "yearly",
     };
   }
-  const isAdmin = user?.role === "admin";
+
+  // Prefer database role; fall back to session role cookie for admin id.
+  const isAdmin =
+    user?.role === "admin" || (userId === "admin" && roleCookie === "admin");
   const hasSubscription = isAdmin || !!user?.subscriptionPlanId;
   return { user, isAdmin, hasSubscription };
 }

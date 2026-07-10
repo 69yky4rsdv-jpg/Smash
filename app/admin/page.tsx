@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
 import {
   addVideoPhotos,
   deleteVideo,
@@ -14,7 +15,6 @@ import {
   subscriptionPlans,
   updateVideo
 } from "@/lib/data";
-import { getSession } from "@/lib/auth";
 import {
   autoCategorizeModelGenders,
   createCategory,
@@ -505,6 +505,8 @@ async function deleteCategoriesAction(formData: FormData) {
   revalidatePath("/categories");
   revalidatePath("/admin");
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const { isAdmin } = await getSession();
