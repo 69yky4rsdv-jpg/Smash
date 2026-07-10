@@ -36,6 +36,8 @@ export type Video = {
   previewUrl?: string;
   /** Stripe (or other) checkout URL for one-time store purchase. */
   purchaseCheckoutUrl?: string;
+  /** Play only the first N seconds of the full video as store preview (mp4/m3u8). */
+  previewDurationSeconds?: number;
   publishedAt: string;
   categories: string[];
   models: string[];

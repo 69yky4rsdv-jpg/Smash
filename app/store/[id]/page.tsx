@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getModels, getStoreVideos, userHasPurchasedStoreVideo } from "@/lib/data";
+import { resolveStorePreviewPlayback } from "@/lib/store-access";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { StorePreviewMedia } from "../StorePreviewMedia";
 
@@ -32,18 +33,16 @@ export default async function StoreVideoPage({ params }: Props) {
     .filter(Boolean) as string[];
   const { user, isAdmin } = await getSession();
   const price = getVideoStorePrice(video.id);
-  const owned = userHasPurchasedStoreVideo(user?.id, video.id, isAdmin);
-  const previewSrc =
-    normalizeStoreMediaUrl(video.previewUrl ?? "") || normalizeStoreMediaUrl(video.videoUrl);
-  const usingPreviewField = Boolean(normalizeStoreMediaUrl(video.previewUrl ?? ""));
+  const hasFullAccess = userHasPurchasedStoreVideo(user?.id, video.id, isAdmin);
+  const playback = resolveStorePreviewPlayback(video, hasFullAccess);
 
   const checkoutUrl = video.purchaseCheckoutUrl?.trim();
-  const buyHref = owned
+  const buyHref = hasFullAccess
     ? `/store/${video.id}/watch`
     : user
       ? checkoutUrl || `/store/${video.id}/checkout`
       : `/store/${video.id}/signup`;
-  const buyExternal = Boolean(user && !owned && checkoutUrl);
+  const buyExternal = Boolean(user && !hasFullAccess && checkoutUrl);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-3 py-8 sm:px-4 sm:py-10 space-y-6">
@@ -58,17 +57,43 @@ export default async function StoreVideoPage({ params }: Props) {
       <section className="grid gap-6 md:grid-cols-[7fr,4fr]">
         <div className="space-y-4">
           <div className="aspect-video overflow-hidden rounded-2xl bg-gradient-to-tr from-pink-500/20 via-black to-pink-700/40">
-            <StorePreviewMedia
-              key={previewSrc}
-              src={previewSrc}
-              poster={video.thumbnailUrl}
-              className="h-full w-full"
-              showErrors={isAdmin}
-            />
+            {playback.mode === "locked" ? (
+              <div className="relative flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center">
+                {video.thumbnailUrl ? (
+                  <img
+                    src={video.thumbnailUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover opacity-30 blur-sm"
+                    aria-hidden
+                  />
+                ) : null}
+                <div className="relative z-10 space-y-2">
+                  <p className="text-sm font-medium text-white">Full video locked</p>
+                  <p className="max-w-sm text-xs text-neutral-300">
+                    {normalizeStoreMediaUrl(video.previewUrl ?? "")
+                      ? "Purchase to watch this video. The preview link matches the full video — enable a 30s timed preview in store admin or add a separate preview URL."
+                      : "Purchase to unlock the full video. Enable a 30 second timed preview in store admin, or add a separate preview URL."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <StorePreviewMedia
+                key={`${playback.src}-${playback.maxDurationSeconds ?? 0}`}
+                src={playback.src}
+                poster={video.thumbnailUrl}
+                className="h-full w-full"
+                showErrors={isAdmin}
+                maxDurationSeconds={
+                  playback.mode === "timed-preview" ? playback.maxDurationSeconds : undefined
+                }
+              />
+            )}
           </div>
           {isAdmin ? (
             <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-100/90 break-all">
-              Admin debug — playing {usingPreviewField ? "preview URL" : "full video URL"}: {previewSrc}
+              Admin debug — {playback.mode} playback
+              {playback.maxDurationSeconds ? ` (${playback.maxDurationSeconds}s)` : ""}
+              {playback.src ? `: ${playback.src}` : " (no URL)"}
             </p>
           ) : null}
           {video.description ? (
@@ -81,7 +106,7 @@ export default async function StoreVideoPage({ params }: Props) {
         <aside className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
           <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">Purchase</p>
           <p className="text-3xl font-bold text-white">${price.toFixed(2)}</p>
-          {owned ? (
+          {hasFullAccess ? (
             <>
               <p className="text-xs text-emerald-300">You own this video.</p>
               <Link href={`/store/${video.id}/watch`} className="btn-gradient mt-2 w-full justify-center text-sm py-2">

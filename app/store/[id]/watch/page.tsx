@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { getStoreVideos, recordStoreVideoPurchase, userHasPurchasedStoreVideo } from "@/lib/data";
+import { getStoreVideos, userHasPurchasedStoreVideo } from "@/lib/data";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { StorePreviewMedia } from "../../StorePreviewMedia";
 
@@ -25,7 +25,7 @@ export default async function StoreWatchPage({ params }: Props) {
   }
 
   if (!userHasPurchasedStoreVideo(user.id, id, isAdmin)) {
-    redirect(`/store/${id}/purchase`);
+    redirect(`/store/${id}/checkout`);
   }
 
   const fullSrc = normalizeStoreMediaUrl(video.videoUrl);

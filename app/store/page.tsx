@@ -15,6 +15,7 @@ import {
 import type { Video } from "@/lib/types";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { getStorePurchaseSuccessUrl } from "@/lib/store-checkout";
+import { parseStorePreviewDuration, STORE_PREVIEW_DURATION_OPTIONS } from "@/lib/store-access";
 import { CopyableUrl } from "./CopyableUrl";
 
 function getVideoStorePrice(videoId: string): number {
@@ -45,6 +46,9 @@ async function addVideoAction(formData: FormData) {
   const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
   const purchaseCheckoutUrl = String(formData.get("purchaseCheckoutUrl") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const previewDurationSeconds = parseStorePreviewDuration(
+    String(formData.get("previewDurationSeconds") ?? "30")
+  );
 
   if (!title || !videoUrl) return;
 
@@ -57,6 +61,7 @@ async function addVideoAction(formData: FormData) {
     videoUrl,
     previewUrl: previewUrl || undefined,
     purchaseCheckoutUrl: purchaseCheckoutUrl || undefined,
+    previewDurationSeconds,
     publishedAt: now,
     categories: [],
     models: [],
@@ -79,6 +84,9 @@ async function updateStoreVideoAction(formData: FormData) {
   const videoUrl = normalizeStoreMediaUrl(String(formData.get("videoUrl") ?? ""));
   const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
   const purchaseCheckoutUrl = String(formData.get("purchaseCheckoutUrl") ?? "").trim();
+  const previewDurationSeconds = parseStorePreviewDuration(
+    String(formData.get("previewDurationSeconds") ?? "30")
+  );
 
   if (!videoUrl) return;
 
@@ -87,6 +95,7 @@ async function updateStoreVideoAction(formData: FormData) {
     videoUrl,
     previewUrl,
     purchaseCheckoutUrl,
+    previewDurationSeconds,
   });
 
   revalidatePath("/store");
@@ -192,6 +201,23 @@ export default async function StorePage() {
                   className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
                 />
               </div>
+              <div className="space-y-1">
+                <label className="text-[11px] text-neutral-400">Timed preview (optional)</label>
+                <select
+                  name="previewDurationSeconds"
+                  defaultValue="30"
+                  className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm text-neutral-200 outline-none focus:ring-2 ring-amber-400/30"
+                >
+                  {STORE_PREVIEW_DURATION_OPTIONS.map((option) => (
+                    <option key={option.value || "off"} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-neutral-500">
+                  Plays the first 30 seconds of the full video when no separate preview URL is set.
+                </p>
+              </div>
               <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-neutral-400">
                 After you add a video, its Stripe success URL is generated automatically and shown in the edit section below.
               </div>
@@ -291,6 +317,20 @@ export default async function StorePage() {
                           placeholder="https://..."
                           className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
                         />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-neutral-400">Timed preview</label>
+                        <select
+                          name="previewDurationSeconds"
+                          defaultValue={video.previewDurationSeconds === 0 ? "0" : "30"}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs text-neutral-200 outline-none focus:ring-2 ring-amber-400/30"
+                        >
+                          {STORE_PREVIEW_DURATION_OPTIONS.map((option) => (
+                            <option key={option.value || "off"} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div className="space-y-1">
                         <label className="text-[11px] text-neutral-400">Stripe checkout URL</label>

@@ -300,6 +300,7 @@ export function updateStoreVideo(
       | "videoUrl"
       | "previewUrl"
       | "purchaseCheckoutUrl"
+      | "previewDurationSeconds"
       | "publishedAt"
     >
   >
@@ -320,6 +321,10 @@ export function updateStoreVideo(
     video.purchaseCheckoutUrl = updates.purchaseCheckoutUrl.trim()
       ? updates.purchaseCheckoutUrl.trim()
       : undefined;
+  }
+  if (updates.previewDurationSeconds !== undefined) {
+    video.previewDurationSeconds =
+      updates.previewDurationSeconds === 0 ? 0 : updates.previewDurationSeconds || undefined;
   }
   if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   saveStoreVideos(list);
