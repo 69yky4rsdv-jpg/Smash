@@ -17,7 +17,8 @@ export function VideoPlayer({ src, poster, className }: Props) {
     if (!video) return;
 
     // Use hls.js for .m3u8 streams in browsers that don't support HLS natively
-    if (Hls.isSupported() && src.endsWith(".m3u8")) {
+    const isHls = src.includes(".m3u8");
+    if (Hls.isSupported() && isHls) {
       const hls = new Hls();
       hls.loadSource(src);
       hls.attachMedia(video);
@@ -25,7 +26,7 @@ export function VideoPlayer({ src, poster, className }: Props) {
       return () => {
         hls.destroy();
       };
-    } else if (video.canPlayType("application/vnd.apple.mpegurl") && src.endsWith(".m3u8")) {
+    } else if (video.canPlayType("application/vnd.apple.mpegurl") && isHls) {
       // Safari / iOS can handle HLS natively with <video src="...m3u8">
       video.src = src;
     }
@@ -38,7 +39,7 @@ export function VideoPlayer({ src, poster, className }: Props) {
       <video
         ref={videoRef}
         // For non-HLS sources (e.g. MP4), let the browser handle src directly
-        src={src.endsWith(".m3u8") ? undefined : src}
+        src={src.includes(".m3u8") ? undefined : src}
         poster={poster}
         controls
         playsInline

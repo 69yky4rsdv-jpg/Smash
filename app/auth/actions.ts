@@ -1,6 +1,6 @@
 'use server';
 
-import { authenticate, registerUser } from "@/lib/auth";
+import { authenticate, registerUser, setAuthSession } from "@/lib/auth";
 
 export async function loginAction(formData: FormData): Promise<{ id: string; role: string }> {
   const email = String(formData.get("email") ?? "").trim();
@@ -15,6 +15,7 @@ export async function loginAction(formData: FormData): Promise<{ id: string; rol
     throw new Error("invalid");
   }
 
+  await setAuthSession(user.id, user.role);
   return { id: user.id, role: user.role };
 }
 
@@ -27,6 +28,7 @@ export async function registerAction(formData: FormData): Promise<{ id: string; 
   }
 
   const user = registerUser(email, password);
+  await setAuthSession(user.id, user.role);
   return { id: user.id, role: user.role };
 }
 

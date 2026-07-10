@@ -17,9 +17,7 @@ export default function RegisterPage() {
 
     const formData = new FormData(e.currentTarget);
     try {
-      const user = await registerAction(formData);
-      document.cookie = `vs_userId=${encodeURIComponent(user.id)}; path=/`;
-      document.cookie = `vs_role=${encodeURIComponent(user.role)}; path=/`;
+      await registerAction(formData);
       // New users without a plan are sent to pricing to choose one.
       window.location.href = "/pricing";
     } catch (err: any) {

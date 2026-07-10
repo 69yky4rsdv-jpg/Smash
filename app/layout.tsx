@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { ReactNode } from "react";
+import { getSession } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/site-settings";
 import { SiteSettingsProvider } from "./(site)/SiteSettingsProvider";
 import { ConditionalShell } from "./(site)/ConditionalShell";
@@ -34,12 +35,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const site = getSiteSettings();
   const cookieStore = await cookies();
   const agePassed = cookieStore.get("vs_age")?.value === "1";
+  const { user, isAdmin } = await getSession();
   return (
     <html lang="en" className="bg-background">
       <body className="min-h-screen bg-gradient-to-b from-black via-background to-black text-foreground antialiased">
         <SiteSettingsProvider siteName={site.siteName} logoUrl={site.logoUrl}>
           <AgeGate initialPassed={agePassed}>
-          <ConditionalShell>{children}</ConditionalShell>
+          <ConditionalShell initialLoggedIn={!!user} initialIsAdmin={isAdmin}>{children}</ConditionalShell>
         </AgeGate>
         </SiteSettingsProvider>
       </body>

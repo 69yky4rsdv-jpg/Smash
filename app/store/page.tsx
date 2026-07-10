@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth";
 import {
@@ -12,6 +13,9 @@ import {
   updateStoreVideo,
 } from "@/lib/data";
 import type { Video } from "@/lib/types";
+import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
+import { getStorePurchaseSuccessUrl } from "@/lib/store-checkout";
+import { CopyableUrl } from "./CopyableUrl";
 
 function getVideoStorePrice(videoId: string): number {
   const hash = Array.from(videoId).reduce((sum, char) => sum + char.charCodeAt(0), 0);
@@ -27,6 +31,7 @@ async function deleteAllVideosAction() {
   if (!isAdmin) return;
   saveStoreVideos([]);
   revalidatePath("/store");
+  redirect("/store");
 }
 
 async function addVideoAction(formData: FormData) {
@@ -35,9 +40,10 @@ async function addVideoAction(formData: FormData) {
   if (!isAdmin) return;
 
   const title = String(formData.get("title") ?? "").trim();
-  const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
-  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
-  const previewUrl = String(formData.get("previewUrl") ?? "").trim();
+  const thumbnailUrl = normalizeStoreMediaUrl(String(formData.get("thumbnailUrl") ?? ""));
+  const videoUrl = normalizeStoreMediaUrl(String(formData.get("videoUrl") ?? ""));
+  const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
+  const purchaseCheckoutUrl = String(formData.get("purchaseCheckoutUrl") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 
   if (!title || !videoUrl) return;
@@ -50,6 +56,7 @@ async function addVideoAction(formData: FormData) {
     thumbnailUrl: thumbnailUrl || undefined,
     videoUrl,
     previewUrl: previewUrl || undefined,
+    purchaseCheckoutUrl: purchaseCheckoutUrl || undefined,
     publishedAt: now,
     categories: [],
     models: [],
@@ -57,6 +64,7 @@ async function addVideoAction(formData: FormData) {
 
   appendStoreVideo(video);
   revalidatePath("/store");
+  redirect(`/store#video-${video.id}`);
 }
 
 async function updateStoreVideoAction(formData: FormData) {
@@ -67,18 +75,23 @@ async function updateStoreVideoAction(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;
 
-  const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim();
-  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
-  const previewUrl = String(formData.get("previewUrl") ?? "").trim();
+  const thumbnailUrl = normalizeStoreMediaUrl(String(formData.get("thumbnailUrl") ?? ""));
+  const videoUrl = normalizeStoreMediaUrl(String(formData.get("videoUrl") ?? ""));
+  const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
+  const purchaseCheckoutUrl = String(formData.get("purchaseCheckoutUrl") ?? "").trim();
+
+  if (!videoUrl) return;
 
   updateStoreVideo(id, {
-    thumbnailUrl: thumbnailUrl || undefined,
-    videoUrl: videoUrl || undefined,
-    previewUrl: previewUrl || undefined,
+    thumbnailUrl,
+    videoUrl,
+    previewUrl,
+    purchaseCheckoutUrl,
   });
 
   revalidatePath("/store");
   revalidatePath(`/store/${id}`);
+  redirect("/store");
 }
 
 async function setThumbnailFromGalleryAction(formData: FormData) {
@@ -86,11 +99,12 @@ async function setThumbnailFromGalleryAction(formData: FormData) {
   const { isAdmin } = await getSession();
   if (!isAdmin) return;
   const id = String(formData.get("id") ?? "").trim();
-  const thumbnailUrl = String(formData.get("pickThumbnailUrl") ?? "").trim();
+  const thumbnailUrl = normalizeStoreMediaUrl(String(formData.get("pickThumbnailUrl") ?? ""));
   if (!id || !thumbnailUrl) return;
   updateStoreVideo(id, { thumbnailUrl });
   revalidatePath("/store");
   revalidatePath(`/store/${id}`);
+  redirect("/store");
 }
 
 async function deleteSingleVideoAction(formData: FormData) {
@@ -102,6 +116,7 @@ async function deleteSingleVideoAction(formData: FormData) {
   deleteStoreVideo(id);
   revalidatePath("/store");
   revalidatePath(`/store/${id}`);
+  redirect("/store");
 }
 
 export default async function StorePage() {
@@ -173,7 +188,18 @@ export default async function StorePage() {
                 <label className="text-[11px] text-neutral-400">Preview CDN link</label>
                 <input
                   name="previewUrl"
-                  placeholder="https://... (optional)"
+                  placeholder="mp4, m3u8, or Bunny embed URL"
+                  className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
+                />
+              </div>
+              <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-neutral-400">
+                After you add a video, its Stripe success URL is generated automatically and shown in the edit section below.
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-[11px] text-neutral-400">Stripe checkout URL (one-time purchase)</label>
+                <input
+                  name="purchaseCheckoutUrl"
+                  placeholder="https://buy.stripe.com/..."
                   className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
                 />
               </div>
@@ -198,14 +224,21 @@ export default async function StorePage() {
             <div className="grid gap-3">
               {videos.map((video) => {
                 const gallery = getVideoPhotoUrls(video.id).slice(0, 60);
+                const successUrl = getStorePurchaseSuccessUrl(video.id);
                 return (
-                  <div key={video.id} className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-3">
+                  <div
+                    key={video.id}
+                    id={`video-${video.id}`}
+                    className="scroll-mt-24 rounded-xl border border-white/10 bg-black/40 p-4 space-y-3"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-neutral-100">{video.title}</p>
                       <Link href={`/store/${video.id}`} className="text-xs text-amber-200 hover:text-amber-100 underline">
                         Open preview page
                       </Link>
                     </div>
+
+                    <CopyableUrl url={successUrl} />
 
                     {gallery.length > 0 && (
                       <form action={setThumbnailFromGalleryAction} className="grid gap-2 md:grid-cols-[1fr,auto]">
@@ -230,7 +263,7 @@ export default async function StorePage() {
                       </form>
                     )}
 
-                    <form action={updateStoreVideoAction} className="grid gap-3 md:grid-cols-3">
+                    <form action={updateStoreVideoAction} className="grid gap-3 md:grid-cols-2">
                       <input type="hidden" name="id" value={video.id} />
                       <div className="space-y-1">
                         <label className="text-[11px] text-neutral-400">Thumbnail URL</label>
@@ -259,7 +292,16 @@ export default async function StorePage() {
                           className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
                         />
                       </div>
-                      <div className="md:col-span-3 flex justify-end">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-neutral-400">Stripe checkout URL</label>
+                        <input
+                          name="purchaseCheckoutUrl"
+                          defaultValue={video.purchaseCheckoutUrl ?? ""}
+                          placeholder="https://buy.stripe.com/..."
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
+                        />
+                      </div>
+                      <div className="md:col-span-2 flex justify-end">
                         <button type="submit" className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-neutral-200 hover:bg-white/10">
                           Save links
                         </button>

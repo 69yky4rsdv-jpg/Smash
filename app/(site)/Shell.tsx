@@ -1,28 +1,42 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
+function readAuthFromCookies(): { isLoggedIn: boolean; isAdmin: boolean } {
+  if (typeof document === "undefined") {
+    return { isLoggedIn: false, isAdmin: false };
+  }
+  const raw = document.cookie ?? "";
+  const userMatch = raw.match(/(?:^|;\s*)vs_userId=([^;]*)/);
+  const roleMatch = raw.match(/(?:^|;\s*)vs_role=([^;]*)/);
+  const userId = userMatch?.[1] ? decodeURIComponent(userMatch[1]).trim() : "";
+  const role = roleMatch?.[1] ? decodeURIComponent(roleMatch[1]).trim() : "";
+  return { isLoggedIn: Boolean(userId), isAdmin: role === "admin" };
+}
+
 export default function SiteShell({
   children,
+  initialLoggedIn = false,
+  initialIsAdmin = false,
 }: {
   children: ReactNode;
+  initialLoggedIn?: boolean;
+  initialIsAdmin?: boolean;
 }) {
   const { siteName, logoUrl } = useSiteSettings();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
+  const [isAdmin, setIsAdmin] = useState(initialIsAdmin);
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
-    const raw = document.cookie ?? "";
-    const hasUser = raw.includes("vs_userId=");
-    const roleMatch = raw.match(/vs_role=([^;]+)/);
-    const role = roleMatch ? decodeURIComponent(roleMatch[1]) : "";
-    setIsLoggedIn(hasUser);
-    setIsAdmin(role === "admin");
-  }, []);
+    const { isLoggedIn: loggedIn, isAdmin: admin } = readAuthFromCookies();
+    setIsLoggedIn(loggedIn);
+    setIsAdmin(admin);
+  }, [pathname, initialLoggedIn, initialIsAdmin]);
 
   return (
     <div className="flex min-h-screen flex-col">

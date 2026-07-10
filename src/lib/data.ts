@@ -291,18 +291,59 @@ export function appendStoreVideo(video: Video): void {
 
 export function updateStoreVideo(
   id: string,
-  updates: Partial<Pick<Video, "title" | "description" | "thumbnailUrl" | "videoUrl" | "previewUrl" | "publishedAt">>
+  updates: Partial<
+    Pick<
+      Video,
+      | "title"
+      | "description"
+      | "thumbnailUrl"
+      | "videoUrl"
+      | "previewUrl"
+      | "purchaseCheckoutUrl"
+      | "publishedAt"
+    >
+  >
 ): void {
   const list = getStoreVideos();
   const video = list.find((v) => v.id === id);
   if (!video) return;
   if (updates.title !== undefined) video.title = updates.title;
-  if (updates.description !== undefined) video.description = updates.description;
-  if (updates.thumbnailUrl !== undefined) video.thumbnailUrl = updates.thumbnailUrl;
-  if (updates.videoUrl !== undefined) video.videoUrl = updates.videoUrl;
-  if (updates.previewUrl !== undefined) video.previewUrl = updates.previewUrl;
+  if (updates.description !== undefined) video.description = updates.description || undefined;
+  if (updates.thumbnailUrl !== undefined) {
+    video.thumbnailUrl = updates.thumbnailUrl.trim() ? updates.thumbnailUrl.trim() : undefined;
+  }
+  if (updates.videoUrl !== undefined) video.videoUrl = updates.videoUrl.trim();
+  if (updates.previewUrl !== undefined) {
+    video.previewUrl = updates.previewUrl.trim() ? updates.previewUrl.trim() : undefined;
+  }
+  if (updates.purchaseCheckoutUrl !== undefined) {
+    video.purchaseCheckoutUrl = updates.purchaseCheckoutUrl.trim()
+      ? updates.purchaseCheckoutUrl.trim()
+      : undefined;
+  }
   if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   saveStoreVideos(list);
+}
+
+export function recordStoreVideoPurchase(userId: string, storeVideoId: string): void {
+  const users = getUsers();
+  const user = users.find((u) => u.id === userId);
+  if (!user) return;
+  const existing = user.purchasedStoreVideoIds ?? [];
+  if (existing.includes(storeVideoId)) return;
+  user.purchasedStoreVideoIds = [...existing, storeVideoId];
+  saveUsers(users);
+}
+
+export function userHasPurchasedStoreVideo(
+  userId: string | undefined,
+  storeVideoId: string,
+  isAdmin = false
+): boolean {
+  if (isAdmin) return true;
+  if (!userId) return false;
+  const user = getUsers().find((u) => u.id === userId);
+  return user?.purchasedStoreVideoIds?.includes(storeVideoId) ?? false;
 }
 
 export function deleteStoreVideo(id: string): void {

@@ -34,6 +34,8 @@ export type Video = {
   videoUrl: string;
   /** Optional preview/trailer URL used on the store purchase page. */
   previewUrl?: string;
+  /** Stripe (or other) checkout URL for one-time store purchase. */
+  purchaseCheckoutUrl?: string;
   publishedAt: string;
   categories: string[];
   models: string[];
@@ -49,5 +51,7 @@ export type User = {
   password: string;
   role: UserRole;
   subscriptionPlanId?: string;
+  /** One-time store video purchases (store video ids). */
+  purchasedStoreVideoIds?: string[];
 };
 
