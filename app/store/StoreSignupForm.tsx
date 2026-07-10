@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { isRedirectError } from "@/lib/action-errors";
 import { registerStoreUserAction } from "./actions";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const afterSignup = `/store/${videoId}/checkout`;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,13 +23,12 @@ export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl }: Pro
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    formData.set("videoId", videoId);
+    formData.set("next", afterSignup);
 
     try {
       await registerStoreUserAction(formData);
-      const afterSignup = checkoutUrl?.trim() || `/store/${videoId}/checkout`;
-      window.location.href = afterSignup;
     } catch (err: unknown) {
+      if (isRedirectError(err)) throw err;
       const message = err instanceof Error ? err.message : "signup_failed";
       if (message === "missing") {
         setError("Email and password are required.");

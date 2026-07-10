@@ -31,6 +31,8 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const site = getSiteSettings();
   const cookieStore = await cookies();

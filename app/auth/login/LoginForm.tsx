@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { loginAction } from "../actions";
+import { isRedirectError, loginAction } from "../actions";
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
@@ -16,10 +16,12 @@ export default function LoginForm() {
     setLoading(true);
 
     const formData = new FormData(e.currentTarget);
+    formData.set("next", nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/");
+
     try {
       await loginAction(formData);
-      window.location.href = nextPath.startsWith("/") ? nextPath : "/";
     } catch (err: unknown) {
+      if (isRedirectError(err)) throw err;
       const code = err instanceof Error ? err.message : "";
       if (code === "missing") {
         setError("Email and password are required.");

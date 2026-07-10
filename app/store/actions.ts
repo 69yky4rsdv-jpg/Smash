@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { readNextPath } from "@/lib/action-errors";
 import { registerUser, setAuthSession } from "@/lib/auth";
 import { recordStoreVideoPurchase } from "@/lib/data";
 
-export async function registerStoreUserAction(formData: FormData): Promise<{ id: string; role: string }> {
+export async function registerStoreUserAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -12,13 +13,15 @@ export async function registerStoreUserAction(formData: FormData): Promise<{ id:
     throw new Error("missing");
   }
 
+  let user;
   try {
-    const user = registerUser(email, password);
-    await setAuthSession(user.id, user.role);
-    return { id: user.id, role: user.role };
+    user = registerUser(email, password);
   } catch {
     throw new Error("exists");
   }
+
+  await setAuthSession(user.id, user.role);
+  redirect(readNextPath(formData, "/store"));
 }
 
 export async function completeStorePurchaseAction(videoId: string): Promise<{ ok: boolean; error?: string }> {
@@ -36,6 +39,7 @@ export async function completeStorePurchaseAction(videoId: string): Promise<{ ok
   }
 
   recordStoreVideoPurchase(user.id, videoId);
+  const { revalidatePath } = await import("next/cache");
   revalidatePath("/store");
   revalidatePath(`/store/${videoId}`);
   revalidatePath(`/store/${videoId}/watch`);

@@ -6,11 +6,13 @@ import { cookies } from "next/headers";
 const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 function authCookieOptions() {
+  const isProd = process.env.NODE_ENV === "production";
   return {
     path: "/",
     maxAge: AUTH_COOKIE_MAX_AGE,
     sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProd,
+    httpOnly: false,
   };
 }
 
@@ -30,7 +32,10 @@ export async function clearAuthSession(): Promise<void> {
 
 export function authenticate(email: string, password: string): User | null {
   const users = getUsers();
-  const user = users.find((u) => u.email === email && u.password === password);
+  const normalized = email.trim().toLowerCase();
+  const user = users.find(
+    (u) => u.email?.toLowerCase() === normalized && u.password === password
+  );
   return user ?? null;
 }
 

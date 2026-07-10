@@ -6,18 +6,6 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useSiteSettings } from "./SiteSettingsProvider";
 
-function readAuthFromCookies(): { isLoggedIn: boolean; isAdmin: boolean } {
-  if (typeof document === "undefined") {
-    return { isLoggedIn: false, isAdmin: false };
-  }
-  const raw = document.cookie ?? "";
-  const userMatch = raw.match(/(?:^|;\s*)vs_userId=([^;]*)/);
-  const roleMatch = raw.match(/(?:^|;\s*)vs_role=([^;]*)/);
-  const userId = userMatch?.[1] ? decodeURIComponent(userMatch[1]).trim() : "";
-  const role = roleMatch?.[1] ? decodeURIComponent(roleMatch[1]).trim() : "";
-  return { isLoggedIn: Boolean(userId), isAdmin: role === "admin" };
-}
-
 export default function SiteShell({
   children,
   initialLoggedIn = false,
@@ -32,10 +20,10 @@ export default function SiteShell({
   const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
   const [isAdmin, setIsAdmin] = useState(initialIsAdmin);
 
+  // Trust server session from layout; sync after navigation (do not read document.cookie).
   useEffect(() => {
-    const { isLoggedIn: loggedIn, isAdmin: admin } = readAuthFromCookies();
-    setIsLoggedIn(loggedIn);
-    setIsAdmin(admin);
+    setIsLoggedIn(initialLoggedIn);
+    setIsAdmin(initialIsAdmin);
   }, [pathname, initialLoggedIn, initialIsAdmin]);
 
   return (

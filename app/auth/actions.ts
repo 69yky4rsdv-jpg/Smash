@@ -1,8 +1,10 @@
 'use server';
 
+import { redirect } from "next/navigation";
+import { readNextPath, isRedirectError } from "@/lib/action-errors";
 import { authenticate, registerUser, setAuthSession } from "@/lib/auth";
 
-export async function loginAction(formData: FormData): Promise<{ id: string; role: string }> {
+export async function loginAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -16,10 +18,10 @@ export async function loginAction(formData: FormData): Promise<{ id: string; rol
   }
 
   await setAuthSession(user.id, user.role);
-  return { id: user.id, role: user.role };
+  redirect(readNextPath(formData));
 }
 
-export async function registerAction(formData: FormData): Promise<{ id: string; role: string }> {
+export async function registerAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
@@ -29,6 +31,7 @@ export async function registerAction(formData: FormData): Promise<{ id: string; 
 
   const user = registerUser(email, password);
   await setAuthSession(user.id, user.role);
-  return { id: user.id, role: user.role };
+  redirect("/pricing");
 }
 
+export { isRedirectError };

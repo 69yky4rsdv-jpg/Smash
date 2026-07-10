@@ -1,6 +1,6 @@
 "use client";
 
-import { registerAction } from "../actions";
+import { isRedirectError, registerAction } from "../actions";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -18,10 +18,9 @@ export default function RegisterPage() {
     const formData = new FormData(e.currentTarget);
     try {
       await registerAction(formData);
-      // New users without a plan are sent to pricing to choose one.
-      window.location.href = "/pricing";
-    } catch (err: any) {
-      const code = err?.message ?? "";
+    } catch (err: unknown) {
+      if (isRedirectError(err)) throw err;
+      const code = err instanceof Error ? err.message : "";
       if (code === "missing") {
         setError("Email and password are required.");
       } else {
