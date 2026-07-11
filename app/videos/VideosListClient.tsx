@@ -1,14 +1,16 @@
 "use client";
 
 import type { Video } from "@/lib/types";
+import type { VideoEngagement } from "@/lib/video-engagement";
 import { useMemo, useState } from "react";
 import { VideoCardWithPreview } from "./VideoCardWithPreview";
 
 type Props = {
   videos: Video[];
+  engagementByVideoId?: Record<string, VideoEngagement>;
 };
 
-export function VideosListClient({ videos }: Props) {
+export function VideosListClient({ videos, engagementByVideoId = {} }: Props) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -38,7 +40,11 @@ export function VideosListClient({ videos }: Props) {
       </div>
       <div className="grid min-w-0 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((video) => (
-          <VideoCardWithPreview key={video.id} video={video} />
+          <VideoCardWithPreview
+            key={video.id}
+            video={video}
+            engagement={engagementByVideoId[video.id]}
+          />
         ))}
       </div>
       {filtered.length === 0 && (

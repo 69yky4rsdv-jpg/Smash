@@ -303,6 +303,8 @@ export function updateStoreVideo(
       | "previewDurationSeconds"
       | "storePrice"
       | "publishedAt"
+      | "categories"
+      | "models"
     >
   >
 ): void {
@@ -334,6 +336,8 @@ export function updateStoreVideo(
         : undefined;
   }
   if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
+  if (updates.categories !== undefined) video.categories = updates.categories;
+  if (updates.models !== undefined) video.models = updates.models;
   saveStoreVideos(list);
 }
 

@@ -1,98 +1,80 @@
 "use client";
 
-import type { Category } from "@/lib/types";
-import type { Video } from "@/lib/types";
+import type { Category, Video } from "@/lib/types";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { getCategoriesWithMeta, type CategoryWithMeta } from "@/lib/category-display";
 
 type Props = {
   categories: Category[];
   videos: Video[];
 };
 
-export function CategoriesClient({ categories, videos }: Props) {
-  const [categoryId, setCategoryId] = useState("");
-  const [search, setSearch] = useState("");
+function CategoryCard({ category }: { category: CategoryWithMeta }) {
+  return (
+    <Link
+      href={`/categories/${category.id}`}
+      className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 text-left transition hover:border-accent-pink/40 hover:ring-2 hover:ring-accent-pink/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-pink/60"
+    >
+      {category.coverUrl ? (
+        <img
+          src={category.coverUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/50" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+      <div className="absolute inset-x-0 bottom-0 p-4">
+        <p className="text-base font-semibold leading-tight text-white drop-shadow-sm sm:text-lg">
+          {category.name}
+        </p>
+        <p className="mt-1 text-[11px] text-neutral-300">
+          {category.videoCount} {category.videoCount === 1 ? "video" : "videos"}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
-  const filteredVideos = useMemo(() => {
-    let list = categoryId
-      ? videos.filter((v) => v.categories && v.categories.includes(categoryId))
-      : [];
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter((v) => v.title.toLowerCase().includes(q));
-    }
-    return list;
-  }, [videos, categoryId, search]);
+export function CategoriesClient({ categories, videos }: Props) {
+  const [categorySearch, setCategorySearch] = useState("");
+
+  const categoriesWithMeta = useMemo(
+    () => getCategoriesWithMeta(categories, videos),
+    [categories, videos]
+  );
+
+  const filteredCategories = useMemo(() => {
+    if (!categorySearch.trim()) return categoriesWithMeta;
+    const q = categorySearch.toLowerCase();
+    return categoriesWithMeta.filter((cat) => cat.name.toLowerCase().includes(q));
+  }, [categoriesWithMeta, categorySearch]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-4">
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="category-select" className="text-sm text-neutral-300 whitespace-nowrap">
-            Category
-          </label>
-          <select
-            id="category-select"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm text-neutral-100 outline-none ring-accent-pink/30 focus:ring-2 sm:w-48"
-          >
-            <option value="">Select a category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-          <label htmlFor="category-search" className="text-sm text-neutral-300 whitespace-nowrap">
-            Search
-          </label>
-          <input
-            id="category-search"
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter by video title…"
-            className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2 sm:max-w-xs"
-          />
-        </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-neutral-400">
+          {filteredCategories.length} categories · sorted by popularity
+        </p>
+        <input
+          type="search"
+          value={categorySearch}
+          onChange={(e) => setCategorySearch(e.target.value)}
+          placeholder="Search categories…"
+          className="w-full max-w-xs rounded-lg border border-white/10 bg-black/60 px-4 py-2 text-sm outline-none ring-accent-pink/30 focus:ring-2"
+        />
       </div>
 
-      {!categoryId ? (
-        <p className="text-sm text-neutral-500">Select a category to see videos.</p>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredVideos.map((video) => (
-            <Link key={video.id} href={`/videos/${video.id}`} className="group">
-              <div className="aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
-                {video.thumbnailUrl ? (
-                  <img
-                    src={video.thumbnailUrl}
-                    alt={video.title}
-                    className="h-full w-full object-cover transition group-hover:scale-[1.02]"
-                  />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
-                )}
-              </div>
-              <h3 className="mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft">
-                {video.title}
-              </h3>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                {new Date(video.publishedAt).toLocaleDateString()}
-              </p>
-            </Link>
-          ))}
-          {filteredVideos.length === 0 && (
-            <p className="col-span-full text-sm text-neutral-500">
-              No videos in this category{search ? " matching your search" : ""}.
-            </p>
-          )}
-        </div>
-      )}
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {filteredCategories.map((cat) => (
+          <CategoryCard key={cat.id} category={cat} />
+        ))}
+        {filteredCategories.length === 0 && (
+          <p className="col-span-full text-sm text-neutral-500">No categories match that search.</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -5,7 +5,12 @@ import { GalleryWithLightbox } from "../../(site)/GalleryWithLightbox";
 import { getModels, getVideos, getVideoPhotoUrls } from "@/lib/data";
 import { getSiteSettings } from "@/lib/site-settings";
 import { updateModel } from "@/lib/admin";
+import { getSession } from "@/lib/auth";
+import { userHasFavoritedModel } from "@/lib/model-favorites";
+import { getEngagementForModels, getEngagementForVideos } from "@/lib/video-engagement";
 import { ModelAdminSelectors } from "./ModelAdminSelectors";
+import { ModelFavoriteButton } from "../ModelFavoriteButton";
+import { LikePercentBadge } from "../LikePercentBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +70,17 @@ export default async function ModelDetailPage({ params }: Props) {
     redirect("/models");
   }
 
-  const videos = getVideos().filter((v) => v.models.includes(model.id));
+  const allVideos = getVideos();
+  const videos = allVideos.filter((v) => v.models.includes(model.id));
   const galleryUrls = model.galleryUrls ?? [];
+  const engagement = getEngagementForModels([model.id], allVideos)[model.id] ?? {
+    likes: 0,
+    views: 0,
+    likePercent: 0,
+  };
+  const videoEngagement = getEngagementForVideos(videos.map((v) => v.id));
+  const { user } = await getSession();
+  const initialFavorited = user ? userHasFavoritedModel(user.id, model.id) : false;
 
   const site = getSiteSettings();
   const enableAdminProfileGallery = site.siteName === "SmashPov";
@@ -104,18 +118,26 @@ export default async function ModelDetailPage({ params }: Props) {
                   />
                 ) : null}
               </div>
-              <div className="space-y-1">
-                <h1 className="text-3xl font-semibold tracking-tight">{model.stageName}</h1>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
-                  {model.gender && (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-3xl font-semibold tracking-tight">{model.stageName}</h1>
+                  <LikePercentBadge engagement={engagement} className="text-xs px-2.5 py-1" />
+                </div>
+                <p className="text-sm text-neutral-400">
+                  {engagement.views > 0
+                    ? `${engagement.likePercent}% liked across ${videos.length} ${videos.length === 1 ? "scene" : "scenes"}`
+                    : `${videos.length} ${videos.length === 1 ? "scene" : "scenes"} · no ratings yet`}
+                </p>
+                {user && (
+                  <ModelFavoriteButton modelId={model.id} initialFavorited={initialFavorited} />
+                )}
+                {model.gender && (
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
                     <span className="rounded-lg bg-white/10 px-2 py-0.5 text-neutral-300">
                       {model.gender === "female" ? "Female" : "Male"} performer
                     </span>
-                  )}
-                  <span>
-                    {model.active ? "Active" : "Taking a break"}
-                  </span>
-                </div>
+                  </div>
+                )}
                 {model.bio && (
                   <p className="mt-3 max-w-xl text-sm text-neutral-300">{model.bio}</p>
                 )}
@@ -153,13 +175,15 @@ export default async function ModelDetailPage({ params }: Props) {
               <p className="text-sm text-neutral-500">No scenes yet.</p>
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {videos.map((video) => (
+                {videos.map((video) => {
+                  const stats = videoEngagement[video.id];
+                  return (
                   <Link
                     key={video.id}
                     href={`/videos/${video.id}`}
                     className="group"
                   >
-                    <div className="aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-neutral-900">
                       {video.thumbnailUrl ? (
                         <img
                           src={video.thumbnailUrl}
@@ -169,15 +193,23 @@ export default async function ModelDetailPage({ params }: Props) {
                       ) : (
                         <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
                       )}
+                      {stats && (
+                        <LikePercentBadge
+                          engagement={stats}
+                          className="absolute right-2 top-2 z-[1]"
+                        />
+                      )}
                     </div>
                     <h3 className="mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft">
                       {video.title}
                     </h3>
                     <p className="mt-0.5 text-xs text-neutral-500">
                       {new Date(video.publishedAt).toLocaleDateString()}
+                      {stats && stats.views > 0 ? ` · ${stats.likePercent}% liked` : ""}
                     </p>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>

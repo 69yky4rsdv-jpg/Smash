@@ -17,10 +17,8 @@ import {
 } from "@/lib/data";
 import {
   autoCategorizeModelGenders,
-  createCategory,
   createModel,
   createVideo,
-  deleteCategories,
   deleteModel,
   setUserSubscription,
   toggleModelActive,
@@ -37,23 +35,12 @@ import { revalidatePath } from "next/cache";
 import { TagMultiSelect } from "./TagMultiSelect";
 import { EditVideoForm } from "./EditVideoForm";
 import { EditModelForm } from "./EditModelForm";
-import { CreateCategoryForm } from "./CreateCategoryForm";
 import { CreateModelForm } from "./CreateModelForm";
 import { BunnyImportForm } from "./BunnyImportForm";
 import { TxtMetadataForm } from "./TxtMetadataForm";
 import { MassTitleGeneratorForm } from "./MassTitleGeneratorForm";
 import { AutoGenderButton } from "./AutoGenderButton";
 import { ImportPhotoSetsForm } from "./ImportPhotoSetsForm";
-
-async function createCategoryAction(formData: FormData) {
-  "use server";
-  const name = String(formData.get("name") ?? "").trim();
-  if (name) {
-    createCategory(name);
-    revalidatePath("/categories");
-    revalidatePath("/admin");
-  }
-}
 
 async function createModelAction(formData: FormData) {
   "use server";
@@ -477,35 +464,6 @@ async function massTitleGeneratorAction(
   }
 }
 
-async function clearAllVideoCategoriesAction() {
-  "use server";
-  const videos = getVideos(true);
-  for (const v of videos) {
-    if (v.categories && v.categories.length > 0) {
-      updateVideo(v.id, { categories: [] });
-    }
-  }
-  revalidatePath("/");
-  revalidatePath("/videos");
-  revalidatePath("/videos/trending");
-  revalidatePath("/categories");
-  revalidatePath("/admin");
-}
-
-async function deleteCategoriesAction(formData: FormData) {
-  "use server";
-  const raw = formData.getAll("categoryIds").map(String).filter(Boolean);
-  if (!raw.length) return;
-  // Safety: only process the first 30 selected at a time.
-  const ids = raw.slice(0, 30);
-  deleteCategories(ids);
-  revalidatePath("/");
-  revalidatePath("/videos");
-  revalidatePath("/videos/trending");
-  revalidatePath("/categories");
-  revalidatePath("/admin");
-}
-
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
@@ -543,7 +501,7 @@ export default async function AdminPage() {
             <header className="space-y-4">
               <h1 className="text-3xl font-semibold tracking-tight">Admin dashboard</h1>
               <p className="text-sm text-neutral-400 max-w-xl">
-                Manage videos, models, categories, imports, and user subscriptions.
+                Manage videos, models, imports, and user subscriptions.
               </p>
               <nav className="flex flex-wrap gap-2 pt-2" aria-label="Admin sections">
                 <a href="#settings" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
@@ -555,9 +513,12 @@ export default async function AdminPage() {
                 <a href="#models" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Models
                 </a>
-                <a href="#categories" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
+                <Link
+                  href="/categories"
+                  className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition"
+                >
                   Categories
-                </a>
+                </Link>
                 <a href="#import" className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white transition">
                   Import
                 </a>
@@ -1129,75 +1090,6 @@ export default async function AdminPage() {
                     </button>
                   </form>
                 </div>
-              </div>
-            </section>
-
-            <section id="categories" className="scroll-mt-24 card-surface p-6 space-y-4 border-l-4 border-l-emerald-500/50">
-              <div>
-                <h2 className="text-lg font-semibold text-neutral-100">Categories</h2>
-                <p className="text-xs text-neutral-500 mt-0.5">Add and view categories used on videos.</p>
-              </div>
-              <CreateCategoryForm action={createCategoryAction} />
-              <div className="flex flex-wrap gap-2 text-[11px] text-neutral-200">
-                {categories.map((cat) => (
-                  <span
-                    key={cat.id}
-                    className="rounded-lg bg-white/5 px-3 py-1 text-xs text-neutral-100"
-                  >
-                    {cat.name}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/5 p-3 space-y-2">
-                <p className="text-xs font-semibold text-red-300">
-                  Bulk remove categories from all videos
-                </p>
-                <p className="text-[11px] text-red-200/80">
-                  This will clear the category list on <strong>every video</strong>. Use this if a TXT
-                  import assigned the wrong categories and you want to start over.
-                </p>
-                <form action={clearAllVideoCategoriesAction} className="mt-1">
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-red-500/70 bg-red-500/20 px-4 py-1.5 text-[11px] font-semibold text-red-100 hover:bg-red-500/30"
-                  >
-                    Remove all categories from all videos
-                  </button>
-                </form>
-              </div>
-              <div className="mt-4 rounded-lg border border-white/15 bg-white/5 p-3 space-y-2">
-                <p className="text-xs font-semibold text-neutral-100">
-                  Delete categories (up to 30 at a time)
-                </p>
-                <p className="text-[11px] text-neutral-400">
-                  Select categories below and click delete to remove them from the category list and
-                  from any videos that use them. For safety, only the first 30 selected will be
-                  deleted per request.
-                </p>
-                <form action={deleteCategoriesAction} className="space-y-2 text-xs">
-                  <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-white/10 bg-black/40 p-2">
-                    {categories.map((cat) => (
-                      <label
-                        key={cat.id}
-                        className="flex items-center gap-2 rounded px-2 py-1 hover:bg-white/10"
-                      >
-                        <input
-                          type="checkbox"
-                          name="categoryIds"
-                          value={cat.id}
-                          className="h-3 w-3 rounded border-white/30 bg-black"
-                        />
-                        <span className="truncate">{cat.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-red-400/70 bg-red-500/30 px-4 py-1.5 text-[11px] font-semibold text-red-50 hover:bg-red-500/50"
-                  >
-                    Delete selected categories (max 30)
-                  </button>
-                </form>
               </div>
             </section>
 

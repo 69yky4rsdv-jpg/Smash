@@ -1,14 +1,17 @@
 "use client";
 
-import type { Video } from "@/lib/types";
+import type { Model, Video } from "@/lib/types";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type Props = {
   videos: Video[];
+  models: Model[];
+  likedVideoIds: string[];
+  favoriteModelIds: string[];
 };
 
-type Tab = "saved" | "liked";
+type Tab = "saved" | "liked" | "models";
 
 function getStoredIds(key: string): string[] {
   if (typeof window === "undefined") return [];
@@ -20,19 +23,21 @@ function getStoredIds(key: string): string[] {
   }
 }
 
-export function ProfileClient({ videos }: Props) {
+export function ProfileClient({ videos, models, likedVideoIds, favoriteModelIds }: Props) {
   const [tab, setTab] = useState<Tab>("saved");
-  const [likedIds, setLikedIds] = useState<string[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    setLikedIds(getStoredIds("vs-liked-videos"));
     setSavedIds(getStoredIds("vs-saved-videos"));
   }, []);
 
   const likedVideos = useMemo(
-    () => videos.filter((v) => likedIds.includes(v.id)),
-    [videos, likedIds]
+    () => videos.filter((v) => likedVideoIds.includes(v.id)),
+    [videos, likedVideoIds]
+  );
+  const favoriteModels = useMemo(
+    () => models.filter((m) => favoriteModelIds.includes(m.id)),
+    [models, favoriteModelIds]
   );
   const savedVideos = useMemo(
     () => videos.filter((v) => savedIds.includes(v.id)),
@@ -47,7 +52,8 @@ export function ProfileClient({ videos }: Props) {
           <div>
             <h1 className="text-xl font-semibold text-neutral-50">Your library</h1>
             <p className="text-xs text-neutral-400">
-              Saved and liked videos are stored in your browser.
+              Liked videos and favorite models sync to your account. Saved videos are stored in
+              your browser.
             </p>
           </div>
         </div>
@@ -75,6 +81,17 @@ className={`rounded-lg px-3 py-1.5 ${
           }`}
         >
           Liked videos
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("models")}
+          className={`rounded-lg px-3 py-1.5 ${
+            tab === "models"
+              ? "bg-pink-400 text-white"
+              : "bg-white/5 text-neutral-200 hover:bg-white/10"
+          }`}
+        >
+          Favorite models
         </button>
       </div>
 
@@ -142,6 +159,37 @@ className={`rounded-lg px-3 py-1.5 ${
                   <p className="mt-0.5 text-xs text-neutral-500">
                     {new Date(video.publishedAt).toLocaleDateString()}
                   </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+      {tab === "models" && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-neutral-100">Favorite models</h2>
+          {favoriteModels.length === 0 ? (
+            <p className="text-xs text-neutral-500">
+              You haven&apos;t favorited any models yet. Tap the heart on a model to add them here.
+            </p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {favoriteModels.map((model) => (
+                <Link
+                  key={model.id}
+                  href={`/models/${model.id}`}
+                  className="card-surface overflow-hidden rounded-xl border border-white/10 bg-white/5 transition hover:border-accent-pink/60"
+                >
+                  <div className="aspect-[4/3] w-full overflow-hidden bg-gradient-pink">
+                    {model.avatarUrl ? (
+                      <img
+                        src={model.avatarUrl}
+                        alt={model.stageName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <p className="p-3 text-sm font-semibold text-neutral-50">{model.stageName}</p>
                 </Link>
               ))}
             </div>

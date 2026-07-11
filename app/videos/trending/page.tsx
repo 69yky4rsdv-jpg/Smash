@@ -1,4 +1,5 @@
 import { getVideos } from "@/lib/data";
+import { getEngagementForVideos } from "@/lib/video-engagement";
 import { TrendingGridClient } from "./TrendingGridClient";
 
 export default function TrendingVideosPage() {
@@ -6,6 +7,7 @@ export default function TrendingVideosPage() {
   const trending = videos.filter(
     (v) => v.isTrending || (v.categories && v.categories.includes("trending"))
   );
+  const engagementByVideoId = getEngagementForVideos(trending.map((v) => v.id));
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-6">
@@ -15,7 +17,7 @@ export default function TrendingVideosPage() {
             The scenes fans are watching the most right now.
           </p>
         </header>
-        <TrendingGridClient videos={trending} />
+        <TrendingGridClient videos={trending} engagementByVideoId={engagementByVideoId} />
       </div>
   );
 }

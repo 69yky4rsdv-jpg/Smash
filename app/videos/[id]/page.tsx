@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCategories, getModels, getVideos, getVideoPhotoUrls, updateVideo } from "@/lib/data";
+import { getEngagementForVideos, getVideoEngagement, userHasLikedVideo } from "@/lib/video-engagement";
 import { getSiteSettings } from "@/lib/site-settings";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
@@ -31,7 +32,7 @@ export default async function VideoDetailPage({ params }: Props) {
     redirect("/videos");
   }
 
-  const { isAdmin, hasSubscription } = await getSession();
+  const { isAdmin, hasSubscription, user } = await getSession();
 
   // If not logged in, or logged in without a subscription, send to pricing.
   if (!isAdmin && !hasSubscription) {
@@ -53,6 +54,10 @@ export default async function VideoDetailPage({ params }: Props) {
       return bOverlap - aOverlap;
     })
     .slice(0, 5);
+
+  const engagement = getVideoEngagement(video.id);
+  const initialLiked = user ? userHasLikedVideo(user.id, video.id) : false;
+  const relatedEngagement = getEngagementForVideos(relatedVideos.map((v) => v.id));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-3 py-6 min-w-0 sm:px-4 sm:py-10 space-y-6 sm:space-y-8">
@@ -81,7 +86,11 @@ export default async function VideoDetailPage({ params }: Props) {
                 >
                   Photos
                 </Link>
-                <VideoEngagementControls videoId={video.id} />
+                <VideoEngagementControls
+                  videoId={video.id}
+                  initialLiked={initialLiked}
+                  initialEngagement={engagement}
+                />
               </div>
             </div>
           </header>
@@ -201,6 +210,9 @@ export default async function VideoDetailPage({ params }: Props) {
                         </p>
                         <p className="mt-0.5 text-[10px] text-neutral-500">
                           {new Date(next.publishedAt).toLocaleDateString()}
+                          {relatedEngagement[next.id]?.views ? (
+                            <> · {relatedEngagement[next.id]!.likePercent}% liked</>
+                          ) : null}
                         </p>
                       </div>
                     </Link>

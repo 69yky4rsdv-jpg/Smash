@@ -1,6 +1,7 @@
 "use client";
 
 import type { Video } from "@/lib/types";
+import type { VideoEngagement } from "@/lib/video-engagement";
 import Link from "next/link";
 import { useRef, useCallback, useEffect, useState } from "react";
 import Hls from "hls.js";
@@ -8,6 +9,7 @@ import { ScrollingTitle } from "../(site)/ScrollingTitle";
 
 type Props = {
   video: Video;
+  engagement?: VideoEngagement;
   titleClassName?: string;
   dateClassName?: string;
   thumbClassName?: string;
@@ -34,6 +36,7 @@ const PREVIEW_DURATION_SEC = 30;
 
 export function VideoCardWithPreview({
   video,
+  engagement,
   titleClassName = "mt-2 text-sm font-medium text-neutral-100 line-clamp-2 group-hover:text-accent-pinkSoft transition-colors duration-200",
   dateClassName = "mt-0.5 text-xs text-neutral-500",
   thumbClassName = "aspect-video w-full overflow-hidden rounded-lg bg-neutral-900",
@@ -212,6 +215,14 @@ export function VideoCardWithPreview({
           <div className="h-full w-full bg-gradient-to-tr from-pink-500/30 via-black to-pink-700/40" />
         )}
         {playIcon}
+        {engagement && engagement.views > 0 && (
+          <span className="absolute right-2 top-2 z-[12] inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-pink-200 backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3" aria-hidden>
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+            {engagement.likePercent}%
+          </span>
+        )}
         {showVideoPreview && (
           <>
             <video

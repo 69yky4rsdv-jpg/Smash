@@ -6,12 +6,14 @@ import { getSession } from "@/lib/auth";
 import {
   appendStoreVideo,
   deleteStoreVideo,
+  getCategories,
   getModels,
   getVideoPhotoUrls,
   getStoreVideos,
   saveStoreVideos,
   updateStoreVideo,
 } from "@/lib/data";
+import { TagMultiSelect } from "../admin/TagMultiSelect";
 import type { Video } from "@/lib/types";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { getStorePurchaseSuccessUrl, getStoreVideoPrice, parseStorePrice } from "@/lib/store-checkout";
@@ -44,6 +46,8 @@ async function addVideoAction(formData: FormData) {
     String(formData.get("previewDurationSeconds") ?? "30")
   );
   const storePrice = parseStorePrice(String(formData.get("storePrice") ?? ""));
+  const categoryIds = formData.getAll("categories").map(String);
+  const modelIds = formData.getAll("models").map(String);
 
   if (!title || !videoUrl) return;
 
@@ -59,8 +63,8 @@ async function addVideoAction(formData: FormData) {
     previewDurationSeconds,
     storePrice,
     publishedAt: now,
-    categories: [],
-    models: [],
+    categories: categoryIds,
+    models: modelIds,
   };
 
   appendStoreVideo(video);
@@ -76,6 +80,9 @@ async function updateStoreVideoAction(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
   if (!id) return;
 
+  const title = String(formData.get("title") ?? "").trim();
+  const categoryIds = formData.getAll("categories").map(String);
+  const modelIds = formData.getAll("models").map(String);
   const thumbnailUrl = normalizeStoreMediaUrl(String(formData.get("thumbnailUrl") ?? ""));
   const videoUrl = normalizeStoreMediaUrl(String(formData.get("videoUrl") ?? ""));
   const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
@@ -85,9 +92,12 @@ async function updateStoreVideoAction(formData: FormData) {
   );
   const storePrice = parseStorePrice(String(formData.get("storePrice") ?? ""));
 
-  if (!videoUrl) return;
+  if (!title || !videoUrl) return;
 
   updateStoreVideo(id, {
+    title,
+    categories: categoryIds,
+    models: modelIds,
     thumbnailUrl,
     videoUrl,
     previewUrl,
@@ -129,6 +139,7 @@ async function deleteSingleVideoAction(formData: FormData) {
 export default async function StorePage() {
   const videos = getStoreVideos();
   const models = getModels();
+  const categories = getCategories();
   const modelById = new Map(models.map((model) => [model.id, model]));
   const { isAdmin } = await getSession();
 
@@ -246,6 +257,18 @@ export default async function StorePage() {
                   className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
                 />
               </div>
+              <div className="grid gap-3 sm:grid-cols-2 md:col-span-2">
+                <TagMultiSelect
+                  name="categories"
+                  label="Categories"
+                  items={categories.map((c) => ({ id: c.id, label: c.name }))}
+                />
+                <TagMultiSelect
+                  name="models"
+                  label="Models"
+                  items={models.map((m) => ({ id: m.id, label: m.stageName }))}
+                />
+              </div>
               <div className="md:col-span-2 flex justify-end">
                 <button type="submit" className="btn-gradient px-5 py-2 text-sm">
                   Add video
@@ -300,6 +323,29 @@ export default async function StorePage() {
 
                     <form action={updateStoreVideoAction} className="grid gap-3 md:grid-cols-2">
                       <input type="hidden" name="id" value={video.id} />
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[11px] text-neutral-400">Title</label>
+                        <input
+                          name="title"
+                          required
+                          defaultValue={video.title}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
+                        />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2 md:col-span-2">
+                        <TagMultiSelect
+                          name="categories"
+                          label="Categories"
+                          items={categories.map((c) => ({ id: c.id, label: c.name }))}
+                          selectedIds={video.categories ?? []}
+                        />
+                        <TagMultiSelect
+                          name="models"
+                          label="Models"
+                          items={models.map((m) => ({ id: m.id, label: m.stageName }))}
+                          selectedIds={video.models ?? []}
+                        />
+                      </div>
                       <div className="space-y-1">
                         <label className="text-[11px] text-neutral-400">Price (USD)</label>
                         <input
@@ -368,7 +414,7 @@ export default async function StorePage() {
                       </div>
                       <div className="md:col-span-2 flex justify-end">
                         <button type="submit" className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-neutral-200 hover:bg-white/10">
-                          Save links
+                          Save changes
                         </button>
                       </div>
                     </form>

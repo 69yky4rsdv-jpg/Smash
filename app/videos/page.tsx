@@ -1,5 +1,6 @@
-import { getVideos } from "@/lib/data";
 import Link from "next/link";
+import { getVideos } from "@/lib/data";
+import { getEngagementForVideos } from "@/lib/video-engagement";
 import { VideosListClient } from "./VideosListClient";
 
 export default async function AllVideosPage() {
@@ -7,6 +8,7 @@ export default async function AllVideosPage() {
   // so the page doesn't list "phantom" videos with missing assets.
   const all = getVideos();
   const videos = all.filter((v) => v.videoUrl && v.thumbnailUrl);
+  const engagementByVideoId = getEngagementForVideos(videos.map((v) => v.id));
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-10">
@@ -16,7 +18,7 @@ export default async function AllVideosPage() {
             Browse the full catalog. Click any thumbnail to open the scene page.
           </p>
         </header>
-        <VideosListClient videos={videos} />
+        <VideosListClient videos={videos} engagementByVideoId={engagementByVideoId} />
 
         {/* Affiliate sign up */}
         <section className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
