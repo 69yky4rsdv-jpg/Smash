@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useStorePreviewAnalytics } from "./StorePreviewTracker";
 
 type BuyActionProps = {
   href: string;
@@ -7,17 +10,23 @@ type BuyActionProps = {
   className?: string;
 };
 
-function BuyAction({ href, external, label, className }: BuyActionProps) {
+function BuyAction({
+  href,
+  external,
+  label,
+  className,
+  onClick,
+}: BuyActionProps & { onClick?: () => void }) {
   const classes = className ?? "btn-gradient mt-4 w-full justify-center text-sm py-2.5";
   if (external) {
     return (
-      <a href={href} className={classes}>
+      <a href={href} className={classes} onClick={onClick}>
         {label}
       </a>
     );
   }
   return (
-    <Link href={href} className={classes}>
+    <Link href={href} className={classes} onClick={onClick}>
       {label}
     </Link>
   );
@@ -29,6 +38,8 @@ type Props = {
   watchHref: string;
   buyHref: string;
   buyExternal: boolean;
+  videoId?: string;
+  visitId?: string;
   durationLabel?: string;
   featuring?: string;
   exclusive: boolean;
@@ -41,12 +52,19 @@ export function StorePurchasePanel({
   watchHref,
   buyHref,
   buyExternal,
+  videoId,
+  visitId,
   durationLabel,
   featuring,
   exclusive,
   publishedAt,
 }: Props) {
   const priceStr = `$${price.toFixed(2)}`;
+  const { trackBuyClick } = useStorePreviewAnalytics(videoId ?? "", visitId);
+
+  function handleBuyClick() {
+    if (videoId) trackBuyClick();
+  }
 
   if (hasFullAccess) {
     return (
@@ -83,15 +101,20 @@ export function StorePurchasePanel({
         ) : null}
         <li className="flex items-start gap-2">
           <span className="text-emerald-400">✓</span>
-          <span>Instant access after purchase</span>
+          <span>Instant access after payment</span>
         </li>
         <li className="flex items-start gap-2">
           <span className="text-emerald-400">✓</span>
-          <span>Free account to unlock (no monthly fee)</span>
+          <span>Log in after checkout to watch</span>
         </li>
       </ul>
 
-      <BuyAction href={buyHref} external={buyExternal} label={`Buy full video — ${priceStr}`} />
+      <BuyAction
+        href={buyHref}
+        external={buyExternal}
+        label={`Buy full video — ${priceStr}`}
+        onClick={handleBuyClick}
+      />
 
       <div className="space-y-1 border-t border-white/10 pt-3 text-xs text-neutral-400">
         {featuring ? <p>Featuring: {featuring}</p> : null}

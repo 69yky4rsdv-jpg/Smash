@@ -17,6 +17,7 @@ import { TagMultiSelect } from "../admin/TagMultiSelect";
 import type { Video } from "@/lib/types";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { getStorePurchaseSuccessUrl, getStoreVideoPrice, parseStorePrice } from "@/lib/store-checkout";
+import { getStorePreviewStats } from "@/lib/store-preview-analytics";
 import { parseStorePreviewDuration, STORE_PREVIEW_DURATION_OPTIONS } from "@/lib/store-access";
 import { parseStoreListingFields } from "@/lib/store-listing";
 import { CopyableUrl } from "./CopyableUrl";
@@ -321,6 +322,7 @@ export default async function StorePage() {
               {videos.map((video) => {
                 const gallery = getVideoPhotoUrls(video.id).slice(0, 60);
                 const successUrl = getStorePurchaseSuccessUrl(video.id);
+                const previewStats = getStorePreviewStats(video.id);
                 return (
                   <div
                     key={video.id}
@@ -335,6 +337,12 @@ export default async function StorePage() {
                     </div>
 
                     <CopyableUrl url={successUrl} />
+
+                    <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[11px] text-neutral-300">
+                      <span className="text-neutral-400">Preview traffic:</span> You {previewStats.pageviews.admin}{" "}
+                      · Visitors {previewStats.pageviews.visitor} · Bots {previewStats.pageviews.bot} · Plays{" "}
+                      {previewStats.previewPlays} · Buy {previewStats.buyClicks}
+                    </div>
 
                     {gallery.length > 0 && (
                       <form action={setThumbnailFromGalleryAction} className="grid gap-2 md:grid-cols-[1fr,auto]">

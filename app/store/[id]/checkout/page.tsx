@@ -10,7 +10,7 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
-/** Logged-in users: redirect straight to Stripe (or signup / watch as needed). */
+/** Redirect straight to Stripe. Login happens on the success page after payment. */
 export default async function StoreCheckoutPage({ params }: Props) {
   const { id } = await params;
   const { user, isAdmin } = await getSession();
@@ -20,11 +20,7 @@ export default async function StoreCheckoutPage({ params }: Props) {
     redirect("/store");
   }
 
-  if (!user) {
-    redirect(`/store/${id}/signup`);
-  }
-
-  if (userHasPurchasedStoreVideo(user.id, id, isAdmin)) {
+  if (user && userHasPurchasedStoreVideo(user.id, id, isAdmin)) {
     redirect(`/store/${id}/watch`);
   }
 

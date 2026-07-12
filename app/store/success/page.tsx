@@ -1,6 +1,7 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getStoreVideos, recordStoreVideoPurchase } from "@/lib/data";
+import { StorePurchaseAccessForm } from "../StorePurchaseAccessForm";
 
 type Props = {
   searchParams: Promise<{ videoId?: string | string[] }>;
@@ -27,9 +28,6 @@ export default async function StorePurchaseSuccessPage({ searchParams }: Props) 
           We could not match this payment to a video. The success link may be missing{" "}
           <code className="text-amber-200">?videoId=...</code> in Stripe.
         </p>
-        <Link href="/store" className="btn-gradient inline-flex justify-center text-sm py-2 px-6">
-          Back to store
-        </Link>
       </div>
     );
   }
@@ -43,59 +41,18 @@ export default async function StorePurchaseSuccessPage({ searchParams }: Props) 
           Payment succeeded, but this video was not found on the server ({videoId}). An admin may need to
           sync <code className="text-amber-200">store-videos.json</code> to production.
         </p>
-        <Link href="/store" className="btn-gradient inline-flex justify-center text-sm py-2 px-6">
-          Back to store
-        </Link>
       </div>
     );
   }
 
   if (user) {
     recordStoreVideoPurchase(user.id, videoId);
+    redirect(`/store/${videoId}/watch`);
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg px-4 py-16 text-center space-y-6">
-      <p className="text-xs uppercase tracking-[0.18em] text-accent-pinkSoft">Purchase complete</p>
-      <h1 className="text-2xl font-semibold text-white">Thank you!</h1>
-      <p className="text-sm text-neutral-300">
-        {user ? (
-          <>
-            Your account now has access to <span className="text-white">{video.title}</span>.
-          </>
-        ) : (
-          <>
-            Create an account or log in with the same email you used at checkout to unlock{" "}
-            <span className="text-white">{video.title}</span>.
-          </>
-        )}
-      </p>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-        {user ? (
-          <Link href={`/store/${videoId}/watch`} className="btn-gradient justify-center text-sm py-2 px-6">
-            Watch full video
-          </Link>
-        ) : (
-          <>
-            <Link href={`/store/${videoId}/signup`} className="btn-gradient justify-center text-sm py-2 px-6">
-              Create free account
-            </Link>
-            <Link
-              href={`/auth/login?next=/store/${videoId}/watch`}
-              className="rounded-full border border-white/15 px-6 py-2 text-sm text-neutral-200 hover:bg-white/5"
-            >
-              Log in
-            </Link>
-          </>
-        )}
-        <Link
-          href="/store"
-          className="rounded-full border border-white/15 px-6 py-2 text-sm text-neutral-200 hover:bg-white/5"
-        >
-          Back to store
-        </Link>
-      </div>
+    <div className="mx-auto w-full max-w-lg px-4 py-10 sm:py-14">
+      <StorePurchaseAccessForm videoId={videoId} videoTitle={video.title} />
     </div>
   );
 }

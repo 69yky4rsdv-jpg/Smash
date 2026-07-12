@@ -15,6 +15,8 @@ type Props = {
   buyExternal?: boolean;
   durationLabel?: string;
   price?: number;
+  onPreviewPlay?: () => void;
+  onBuyClick?: () => void;
 };
 
 function formatClock(seconds: number): string {
@@ -33,6 +35,8 @@ export function StorePreviewMedia({
   buyExternal = false,
   durationLabel,
   price,
+  onPreviewPlay,
+  onBuyClick,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +44,13 @@ export function StorePreviewMedia({
   const [elapsed, setElapsed] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const timedPreview = Boolean(maxDurationSeconds && maxDurationSeconds > 0);
+  const previewPlayTracked = useRef(false);
+
+  function trackPreviewPlayOnce() {
+    if (previewPlayTracked.current) return;
+    previewPlayTracked.current = true;
+    onPreviewPlay?.();
+  }
 
   useEffect(() => {
     setPreviewEnded(false);
@@ -93,6 +104,7 @@ export function StorePreviewMedia({
         return;
       }
       setIsPlaying(true);
+      trackPreviewPlayOnce();
     };
 
     const onPause = () => setIsPlaying(false);
@@ -161,6 +173,7 @@ export function StorePreviewMedia({
     const video = videoRef.current;
     if (!video || previewEnded) return;
     if (video.paused) {
+      trackPreviewPlayOnce();
       void video.play();
     } else {
       video.pause();
@@ -219,11 +232,11 @@ export function StorePreviewMedia({
           </p>
           {buyHref ? (
             buyExternal ? (
-              <a href={buyHref} className="btn-gradient px-5 py-2 text-xs">
+              <a href={buyHref} className="btn-gradient px-5 py-2 text-xs" onClick={onBuyClick}>
                 Buy full video{price ? ` — $${price.toFixed(2)}` : ""}
               </a>
             ) : (
-              <Link href={buyHref} className="btn-gradient px-5 py-2 text-xs">
+              <Link href={buyHref} className="btn-gradient px-5 py-2 text-xs" onClick={onBuyClick}>
                 Buy full video{price ? ` — $${price.toFixed(2)}` : ""}
               </Link>
             )

@@ -10,12 +10,13 @@ type Props = {
   videoTitle: string;
   price: string;
   checkoutUrl?: string;
+  purchased?: boolean;
 };
 
-export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl }: Props) {
+export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl, purchased = false }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const afterSignup = `/store/${videoId}/checkout`;
+  const afterSignup = purchased ? `/store/${videoId}/watch` : `/store/${videoId}/checkout`;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -24,6 +25,9 @@ export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl }: Pro
 
     const formData = new FormData(e.currentTarget);
     formData.set("next", afterSignup);
+    if (purchased) {
+      formData.set("unlockVideoId", videoId);
+    }
 
     try {
       await registerStoreUserAction(formData);
@@ -47,11 +51,24 @@ export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl }: Pro
         <Link href={`/store/${videoId}`} className="text-xs text-accent-pinkSoft hover:text-accent-pink">
           ← Back to preview
         </Link>
-        <p className="text-xs uppercase tracking-[0.18em] text-accent-pinkSoft">Free account</p>
-        <h1 className="text-2xl font-semibold text-white">Create account to buy</h1>
+        <p className="text-xs uppercase tracking-[0.18em] text-accent-pinkSoft">
+          {purchased ? "Unlock your purchase" : "Free account"}
+        </p>
+        <h1 className="text-2xl font-semibold text-white">
+          {purchased ? "Create account to watch" : "Create account to buy"}
+        </h1>
         <p className="text-sm text-neutral-400">
-          Sign up for a free account — no membership required. Then complete your one-time purchase for{" "}
-          <span className="text-neutral-200">{videoTitle}</span> ({price}).
+          {purchased ? (
+            <>
+              You already paid for <span className="text-neutral-200">{videoTitle}</span>. Create a free
+              account to watch the full video.
+            </>
+          ) : (
+            <>
+              Sign up for a free account — no membership required. Then complete your one-time purchase for{" "}
+              <span className="text-neutral-200">{videoTitle}</span> ({price}).
+            </>
+          )}
         </p>
       </header>
 
@@ -84,13 +101,26 @@ export function StoreSignupForm({ videoId, videoTitle, price, checkoutUrl }: Pro
           />
         </div>
         <button type="submit" disabled={loading} className="btn-gradient w-full justify-center text-sm disabled:opacity-60">
-          {loading ? "Creating account…" : checkoutUrl ? "Continue to payment" : "Create free account"}
+          {loading
+            ? "Creating account…"
+            : purchased
+              ? "Create account & watch"
+              : checkoutUrl
+                ? "Continue to payment"
+                : "Create free account"}
         </button>
       </form>
 
       <p className="text-center text-xs text-neutral-500">
         Already have an account?{" "}
-        <Link href={`/auth/login?next=/store/${videoId}/checkout`} className="text-accent-pink hover:text-accent-pinkSoft">
+        <Link
+          href={
+            purchased
+              ? `/store/success?videoId=${videoId}`
+              : `/auth/login?next=/store/${videoId}/checkout`
+          }
+          className="text-accent-pink hover:text-accent-pinkSoft"
+        >
           Log in
         </Link>
       </p>
