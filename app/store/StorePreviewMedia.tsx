@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 import { isHlsMediaUrl, isIframeMediaUrl } from "@/lib/store-media-url";
@@ -9,8 +10,11 @@ type Props = {
   poster?: string;
   className?: string;
   showErrors?: boolean;
-  /** Stop playback after this many seconds (store preview clip). */
   maxDurationSeconds?: number;
+  buyHref?: string;
+  buyExternal?: boolean;
+  durationLabel?: string;
+  price?: number;
 };
 
 function formatClock(seconds: number): string {
@@ -25,6 +29,10 @@ export function StorePreviewMedia({
   className,
   showErrors = false,
   maxDurationSeconds,
+  buyHref,
+  buyExternal = false,
+  durationLabel,
+  price,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -203,7 +211,23 @@ export function StorePreviewMedia({
       {previewEnded ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/85 p-4 text-center">
           <p className="text-sm font-medium text-white">Preview ended</p>
-          <p className="max-w-xs text-xs text-neutral-300">Purchase to watch the full video.</p>
+          <p className="max-w-xs text-xs text-neutral-300">
+            {durationLabel
+              ? `Unlock the full ${durationLabel} scene`
+              : "Purchase to watch the full video"}
+            {price ? ` — $${price.toFixed(2)}` : ""}
+          </p>
+          {buyHref ? (
+            buyExternal ? (
+              <a href={buyHref} className="btn-gradient px-5 py-2 text-xs">
+                Buy full video{price ? ` — $${price.toFixed(2)}` : ""}
+              </a>
+            ) : (
+              <Link href={buyHref} className="btn-gradient px-5 py-2 text-xs">
+                Buy full video{price ? ` — $${price.toFixed(2)}` : ""}
+              </Link>
+            )
+          ) : null}
           <button
             type="button"
             onClick={restartPreview}

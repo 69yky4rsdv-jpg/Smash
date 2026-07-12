@@ -18,6 +18,7 @@ import type { Video } from "@/lib/types";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { getStorePurchaseSuccessUrl, getStoreVideoPrice, parseStorePrice } from "@/lib/store-checkout";
 import { parseStorePreviewDuration, STORE_PREVIEW_DURATION_OPTIONS } from "@/lib/store-access";
+import { parseStoreListingFields } from "@/lib/store-listing";
 import { CopyableUrl } from "./CopyableUrl";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +42,7 @@ async function addVideoAction(formData: FormData) {
   const videoUrl = normalizeStoreMediaUrl(String(formData.get("videoUrl") ?? ""));
   const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
   const purchaseCheckoutUrl = String(formData.get("purchaseCheckoutUrl") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
+  const listing = parseStoreListingFields(formData);
   const previewDurationSeconds = parseStorePreviewDuration(
     String(formData.get("previewDurationSeconds") ?? "30")
   );
@@ -55,13 +56,16 @@ async function addVideoAction(formData: FormData) {
   const video: Video = {
     id: randomUUID(),
     title,
-    description: description || undefined,
+    description: listing.description,
     thumbnailUrl: thumbnailUrl || undefined,
     videoUrl,
     previewUrl: previewUrl || undefined,
     purchaseCheckoutUrl: purchaseCheckoutUrl || undefined,
     previewDurationSeconds,
     storePrice,
+    storeDurationLabel: listing.storeDurationLabel,
+    storeFeaturing: listing.storeFeaturing,
+    storeExclusive: listing.storeExclusive,
     publishedAt: now,
     categories: categoryIds,
     models: modelIds,
@@ -87,6 +91,7 @@ async function updateStoreVideoAction(formData: FormData) {
   const videoUrl = normalizeStoreMediaUrl(String(formData.get("videoUrl") ?? ""));
   const previewUrl = normalizeStoreMediaUrl(String(formData.get("previewUrl") ?? ""));
   const purchaseCheckoutUrl = String(formData.get("purchaseCheckoutUrl") ?? "").trim();
+  const listing = parseStoreListingFields(formData);
   const previewDurationSeconds = parseStorePreviewDuration(
     String(formData.get("previewDurationSeconds") ?? "30")
   );
@@ -96,6 +101,7 @@ async function updateStoreVideoAction(formData: FormData) {
 
   updateStoreVideo(id, {
     title,
+    description: listing.description,
     categories: categoryIds,
     models: modelIds,
     thumbnailUrl,
@@ -104,6 +110,9 @@ async function updateStoreVideoAction(formData: FormData) {
     purchaseCheckoutUrl,
     previewDurationSeconds,
     storePrice,
+    storeDurationLabel: listing.storeDurationLabel,
+    storeFeaturing: listing.storeFeaturing,
+    storeExclusive: listing.storeExclusive,
   });
 
   revalidatePath("/store");
@@ -238,6 +247,34 @@ export default async function StorePage() {
                   Plays the first 30 seconds of the full video when no separate preview URL is set.
                 </p>
               </div>
+              <div className="space-y-1">
+                <label className="text-[11px] text-neutral-400">Length (shown on product page)</label>
+                <input
+                  name="storeDurationLabel"
+                  placeholder="e.g. 40 min"
+                  className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] text-neutral-400">Featuring (optional)</label>
+                <input
+                  name="storeFeaturing"
+                  placeholder="e.g. Summer — used if no models tagged"
+                  className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
+                />
+              </div>
+              <div className="flex items-center gap-2 md:col-span-2">
+                <input
+                  type="checkbox"
+                  name="storeExclusive"
+                  id="add-storeExclusive"
+                  defaultChecked
+                  className="rounded border-white/20"
+                />
+                <label htmlFor="add-storeExclusive" className="text-[11px] text-neutral-300">
+                  Show as exclusive (only on this site)
+                </label>
+              </div>
               <div className="md:col-span-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-[11px] text-neutral-400">
                 After you add a video, its Stripe success URL is generated automatically and shown in the edit section below.
               </div>
@@ -254,6 +291,7 @@ export default async function StorePage() {
                 <textarea
                   name="description"
                   rows={3}
+                  placeholder="2–3 sentences about the scene for the product page…"
                   className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-sm outline-none focus:ring-2 ring-amber-400/30"
                 />
               </div>
@@ -361,6 +399,46 @@ export default async function StorePage() {
                           Shown now: ${getStoreVideoPrice(video).toFixed(2)}
                           {video.storePrice ? " (custom)" : " (auto)"}
                         </p>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-neutral-400">Length (product page)</label>
+                        <input
+                          name="storeDurationLabel"
+                          defaultValue={video.storeDurationLabel ?? ""}
+                          placeholder="e.g. 40 min"
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-neutral-400">Featuring (optional)</label>
+                        <input
+                          name="storeFeaturing"
+                          defaultValue={video.storeFeaturing ?? ""}
+                          placeholder="e.g. Summer"
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 md:col-span-2">
+                        <input
+                          type="checkbox"
+                          name="storeExclusive"
+                          id={`exclusive-${video.id}`}
+                          defaultChecked={video.storeExclusive !== false}
+                          className="rounded border-white/20"
+                        />
+                        <label htmlFor={`exclusive-${video.id}`} className="text-[11px] text-neutral-300">
+                          Show as exclusive (only on this site)
+                        </label>
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[11px] text-neutral-400">Description (product page)</label>
+                        <textarea
+                          name="description"
+                          rows={3}
+                          defaultValue={video.description ?? ""}
+                          placeholder="About this scene…"
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-xs outline-none focus:ring-2 ring-amber-400/30"
+                        />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[11px] text-neutral-400">Thumbnail URL</label>

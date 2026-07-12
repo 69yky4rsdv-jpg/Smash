@@ -3,9 +3,11 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getModels, getStoreVideos, userHasPurchasedStoreVideo } from "@/lib/data";
 import { resolveStorePreviewPlayback } from "@/lib/store-access";
+import { getStoreFeaturingLabel, isStoreExclusive } from "@/lib/store-listing";
 import { normalizeStoreMediaUrl } from "@/lib/store-media-url";
 import { getStoreVideoPrice } from "@/lib/store-checkout";
 import { StorePreviewMedia } from "../StorePreviewMedia";
+import { StorePurchasePanel } from "../StorePurchasePanel";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -23,9 +25,13 @@ export default async function StoreVideoPage({ params }: Props) {
   }
 
   const models = getModels();
-  const performers = video.models
+  const performerNames = video.models
     .map((modelId) => models.find((model) => model.id === modelId)?.stageName)
     .filter(Boolean) as string[];
+  const featuring = getStoreFeaturingLabel(video, performerNames);
+  const exclusive = isStoreExclusive(video);
+  const durationLabel = video.storeDurationLabel?.trim();
+
   const { user, isAdmin } = await getSession();
   const price = getStoreVideoPrice(video);
   const hasFullAccess = userHasPurchasedStoreVideo(user?.id, video.id, isAdmin);
@@ -41,12 +47,35 @@ export default async function StoreVideoPage({ params }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-3 py-8 sm:px-4 sm:py-10 space-y-6">
-      <header className="space-y-2">
+      <header className="space-y-3">
         <Link href="/store" className="text-xs text-accent-pinkSoft hover:text-accent-pink">
           ← Back to store
         </Link>
-        <p className="text-xs text-accent-pinkSoft uppercase tracking-[0.18em]">Preview</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs text-accent-pinkSoft uppercase tracking-[0.18em]">Preview</p>
+          {exclusive ? (
+            <span className="rounded-full border border-pink-400/40 bg-pink-500/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-pink-200">
+              Exclusive
+            </span>
+          ) : null}
+          {durationLabel ? (
+            <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[10px] font-medium text-neutral-200">
+              {durationLabel} full scene
+            </span>
+          ) : null}
+        </div>
         <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">{video.title}</h1>
+        {!hasFullAccess ? (
+          <p className="max-w-2xl text-sm text-neutral-400">
+            {durationLabel && exclusive
+              ? `${durationLabel} exclusive full video · one-time purchase · 30 second free preview below`
+              : durationLabel
+                ? `${durationLabel} full video · buy once, watch anytime · free preview below`
+                : exclusive
+                  ? "Exclusive full video · only available here · free preview below"
+                  : "Watch the free preview, then unlock the full scene with a one-time purchase."}
+          </p>
+        ) : null}
       </header>
 
       <section className="grid gap-6 md:grid-cols-[7fr,4fr]">
@@ -65,9 +94,8 @@ export default async function StoreVideoPage({ params }: Props) {
                 <div className="relative z-10 space-y-2">
                   <p className="text-sm font-medium text-white">Full video locked</p>
                   <p className="max-w-sm text-xs text-neutral-300">
-                    {normalizeStoreMediaUrl(video.previewUrl ?? "")
-                      ? "Purchase to watch this video. The preview link matches the full video — enable a 30s timed preview in store admin or add a separate preview URL."
-                      : "Purchase to unlock the full video. Enable a 30 second timed preview in store admin, or add a separate preview URL."}
+                    Purchase to unlock
+                    {durationLabel ? ` the full ${durationLabel} scene` : " the full video"}.
                   </p>
                 </div>
               </div>
@@ -81,6 +109,10 @@ export default async function StoreVideoPage({ params }: Props) {
                 maxDurationSeconds={
                   playback.mode === "timed-preview" ? playback.maxDurationSeconds : undefined
                 }
+                buyHref={hasFullAccess ? undefined : buyHref}
+                buyExternal={buyExternal}
+                durationLabel={durationLabel}
+                price={hasFullAccess ? undefined : price}
               />
             )}
           </div>
@@ -92,41 +124,24 @@ export default async function StoreVideoPage({ params }: Props) {
             </p>
           ) : null}
           {video.description ? (
-            <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-neutral-200">
-              {video.description}
-            </p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-1">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">About this scene</p>
+              <p className="text-sm text-neutral-200 whitespace-pre-wrap">{video.description}</p>
+            </div>
           ) : null}
         </div>
 
-        <aside className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-5">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">Purchase</p>
-          <p className="text-3xl font-bold text-white">${price.toFixed(2)}</p>
-          {hasFullAccess ? (
-            <>
-              <p className="text-xs text-emerald-300">You own this video.</p>
-              <Link href={`/store/${video.id}/watch`} className="btn-gradient mt-2 w-full justify-center text-sm py-2">
-                Watch full video
-              </Link>
-            </>
-          ) : (
-            <>
-              <p className="text-xs text-neutral-400">One-time access to this full video. Free account required — no membership.</p>
-              {buyExternal ? (
-                <a href={buyHref} className="btn-gradient mt-2 w-full justify-center text-sm py-2">
-                  Buy Now
-                </a>
-              ) : (
-                <Link href={buyHref} className="btn-gradient mt-2 w-full justify-center text-sm py-2">
-                  Buy Now
-                </Link>
-              )}
-            </>
-          )}
-          <div className="space-y-1 pt-2 text-xs text-neutral-300">
-            <p>Performers: {performers.length ? performers.join(", ") : "Featured cast"}</p>
-            <p>Published: {new Date(video.publishedAt).toLocaleDateString()}</p>
-          </div>
-        </aside>
+        <StorePurchasePanel
+          price={price}
+          hasFullAccess={hasFullAccess}
+          watchHref={`/store/${video.id}/watch`}
+          buyHref={buyHref}
+          buyExternal={buyExternal}
+          durationLabel={durationLabel}
+          featuring={featuring}
+          exclusive={exclusive}
+          publishedAt={video.publishedAt}
+        />
       </section>
     </div>
   );

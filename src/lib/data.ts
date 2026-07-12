@@ -302,6 +302,9 @@ export function updateStoreVideo(
       | "purchaseCheckoutUrl"
       | "previewDurationSeconds"
       | "storePrice"
+      | "storeDurationLabel"
+      | "storeFeaturing"
+      | "storeExclusive"
       | "publishedAt"
       | "categories"
       | "models"
@@ -334,6 +337,17 @@ export function updateStoreVideo(
       typeof updates.storePrice === "number" && updates.storePrice > 0
         ? updates.storePrice
         : undefined;
+  }
+  if (updates.storeDurationLabel !== undefined) {
+    video.storeDurationLabel = updates.storeDurationLabel.trim()
+      ? updates.storeDurationLabel.trim()
+      : undefined;
+  }
+  if (updates.storeFeaturing !== undefined) {
+    video.storeFeaturing = updates.storeFeaturing.trim() ? updates.storeFeaturing.trim() : undefined;
+  }
+  if (updates.storeExclusive !== undefined) {
+    video.storeExclusive = updates.storeExclusive;
   }
   if (updates.publishedAt !== undefined) video.publishedAt = updates.publishedAt;
   if (updates.categories !== undefined) video.categories = updates.categories;

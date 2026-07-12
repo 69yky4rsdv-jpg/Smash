@@ -40,6 +40,12 @@ export type Video = {
   previewDurationSeconds?: number;
   /** One-time store purchase price in USD. Falls back to auto pricing when unset. */
   storePrice?: number;
+  /** Display length e.g. "40 min" on the store product page. */
+  storeDurationLabel?: string;
+  /** Performer names shown on store page when models aren't tagged. */
+  storeFeaturing?: string;
+  /** Show "Exclusive" badge; defaults to true when unset. */
+  storeExclusive?: boolean;
   publishedAt: string;
   categories: string[];
   models: string[];
