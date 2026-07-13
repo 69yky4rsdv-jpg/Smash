@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { notifyStorePreviewStatsRefresh } from "./store-preview-stats-events";
 
 type Props = {
   videoId: string;
@@ -16,7 +17,7 @@ export function useStorePreviewAnalytics(videoId: string, visitId?: string) {
 
   async function track(event: "human_confirm" | "preview_play" | "buy_click") {
     try {
-      await fetch("/api/store/preview-analytics", {
+      const res = await fetch("/api/store/preview-analytics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -26,6 +27,9 @@ export function useStorePreviewAnalytics(videoId: string, visitId?: string) {
         }),
         keepalive: event === "buy_click",
       });
+      if (res.ok) {
+        notifyStorePreviewStatsRefresh(videoId);
+      }
     } catch {
       // Non-blocking analytics
     }
@@ -35,13 +39,13 @@ export function useStorePreviewAnalytics(videoId: string, visitId?: string) {
 }
 
 export function StorePreviewTracker({ videoId, visitId }: Props) {
-  const { trackPreviewPlay } = useStorePreviewAnalytics(videoId, visitId);
-
   useEffect(() => {
     void fetch("/api/store/preview-analytics", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ videoId, event: "human_confirm", visitId }),
+    }).then((res) => {
+      if (res.ok) notifyStorePreviewStatsRefresh(videoId);
     });
   }, [videoId, visitId]);
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import {
+  getStorePreviewStats,
   recordStorePreviewEvent,
   type StorePreviewEventType,
 } from "@/lib/store-preview-analytics";
@@ -10,6 +11,20 @@ const ALLOWED_EVENTS: StorePreviewEventType[] = [
   "preview_play",
   "buy_click",
 ];
+
+export async function GET(request: NextRequest) {
+  const { isAdmin } = await getSession();
+  if (!isAdmin) {
+    return NextResponse.json({ ok: false, error: "forbidden" }, { status: 403 });
+  }
+
+  const videoId = request.nextUrl.searchParams.get("videoId")?.trim();
+  if (!videoId) {
+    return NextResponse.json({ ok: false, error: "missing_video_id" }, { status: 400 });
+  }
+
+  return NextResponse.json({ ok: true, stats: getStorePreviewStats(videoId) });
+}
 
 export async function POST(request: NextRequest) {
   let body: { videoId?: string; event?: string; visitId?: string };
@@ -25,7 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "invalid_payload" }, { status: 400 });
   }
 
-  const { isAdmin } = await getSession();
+  const { isAdmin, user } = await getSession();
   const userAgent = request.headers.get("user-agent");
   const referer = request.headers.get("referer");
   const ip =
@@ -41,6 +56,7 @@ export async function POST(request: NextRequest) {
     referer,
     ip,
     isAdmin,
+    isLoggedIn: Boolean(user),
   });
 
   return NextResponse.json({ ok: true });

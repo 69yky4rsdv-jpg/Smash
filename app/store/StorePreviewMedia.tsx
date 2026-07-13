@@ -56,6 +56,7 @@ export function StorePreviewMedia({
     setPreviewEnded(false);
     setElapsed(0);
     setIsPlaying(false);
+    previewPlayTracked.current = false;
   }, [src, maxDurationSeconds]);
 
   useEffect(() => {
@@ -107,6 +108,10 @@ export function StorePreviewMedia({
       trackPreviewPlayOnce();
     };
 
+    const onPlaying = () => {
+      trackPreviewPlayOnce();
+    };
+
     const onPause = () => setIsPlaying(false);
 
     video.addEventListener("error", onVideoError);
@@ -114,6 +119,7 @@ export function StorePreviewMedia({
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("seeked", onSeeking);
     video.addEventListener("play", onPlay);
+    video.addEventListener("playing", onPlaying);
     video.addEventListener("pause", onPause);
 
     if (isHls && Hls.isSupported()) {
@@ -132,6 +138,7 @@ export function StorePreviewMedia({
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("seeked", onSeeking);
       video.removeEventListener("play", onPlay);
+      video.removeEventListener("playing", onPlaying);
       video.removeEventListener("pause", onPause);
       hls?.destroy();
       video.removeAttribute("src");
@@ -155,7 +162,10 @@ export function StorePreviewMedia({
       : src.replace("iframe.mediadelivery.net/play/", "iframe.mediadelivery.net/embed/");
 
     return (
-      <div className={`relative h-full w-full ${className ?? ""}`}>
+      <div
+        className={`relative h-full w-full ${className ?? ""}`}
+        onPointerDown={() => trackPreviewPlayOnce()}
+      >
         <iframe
           src={embedSrc}
           className="h-full w-full border-0"

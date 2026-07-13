@@ -52,20 +52,21 @@ export function hashIp(ip: string | null | undefined): string | undefined {
   return createHash("sha256").update(ip.trim()).digest("hex").slice(0, 16);
 }
 
-const BOT_UA_PATTERNS = [
-  "bot",
-  "crawl",
-  "spider",
+const DEFINITE_BOT_UA_PATTERNS = [
+  "googlebot",
+  "bingbot",
   "slurp",
-  "mediapartners",
+  "duckduckbot",
+  "baiduspider",
+  "yandexbot",
   "facebookexternalhit",
   "twitterbot",
   "linkedinbot",
   "whatsapp",
-  "telegram",
+  "telegrambot",
   "discordbot",
   "slackbot",
-  "headless",
+  "headlesschrome",
   "phantomjs",
   "selenium",
   "puppeteer",
@@ -77,28 +78,56 @@ const BOT_UA_PATTERNS = [
   "petalbot",
   "gptbot",
   "claudebot",
-  "anthropic",
-  "prerender",
-  "preview",
+  "anthropic-ai",
   "ia_archiver",
-  "applebot",
+  "applebot/",
+  "semrushbot",
+  "ahrefsbot",
+  "mj12bot",
+  "dotbot",
+  "petalbot",
+  "mediapartners-google",
 ];
+
+/** Real browsers — including private/incognito — should not be treated as bots. */
+const BROWSER_UA_HINTS = [
+  "mozilla/5.0",
+  "chrome/",
+  "safari/",
+  "firefox/",
+  "edg/",
+  "opr/",
+  "samsungbrowser/",
+];
+
+export function isLikelyBrowser(userAgent: string | null | undefined): boolean {
+  if (!userAgent || userAgent.trim().length < 12) return false;
+  const lower = userAgent.toLowerCase();
+  return BROWSER_UA_HINTS.some((hint) => lower.includes(hint));
+}
 
 export function isBotUserAgent(userAgent: string | null | undefined): boolean {
   if (!userAgent || userAgent.trim().length < 12) return true;
   const lower = userAgent.toLowerCase();
-  return BOT_UA_PATTERNS.some((pattern) => lower.includes(pattern));
+  if (isLikelyBrowser(userAgent) && !DEFINITE_BOT_UA_PATTERNS.some((pattern) => lower.includes(pattern))) {
+    return false;
+  }
+  return DEFINITE_BOT_UA_PATTERNS.some((pattern) => lower.includes(pattern));
 }
 
 function resolveVisitorType(input: {
   isAdmin: boolean;
+  isLoggedIn?: boolean;
   userAgent?: string | null;
   humanConfirmed: boolean;
 }): StorePreviewVisitorType {
   if (input.isAdmin) return "admin";
-  if (input.humanConfirmed && !isBotUserAgent(input.userAgent)) return "visitor";
   if (isBotUserAgent(input.userAgent)) return "bot";
-  return input.humanConfirmed ? "visitor" : "bot";
+  // Real browser UA counts as a visitor even before JS runs (private mode, ad blockers, etc.).
+  if (isLikelyBrowser(input.userAgent) || input.humanConfirmed || input.isLoggedIn) {
+    return "visitor";
+  }
+  return "bot";
 }
 
 export function logStorePreviewPageView(input: {
@@ -107,6 +136,7 @@ export function logStorePreviewPageView(input: {
   referer?: string | null;
   ip?: string | null;
   isAdmin: boolean;
+  isLoggedIn?: boolean;
 }): string {
   const data = readAnalytics();
   const visit: StorePreviewVisit = {
@@ -115,6 +145,7 @@ export function logStorePreviewPageView(input: {
     at: new Date().toISOString(),
     visitorType: resolveVisitorType({
       isAdmin: input.isAdmin,
+      isLoggedIn: input.isLoggedIn,
       userAgent: input.userAgent,
       humanConfirmed: false,
     }),
@@ -154,17 +185,25 @@ export function recordStorePreviewEvent(input: {
   referer?: string | null;
   ip?: string | null;
   isAdmin?: boolean;
+  isLoggedIn?: boolean;
 }): void {
   const data = readAnalytics();
   const ipHash = hashIp(input.ip);
-  let visit = findRecentVisit(input.videoId, input.visitId, ipHash);
+  let visit: StorePreviewVisit | undefined;
+
+  if (input.visitId) {
+    visit = data.visits.find((v) => v.id === input.visitId && v.videoId === input.videoId);
+  }
+  if (!visit) {
+    visit = findRecentVisit(input.videoId, input.visitId, ipHash);
+  }
 
   if (!visit) {
     visit = {
       id: input.visitId || randomUUID(),
       videoId: input.videoId,
       at: new Date().toISOString(),
-      visitorType: "bot",
+      visitorType: "visitor",
       userAgent: input.userAgent?.slice(0, 300) || undefined,
       referer: input.referer?.slice(0, 500) || undefined,
       ipHash,
@@ -184,6 +223,7 @@ export function recordStorePreviewEvent(input: {
 
   visit.visitorType = resolveVisitorType({
     isAdmin: Boolean(input.isAdmin),
+    isLoggedIn: Boolean(input.isLoggedIn),
     userAgent: input.userAgent ?? visit.userAgent,
     humanConfirmed: visit.humanConfirmed,
   });

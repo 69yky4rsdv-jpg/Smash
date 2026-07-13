@@ -53,6 +53,7 @@ export default async function StoreVideoPage({ params }: Props) {
     referer: hdrs.get("referer"),
     ip: hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || hdrs.get("x-real-ip"),
     isAdmin,
+    isLoggedIn: Boolean(user),
   });
 
   return (
