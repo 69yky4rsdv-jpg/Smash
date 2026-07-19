@@ -45,11 +45,11 @@ export function VideoPlayer({ src, poster, className }: Props) {
         playsInline
         className="h-full w-full object-contain"
       />
-      <div className="pointer-events-none absolute left-2 -bottom-10 z-10">
+      <div className="pointer-events-none absolute bottom-2 left-2 z-10">
         <img
-          src="https://Pull-Video-Load.b-cdn.net/logo/BIg-SMASHPOV.COM-2.png"
+          src="/logo/BIg-SMASHPOV.COM-2.png"
           alt="SmashPov watermark"
-          className="h-40 opacity-80 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)]"
+          className="h-16 opacity-80 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)] sm:h-20"
         />
       </div>
     </div>

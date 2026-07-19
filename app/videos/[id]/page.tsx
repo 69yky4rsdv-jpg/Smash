@@ -86,7 +86,7 @@ export default async function VideoDetailPage({ params }: Props) {
   const videoModels = models.filter((m) => video.models.includes(m.id));
   const videoCategories = categories.filter((c) => video.categories.includes(c.id));
   const relatedVideos = videos
-    .filter((v) => v.id !== video.id)
+    .filter((v) => v.id !== video.id && Boolean(v.thumbnailUrl?.trim()))
     .sort((a, b) => {
       const aOverlap = a.categories.filter((c) => video.categories.includes(c)).length;
       const bOverlap = b.categories.filter((c) => video.categories.includes(c)).length;
@@ -147,11 +147,11 @@ export default async function VideoDetailPage({ params }: Props) {
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
-                      <div className="pointer-events-none absolute left-2 -bottom-10 z-10">
+                      <div className="pointer-events-none absolute bottom-2 left-2 z-10">
                         <img
-                          src="https://Pull-Video-Load.b-cdn.net/logo/BIg-SMASHPOV.COM-2.png"
+                          src="/logo/BIg-SMASHPOV.COM-2.png"
                           alt="SmashPov watermark"
-                          className="h-40 opacity-80 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)]"
+                          className="h-16 opacity-80 drop-shadow-[0_0_12px_rgba(0,0,0,0.9)] sm:h-20"
                         />
                       </div>
                     </div>

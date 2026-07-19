@@ -17,6 +17,9 @@ type Props = {
 
 export function TagMultiSelect({ name, label, items, selectedIds = [] }: Props) {
   const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState<string[]>(() =>
+    selectedIds.filter((id) => items.some((item) => item.id === id))
+  );
 
   const filtered = useMemo(() => {
     if (!query.trim()) return items;
@@ -24,10 +27,22 @@ export function TagMultiSelect({ name, label, items, selectedIds = [] }: Props) 
     return items.filter((item) => item.label.toLowerCase().includes(q));
   }, [items, query]);
 
+  function toggle(id: string) {
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
   return (
     <div className="space-y-1 text-xs">
+      {selected.map((id) => (
+        <input key={`${name}-${id}`} type="hidden" name={name} value={id} />
+      ))}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-neutral-200">{label}</p>
+        <p className="text-neutral-200">
+          {label}
+          {selected.length > 0 ? (
+            <span className="ml-1 text-neutral-500">({selected.length})</span>
+          ) : null}
+        </p>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -40,9 +55,8 @@ export function TagMultiSelect({ name, label, items, selectedIds = [] }: Props) 
           <label key={item.id} className="inline-flex items-center gap-1 rounded-lg bg-white/5 px-2 py-1">
             <input
               type="checkbox"
-              name={name}
-              value={item.id}
-              defaultChecked={selectedIds.includes(item.id)}
+              checked={selected.includes(item.id)}
+              onChange={() => toggle(item.id)}
               className="h-3 w-3 rounded border-white/20 bg-black/70"
             />
             <span>{item.label}</span>
@@ -55,4 +69,3 @@ export function TagMultiSelect({ name, label, items, selectedIds = [] }: Props) 
     </div>
   );
 }
-
