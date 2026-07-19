@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getCategories, getModels, getVideos, getVideoPhotoUrls, updateVideo } from "@/lib/data";
+import { getCategories, getModels, getVideos, getVideoPhotoUrls, parsePhotoUrls, setVideoPhotos, updateVideo } from "@/lib/data";
 import { getEngagementForVideos, getVideoEngagement, userHasLikedVideo } from "@/lib/video-engagement";
 import { getSiteSettings } from "@/lib/site-settings";
 import { VideoPlayer } from "../VideoPlayer";
 import { VideoEngagementControls } from "../VideoEngagementControls";
 import { AdminThumbnailSelector } from "./AdminThumbnailSelector";
+import { AdminVideoEditForm } from "./AdminVideoEditForm";
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -17,10 +18,47 @@ type Props = {
 
 async function setVideoThumbnailAction(videoId: string, thumbnailUrl: string) {
   "use server";
+  const { isAdmin } = await getSession();
+  if (!isAdmin) return;
   updateVideo(videoId, { thumbnailUrl });
   revalidatePath(`/videos/${videoId}`);
   revalidatePath("/");
   revalidatePath("/videos");
+}
+
+async function updateVideoFromDetailAction(formData: FormData) {
+  "use server";
+  const { isAdmin } = await getSession();
+  if (!isAdmin) return;
+
+  const videoId = String(formData.get("videoId") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim();
+  const videoUrl = String(formData.get("videoUrl") ?? "").trim();
+  const thumbnailUrl = String(formData.get("thumbnailUrl") ?? "").trim() || undefined;
+  const modelIds = formData.getAll("models").map(String);
+  const categoryIds = formData.getAll("categories").map(String);
+  const photoPaste = String(formData.get("photoUrls") ?? "");
+
+  if (!videoId || !title || !videoUrl) return;
+
+  updateVideo(videoId, {
+    title,
+    videoUrl,
+    thumbnailUrl,
+    models: modelIds,
+    categories: categoryIds,
+  });
+
+  setVideoPhotos(videoId, parsePhotoUrls(photoPaste));
+
+  revalidatePath(`/videos/${videoId}`);
+  revalidatePath(`/videos/${videoId}/photos`);
+  revalidatePath("/");
+  revalidatePath("/videos");
+  revalidatePath("/videos/trending");
+  revalidatePath("/categories");
+  revalidatePath("/admin");
+  revalidatePath("/models");
 }
 
 export default async function VideoDetailPage({ params }: Props) {
@@ -44,8 +82,9 @@ export default async function VideoDetailPage({ params }: Props) {
   const enableAdminThumbnail = site.siteName === "SmashPov" && photoUrls.length > 0;
 
   const models = getModels();
+  const categories = getCategories();
   const videoModels = models.filter((m) => video.models.includes(m.id));
-  const videoCategories = getCategories().filter((c) => video.categories.includes(c.id));
+  const videoCategories = categories.filter((c) => video.categories.includes(c.id));
   const relatedVideos = videos
     .filter((v) => v.id !== video.id)
     .sort((a, b) => {
@@ -139,6 +178,15 @@ export default async function VideoDetailPage({ params }: Props) {
                   setThumbnailAction={setVideoThumbnailAction}
                 />
               )}
+              {isAdmin ? (
+                <AdminVideoEditForm
+                  video={video}
+                  models={models}
+                  categories={categories}
+                  photoUrls={photoUrls}
+                  updateAction={updateVideoFromDetailAction}
+                />
+              ) : null}
               <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm">
                 {video.description && (
                   <p className="text-[13px] text-neutral-200">{video.description}</p>
