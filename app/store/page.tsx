@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth";
+import { ConversionTrustStrip } from "../(site)/ConversionTrustStrip";
 import {
   appendStoreVideo,
   deleteStoreVideo,
@@ -155,14 +156,18 @@ export default async function StorePage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-3 py-8 sm:px-4 sm:py-10 space-y-6">
-      <header className="space-y-2">
-        <p className="text-xs text-accent-pinkSoft uppercase tracking-[0.18em]">Store</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
-          Full Videos For Purchase
-        </h1>
-        <p className="max-w-3xl text-sm text-neutral-300">
-          Browse all available scenes, view each preview page, and purchase access instantly.
-        </p>
+      <header className="space-y-4">
+        <div className="space-y-2">
+          <p className="text-xs text-accent-pinkSoft uppercase tracking-[0.18em]">Store</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-white md:text-4xl">
+            Full Videos For Purchase
+          </h1>
+          <p className="max-w-3xl text-sm text-neutral-300">
+            Preview any scene free, then buy once for instant access. Secure Stripe checkout — no
+            subscription required.
+          </p>
+        </div>
+        <ConversionTrustStrip compact />
       </header>
 
       {isAdmin && (
@@ -547,7 +552,7 @@ export default async function StorePage() {
                 <p className="mt-3 text-2xl font-bold text-white">
                   ${price.toFixed(2)}
                 </p>
-                <p className="text-[11px] text-neutral-400">One-time video purchase</p>
+                <p className="text-[11px] text-neutral-400">One-time purchase · preview free</p>
                 <Link href={`/store/${video.id}`} className="btn-gradient mt-4 w-full justify-center text-xs py-2">
                   Preview & Buy
                 </Link>

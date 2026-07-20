@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { isRedirectError } from "@/lib/action-errors";
+import { ConversionTrustStrip } from "../(site)/ConversionTrustStrip";
 import { loginAfterStorePurchaseAction } from "./actions";
 
 type Props = {
@@ -87,6 +88,8 @@ export function StorePurchaseAccessForm({ videoId, videoTitle }: Props) {
           Create free account
         </Link>
       </p>
+
+      <ConversionTrustStrip compact />
     </div>
   );
 }

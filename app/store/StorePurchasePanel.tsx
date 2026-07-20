@@ -115,6 +115,9 @@ export function StorePurchasePanel({
         label={`Buy full video — ${priceStr}`}
         onClick={handleBuyClick}
       />
+      <p className="text-center text-[10px] text-neutral-500">
+        🔒 Secure checkout via Stripe · discreet billing · instant access
+      </p>
 
       <div className="space-y-1 border-t border-white/10 pt-3 text-xs text-neutral-400">
         {featuring ? <p>Featuring: {featuring}</p> : null}
